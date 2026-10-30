@@ -1,0 +1,36 @@
+name: zal_life
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # --- добавленные зависимости ---
+  provider: ^6.1.2
+  sqflite: ^2.3.3+1
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  uuid: ^4.4.2
+  image_picker: ^1.1.2
+
+  # --- графики и настройки ---
+  fl_chart: ^0.69.0
+  shared_preferences: ^2.3.2
+
+  # --- шагомер (с поддержкой 100% фона) ---
+  accurate_step_counter: ^3.1.0
+  permission_handler: ^11.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
