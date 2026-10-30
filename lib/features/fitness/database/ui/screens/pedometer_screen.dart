@@ -76,6 +76,8 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
             if (pedo.isContinuousWalk) SliverToBoxAdapter(child: _activeWalkBanner(pedo)),
             SliverToBoxAdapter(child: _heroMultiRings(pedo, accent)),
             SliverToBoxAdapter(child: _statTiles(pedo, accent)),
+            SliverToBoxAdapter(child: _activityScoreCard(pedo)),
+            SliverToBoxAdapter(child: _weeklySummary(pedo)),
             if (pedo.steps > 3000 && waterToday < 1000)
               SliverToBoxAdapter(child: _waterPrompt(nutrition)),
             SliverToBoxAdapter(child: _virtualWalkProgress(pedo)),
@@ -265,6 +267,97 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
     );
   }
 
+  // ─── Индекс активности и детальная статистика ───
+  Widget _activityScoreCard(PedometerProvider pedo) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      child: _glassBox(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('ИНДЕКС АКТИВНОСТИ', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                const Spacer(),
+                Text('${pedo.activityScore}/100', style: TextStyle(color: _timeAccent, fontSize: 14, fontWeight: FontWeight.w900)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: pedo.activityScore / 100,
+                minHeight: 8,
+                backgroundColor: Colors.white.withOpacity(0.05),
+                valueColor: AlwaysStoppedAnimation(_timeAccent),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _miniStat('🔥', '${pedo.calories.round()}', 'ККАЛ'),
+                _miniStat('⏱', '${pedo.activeMinutes}', 'МИН'),
+                _miniStat('🚀', '${pedo.averageSpeed.toStringAsFixed(1)}', 'КМ/Ч'),
+                _miniStat('🏆', '${pedo.bestDaySteps}', 'РЕКОРД'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _miniStat(String emoji, String value, String label) {
+    return Column(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 6),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 8, fontWeight: FontWeight.w800)),
+      ],
+    );
+  }
+
+  // ─── Итоги за неделю ───
+  Widget _weeklySummary(PedometerProvider pedo) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      child: _glassBox(
+        accent: _purple,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: _purple.withOpacity(0.15), shape: BoxShape.circle),
+              child: const Icon(Icons.date_range_rounded, color: _purple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('ИТОГИ ЗА 7 ДНЕЙ', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text('${pedo.weeklySteps} шагов', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                      const SizedBox(width: 8),
+                      Text('•', style: TextStyle(color: Colors.white.withOpacity(0.3))),
+                      const SizedBox(width: 8),
+                      Text('${pedo.weeklyDistance.toStringAsFixed(1)} км', style: const TextStyle(color: _purple, fontSize: 14, fontWeight: FontWeight.w800)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _waterPrompt(NutritionProvider nutrition) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
@@ -353,7 +446,6 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
                       valueColor: const AlwaysStoppedAnimation(_purple),
                     ),
                   ),
-                  // Анимированный поезд
                   Positioned(
                     left: progress * (MediaQuery.of(context).size.width - 64) - 12,
                     top: -6,
@@ -485,7 +577,7 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
                   cellColor = Colors.white.withOpacity(0.04);
                 }
 
-                if (index == 27) borderColor = Colors.white.withOpacity(0.8); // Highlight today
+                if (index == 27) borderColor = Colors.white.withOpacity(0.8);
 
                 return Tooltip(
                   message: '${day.date.day}.${day.date.month} — ${day.steps} шагов',
@@ -587,18 +679,19 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
     );
   }
 
-  // ─── Пульс недели (Line Chart с заливкой) ───
+  // ─── Пульс недели (Линейный график) ───
   Widget _chartCard(PedometerProvider pedo) {
     final data = _isMonthlyChart
         ? pedo.history
         : (pedo.history.length >= 7 ? pedo.history.sublist(pedo.history.length - 7) : pedo.history);
-    if (data.isEmpty) return const SizedBox.shrink();
 
-    final maxData = data.fold<double>(0, (m, d) => d.steps > m ? d.steps.toDouble() : m);
+    final safeData = data.isEmpty
+        ? List.generate(7, (i) => StepDay(date: DateTime.now().subtract(Duration(days: 6 - i)), steps: 0))
+        : data;
+
+    final maxData = safeData.fold<double>(0, (m, d) => d.steps > m ? d.steps.toDouble() : m);
     final maxY = math.max(maxData, pedo.goal.toDouble()) * 1.2;
-
-    // Формируем точки для графика
-    final spots = List.generate(data.length, (i) => FlSpot(i.toDouble(), data[i].steps.toDouble()));
+    final spots = List.generate(safeData.length, (i) => FlSpot(i.toDouble(), safeData[i].steps.toDouble()));
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -633,7 +726,7 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
               child: LineChart(
                 LineChartData(
                   minX: 0,
-                  maxX: (data.length - 1).toDouble(),
+                  maxX: (safeData.length - 1).toDouble(),
                   minY: 0,
                   maxY: maxY,
                   lineTouchData: LineTouchData(
@@ -641,7 +734,7 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
                       getTooltipColor: (_) => _elevated,
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((spot) {
-                          final d = data[spot.x.toInt()];
+                          final d = safeData[spot.x.toInt()];
                           return LineTooltipItem(
                             '${d.steps} шагов\n${d.date.day}.${d.date.month}',
                             const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
@@ -677,12 +770,12 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
                         interval: _isMonthlyChart ? 5 : 1,
                         getTitlesWidget: (value, _) {
                           final i = value.toInt();
-                          if (i < 0 || i >= data.length) return const SizedBox.shrink();
-                          final d = data[i].date;
+                          if (i < 0 || i >= safeData.length) return const SizedBox.shrink();
+                          final d = safeData[i].date;
                           final text = _isMonthlyChart ? '${d.day}' : ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'][d.weekday - 1];
                           return Padding(
                             padding: const EdgeInsets.only(top: 12),
-                            child: Text(text, style: TextStyle(color: i == data.length - 1 ? _timeAccent : Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: i == data.length - 1 ? FontWeight.w900 : FontWeight.w700)),
+                            child: Text(text, style: TextStyle(color: i == safeData.length - 1 ? _timeAccent : Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: i == safeData.length - 1 ? FontWeight.w900 : FontWeight.w700)),
                           );
                         },
                       ),
@@ -707,7 +800,7 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
                         getDotPainter: (spot, percent, barData, index) {
                           return FlDotCirclePainter(
                             radius: 4,
-                            color: index == data.length - 1 ? _timeAccent : _surface,
+                            color: index == safeData.length - 1 ? _timeAccent : _surface,
                             strokeWidth: 2,
                             strokeColor: _timeAccent,
                           );
@@ -740,7 +833,7 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
     );
   }
 
-  // ─── Квесты (Мощный дизайн) ───
+  // ─── Квесты ───
   Widget _questsSection(PedometerProvider pedo) {
     final quests = pedo.quests;
     if (quests.isEmpty) return const SizedBox.shrink();
@@ -813,7 +906,7 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
     );
   }
 
-  // ─── Медали (с эффектом Shimmer) ───
+  // ─── Медали ───
   Widget _achievementsSection(PedometerProvider pedo) {
     final achievements = pedo.achievements;
     return Padding(
@@ -864,7 +957,6 @@ class _PedometerScreenState extends State<PedometerScreen> with TickerProviderSt
                           Text(a.title, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: a.unlocked ? Colors.white : Colors.white24, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.2)),
                         ],
                       ),
-                      // Анимация блика для разблокированных медалей
                       if (a.unlocked)
                         Positioned.fill(
                           child: AnimatedBuilder(
@@ -1112,7 +1204,6 @@ class _MultiRingPainter extends CustomPainter {
   }
 
   void _drawRing(Canvas canvas, Offset center, double radius, double stroke, double progress, Color color) {
-    // Фоновое кольцо
     canvas.drawCircle(
       center, radius,
       Paint()
@@ -1127,7 +1218,6 @@ class _MultiRingPainter extends CustomPainter {
     const startAngle = -math.pi / 2;
     final sweepAngle = 2 * math.pi * progress;
 
-    // Свечение кольца
     canvas.drawArc(
       rect, startAngle, sweepAngle, false,
       Paint()
@@ -1138,7 +1228,6 @@ class _MultiRingPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
 
-    // Основное кольцо
     canvas.drawArc(
       rect, startAngle, sweepAngle, false,
       Paint()

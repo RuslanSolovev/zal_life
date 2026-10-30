@@ -90,6 +90,7 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
   Map<int, int> _hourlySteps = {};
   List<StepDay> _history = [];
 
+  // ─── Геттеры (Базовые) ───
   int get steps => _steps;
   int get goal => _goal;
   double get progress => _goal > 0 ? (_steps / _goal).clamp(0.0, 1.0) : 0.0;
@@ -104,30 +105,72 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
   Map<int, int> get hourlySteps => _hourlySteps;
   List<StepDay> get history => _history;
 
-  int get cadence => _cadence;
+  // ─── Каденс и Прогулка ───
+  int get cadence {
+    final now = DateTime.now();
+    _recentStepTimes.removeWhere((t) => now.difference(t).inSeconds > 60);
+    if (_recentStepTimes.isEmpty) {
+      return _isWalking ? 90 : 0; // Если идем, показываем средний темп
+    }
+    return _recentStepTimes.length;
+  }
+
   double get zone1Minutes => _zone1Seconds / 60.0;
   double get zone2Minutes => _zone2Seconds / 60.0;
   double get zone3Minutes => _zone3Seconds / 60.0;
   bool get isContinuousWalk => _isContinuousWalk;
   Duration get walkDuration => _walkDuration;
 
+  // ─── Калибровка (Сегодня) ───
   double get distanceKm => (_steps * (_heightCm * 0.415) / 100000.0);
   double get calories => _steps * (_weightKg * 0.0005);
   int get activeMinutes => (_steps / 100).round();
   bool get isOnFire => _steps > (_goal * 1.5);
 
-  // ─── Данные для Транссиба (JourneyView) ───
-  double get totalDistanceKmAllTime {
-    double total = 0;
-    for (final day in _history) {
-      total += day.steps * (_heightCm * 0.415) / 100000.0;
-    }
-    return total;
+  // Средняя скорость (км/ч) за сегодня
+  double get averageSpeed {
+    if (activeMinutes == 0) return 0.0;
+    return (distanceKm / (activeMinutes / 60.0)).clamp(0.0, 20.0);
   }
+
+  // ─── Данные за всё время ───
+  double get totalDistanceKmAllTime =>
+      _history.fold<double>(0, (sum, d) => sum + (d.steps * (_heightCm * 0.415) / 100000.0));
 
   int get totalStepsAllTime =>
       _history.fold<int>(0, (sum, d) => sum + d.steps);
 
+  double get totalCaloriesAllTime =>
+      _history.fold<double>(0, (sum, d) => sum + (d.steps * (_weightKg * 0.0005)));
+
+  // ─── Данные за неделю ───
+  int get weeklySteps {
+    final last7 = _history.length > 7 ? _history.sublist(_history.length - 7) : _history;
+    return last7.fold<int>(0, (sum, d) => sum + d.steps);
+  }
+
+  double get weeklyDistance {
+    final last7 = _history.length > 7 ? _history.sublist(_history.length - 7) : _history;
+    return last7.fold<double>(0, (sum, d) => sum + (d.steps * (_heightCm * 0.415) / 100000.0));
+  }
+
+  // ─── Рекорды и Индекс ───
+  int get bestDaySteps {
+    if (_history.isEmpty) return _steps;
+    final maxHist = _history.fold<int>(0, (m, d) => d.steps > m ? d.steps : m);
+    return math.max(maxHist, _steps);
+  }
+
+  int get activityScore {
+    double score = 0;
+    score += progress * 40; // 40% за шаги
+    score += (distanceKm / 8.0).clamp(0.0, 1.0) * 20; // 20% за 8 км
+    score += (calories / 500.0).clamp(0.0, 1.0) * 20; // 20% за 500 ккал
+    score += (activeMinutes / 30.0).clamp(0.0, 1.0) * 20; // 20% за 30 мин
+    return score.round().clamp(0, 100);
+  }
+
+  // Улучшенный стрик
   int get currentStreak {
     if (_history.isEmpty) return 0;
     int streak = 0;
@@ -351,7 +394,7 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _loadHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final keys = prefs.getKeys().where((k) => k.startsWith(_kHistoryPrefix)).toList();
-    keys.sort(); // YYYY-MM-DD сортируется лексикографически
+    keys.sort();
 
     _history = [];
     for (final key in keys) {
@@ -366,7 +409,6 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
       }
     }
 
-    // Гарантируем, что сегодняшний день есть в истории
     final todayKey = _dateKey(DateTime.now());
     bool todayExists = false;
     for (int i = 0; i < _history.length; i++) {
@@ -438,11 +480,11 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     await openAppSettings();
   }
 
+  // ─── 6 Квестов ───
   List<DailyQuest> get quests {
     final hour = DateTime.now().hour;
-    final morningSteps = _hourlySteps.entries
-        .where((e) => e.key < 10)
-        .fold(0, (sum, e) => sum + e.value);
+    final morningSteps = _hourlySteps.entries.where((e) => e.key < 10).fold(0, (sum, e) => sum + e.value);
+    final nightSteps = _hourlySteps.entries.where((e) => e.key >= 22).fold(0, (sum, e) => sum + e.value);
 
     return [
       DailyQuest(
@@ -459,42 +501,59 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
         isCompleted: _steps >= (_goal / 2),
         progress: (_steps / (_goal / 2)).clamp(0.0, 1.0),
       ),
+      DailyQuest(
+        id: 'full_goal',
+        title: 'Цель дня',
+        subtitle: 'Выполни дневную норму',
+        isCompleted: _steps >= _goal,
+        progress: (_steps / _goal).clamp(0.0, 1.0),
+      ),
+      DailyQuest(
+        id: 'fast_pace',
+        title: 'Скороход',
+        subtitle: 'Удерживай темп > 120 шаг/мин',
+        isCompleted: cadence > 120,
+        progress: (cadence / 120).clamp(0.0, 1.0),
+      ),
+      DailyQuest(
+        id: 'night_owl',
+        title: 'Ночной гуляка',
+        subtitle: 'Пройди 500 шагов после 22:00',
+        isCompleted: nightSteps >= 500,
+        progress: (nightSteps / 500).clamp(0.0, 1.0),
+      ),
+      if (hour >= 18)
+        DailyQuest(
+          id: 'evening_push',
+          title: 'Вечерний рывок',
+          subtitle: 'Доберись до цели до конца дня',
+          isCompleted: _steps >= _goal,
+          progress: (_steps / _goal).clamp(0.0, 1.0),
+        ),
     ];
   }
 
+  // ─── 14 Достижений ───
   List<Achievement> get achievements {
+    final totalSteps = totalStepsAllTime;
+    final totalCalories = totalCaloriesAllTime;
     final maxHistory = _history.fold<int>(0, (m, d) => d.steps > m ? d.steps : m);
-    final totalSteps = _history.fold<int>(0, (s, d) => s + d.steps);
 
     return [
-      Achievement(
-        id: 'first_step',
-        emoji: '👟',
-        title: 'Первый шаг',
-        description: 'Сделайте 1 шаг',
-        unlocked: totalSteps > 0,
-      ),
-      Achievement(
-        id: '10k_day',
-        emoji: '🔥',
-        title: '10 000',
-        description: 'Пройдите 10к за день',
-        unlocked: maxHistory >= 10000,
-      ),
-      Achievement(
-        id: 'streak_3',
-        emoji: '⚡',
-        title: 'Серия',
-        description: '3 дня подряд',
-        unlocked: currentStreak >= 3,
-      ),
-      Achievement(
-        id: 'marathon',
-        emoji: '🏅',
-        title: 'Марафонец',
-        description: 'Пройдите 42 км',
-        unlocked: totalSteps * 0.0007 >= 42,
-      ),
+      Achievement(id: 'first', emoji: '👟', title: 'Первый шаг', description: '1 шаг', unlocked: totalSteps > 0),
+      Achievement(id: '5k', emoji: '🚶', title: '5 000', description: '5 000 за день', unlocked: maxHistory >= 5000),
+      Achievement(id: '10k', emoji: '🔥', title: '10 000', description: '10 000 за день', unlocked: maxHistory >= 10000),
+      Achievement(id: '15k', emoji: '⚡', title: '15 000', description: '15 000 за день', unlocked: maxHistory >= 15000),
+      Achievement(id: '20k', emoji: '🏃', title: '20 000', description: '20 000 за день', unlocked: maxHistory >= 20000),
+      Achievement(id: 'streak_3', emoji: '✨', title: 'Серия 3', description: '3 дня подряд', unlocked: currentStreak >= 3),
+      Achievement(id: 'streak_7', emoji: '🌟', title: 'Серия 7', description: '7 дней подряд', unlocked: currentStreak >= 7),
+      Achievement(id: 'streak_30', emoji: '👑', title: 'Серия 30', description: '30 дней подряд', unlocked: currentStreak >= 30),
+      Achievement(id: 'dist_10', emoji: '🚩', title: '10 км', description: '10 км суммарно', unlocked: totalDistanceKmAllTime >= 10),
+      Achievement(id: 'dist_100', emoji: '🌍', title: '100 км', description: '100 км суммарно', unlocked: totalDistanceKmAllTime >= 100),
+      Achievement(id: 'marathon', emoji: '🏅', title: 'Марафон', description: '42 км суммарно', unlocked: totalDistanceKmAllTime >= 42.2),
+      Achievement(id: 'steps_100k', emoji: '💯', title: '100 000', description: '100 000 шагов всего', unlocked: totalSteps >= 100000),
+      Achievement(id: 'cal_5k', emoji: '🔥', title: '5 000 ккал', description: '5 000 ккал сожжено', unlocked: totalCalories >= 5000),
+      Achievement(id: 'cal_10k', emoji: '💥', title: '10 000 ккал', description: '10 000 ккал сожжено', unlocked: totalCalories >= 10000),
     ];
   }
 
