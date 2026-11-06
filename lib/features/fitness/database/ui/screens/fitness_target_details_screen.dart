@@ -1,8 +1,13 @@
 // features/fitness/ui/screens/fitness_target_details_screen.dart
-// 🆕 v16: добавлены хинты для boxingRounds и holdTime
+// 🎨 design refinement: hero-card с полноэкранным cover + Power Mode tokens
+import 'dart:io';
+import 'dart:ui' show FontFeature;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../../../models/fitness_models.dart';
 import '../../../models/enums.dart';
 import '../../../providers/fitness_provider.dart';
@@ -27,17 +32,19 @@ class _Power {
   static const Color darkCard2 = Color(0xFF2C2C2E);
   static const Color lightBg = Color(0xFFF2F2F7);
   static const Color lightCard = Color(0xFFFFFFFF);
+  static const Color lightCard2 = Color(0xFFF9FAFB);
 
   static Color bg(bool isDark) => isDark ? darkBg : lightBg;
   static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : const Color(0xFFF9FAFB);
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
+  static Color card2(bool isDark) => isDark ? darkCard2 : lightCard2;
+  static Color textPrimary(bool isDark) =>
+      isDark ? Colors.white : const Color(0xFF0A0A0A);
   static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
+      ? Colors.white.withOpacity(0.62)
+      : const Color(0xFF3C3C43).withOpacity(0.62);
   static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
+      ? Colors.white.withOpacity(0.32)
+      : const Color(0xFF3C3C43).withOpacity(0.32);
   static Color separator(bool isDark) =>
       isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
 
@@ -45,8 +52,11 @@ class _Power {
     BoxShadow(color: color.withOpacity(strength), blurRadius: 16),
   ];
 
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
+  static List<BoxShadow> glow(
+      Color color, {
+        double strength = 0.4,
+        double blur = 24,
+      }) =>
       [
         BoxShadow(
           color: color.withOpacity(strength),
@@ -54,7 +64,108 @@ class _Power {
           offset: const Offset(0, 6),
         ),
       ];
+
+  static List<BoxShadow> cardShadow(bool isDark, Color tint) => isDark
+      ? [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.45),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: Colors.black.withOpacity(0.25),
+      blurRadius: 14,
+      offset: const Offset(0, 6),
+    ),
+  ]
+      : [
+    BoxShadow(
+      color: tint.withOpacity(0.05),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: tint.withOpacity(0.08),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
+    ),
+  ];
 }
+
+class _R {
+  static const xs = 8.0;
+  static const sm = 12.0;
+  static const md = 14.0;
+  static const lg = 18.0;
+  static const xl = 22.0;
+  static const xxl = 28.0;
+}
+
+class _Sp {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 20.0;
+  static const xxl = 24.0;
+}
+
+class _Num {
+  static const _feat = <FontFeature>[FontFeature.tabularFigures()];
+  static TextStyle t(TextStyle base) => base.copyWith(fontFeatures: _feat);
+}
+
+// ==================== PRESSABLE ====================
+
+class _Pressable extends StatefulWidget {
+  const _Pressable({
+    required this.child,
+    required this.onTap,
+    this.onLongPress,
+    this.scale = 0.97,
+    this.haptic = true,
+  });
+
+  final Widget child;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final double scale;
+  final bool haptic;
+
+  @override
+  State<_Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<_Pressable> {
+  bool _pressed = false;
+
+  void _setPressed(bool v) {
+    if (_pressed != v) setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      onTap: () {
+        if (widget.haptic) HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      onLongPress: widget.onLongPress,
+      child: AnimatedScale(
+        scale: _pressed ? widget.scale : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ==================== SCREEN ====================
 
 class FitnessTargetDetailsScreen extends StatefulWidget {
   final FitnessTarget target;
@@ -73,6 +184,121 @@ class FitnessTargetDetailsScreen extends StatefulWidget {
 
 class _FitnessTargetDetailsScreenState
     extends State<FitnessTargetDetailsScreen> {
+  // ─────────────────────────────────────────────────────────
+  //  Image helpers
+  // ─────────────────────────────────────────────────────────
+  String? _resolveExerciseImageUrl(String? exerciseId) {
+    if (exerciseId == null || exerciseId.isEmpty) return null;
+    try {
+      final provider = context.read<FitnessProvider>();
+      final ex = provider.exercises.firstWhere((e) => e.id == exerciseId);
+      return ex.imageUrl;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _coverImage(String url, Widget fallback) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => fallback,
+      );
+    }
+    if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => fallback,
+        errorWidget: (_, __, ___) => fallback,
+      );
+    }
+    return Image.file(
+      File(url),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fallback,
+    );
+  }
+
+  /// Компактный thumb (используется в bottom-sheets)
+  Widget _buildExerciseThumb({
+    required String? exerciseId,
+    required double size,
+    required double radius,
+    required Color accent,
+    required String fallbackEmoji,
+    bool onDark = false,
+  }) {
+    Exercise? ex;
+    if (exerciseId != null && exerciseId.isNotEmpty) {
+      final provider = context.read<FitnessProvider>();
+      try {
+        ex = provider.exercises.firstWhere((e) => e.id == exerciseId);
+      } catch (_) {
+        ex = null;
+      }
+    }
+
+    final url = ex?.imageUrl;
+    final hasImage = url != null && url.isNotEmpty;
+    final emoji = (ex != null) ? ex.exerciseType.emoji : fallbackEmoji;
+
+    final Widget fallback = Text(
+      emoji,
+      style: TextStyle(fontSize: size * 0.5),
+    );
+
+    Widget imageWidget() {
+      if (!hasImage) return fallback;
+      if (url!.startsWith('assets/')) {
+        return Image.asset(
+          url,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => fallback,
+        );
+      }
+      if (url.startsWith('http')) {
+        return CachedNetworkImage(
+          imageUrl: url,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          placeholder: (_, __) => Container(
+            color: onDark
+                ? Colors.white.withOpacity(0.10)
+                : accent.withOpacity(0.08),
+          ),
+          errorWidget: (_, __, ___) => fallback,
+        );
+      }
+      return Image.file(
+        File(url),
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => fallback,
+      );
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: onDark
+            ? Colors.white.withOpacity(0.22)
+            : accent.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: _Power.softGlow(accent, strength: 0.20),
+      ),
+      clipBehavior: Clip.antiAlias,
+      alignment: Alignment.center,
+      child: imageWidget(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
@@ -93,40 +319,11 @@ class _FitnessTargetDetailsScreenState
         slivers: [
           _buildSliverAppBar(isDark, target, provider),
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    target.type.displayName.toUpperCase(),
-                    style: const TextStyle(
-                      color: _Power.volt,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.2,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    target.name,
-                    style: TextStyle(
-                      color: _Power.textPrimary(isDark),
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.2,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
+          // ═══ HERO — full-cover image ═══
           SliverToBoxAdapter(
             child: _buildHeroCard(isDark, target),
           ),
+
           SliverToBoxAdapter(
             child: _buildForecastCard(isDark, target, forecast),
           ),
@@ -136,7 +333,8 @@ class _FitnessTargetDetailsScreenState
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+              padding:
+              const EdgeInsets.fromLTRB(_Sp.xl, _Sp.xxl, _Sp.xl, _Sp.md),
               child: Row(
                 children: [
                   Container(
@@ -158,24 +356,26 @@ class _FitnessTargetDetailsScreenState
                       letterSpacing: 1.8,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: _Sp.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
+                      horizontal: _Sp.sm,
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       color: _Power.volt.withOpacity(0.14),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(_R.xs),
                     ),
                     child: Text(
                       '${entries.length}',
-                      style: const TextStyle(
-                        color: _Power.volt,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.2,
-                        height: 1,
+                      style: _Num.t(
+                        const TextStyle(
+                          color: _Power.volt,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.2,
+                          height: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -191,11 +391,10 @@ class _FitnessTargetDetailsScreenState
               delegate: SliverChildBuilderDelegate(
                     (context, index) {
                   final entry = entries[index];
-                  final prev = index < entries.length - 1
-                      ? entries[index + 1]
-                      : null;
+                  final prev =
+                  index < entries.length - 1 ? entries[index + 1] : null;
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: _Sp.lg),
                     child: _buildEntryCard(isDark, entry, prev, target),
                   );
                 },
@@ -208,12 +407,12 @@ class _FitnessTargetDetailsScreenState
       ),
       floatingActionButton: target.status == FitnessTargetStatus.active
           ? Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.only(bottom: _Sp.sm),
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow:
-            _Power.glow(target.accentColor, strength: 0.4, blur: 20),
+            _Power.glow(target.accentColor, strength: 0.45, blur: 24),
           ),
           child: FloatingActionButton.extended(
             backgroundColor: target.accentColor,
@@ -238,7 +437,7 @@ class _FitnessTargetDetailsScreenState
   }
 
   // =====================================================================
-  // APP BAR (без изменений)
+  // SLIVER APP BAR
   // =====================================================================
 
   Widget _buildSliverAppBar(
@@ -254,12 +453,15 @@ class _FitnessTargetDetailsScreenState
       scrolledUnderElevation: 0,
       leadingWidth: 60,
       leading: Padding(
-        padding: const EdgeInsets.only(left: 16, top: 10, bottom: 10),
-        child: GestureDetector(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            Navigator.pop(context);
-          },
+        padding: const EdgeInsets.only(
+          left: _Sp.lg,
+          top: 10,
+          bottom: 10,
+        ),
+        child: _Pressable(
+          onTap: () => Navigator.pop(context),
+          scale: 0.9,
+          haptic: false,
           child: Container(
             width: 36,
             height: 36,
@@ -291,7 +493,7 @@ class _FitnessTargetDetailsScreenState
       centerTitle: true,
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 16),
+          padding: const EdgeInsets.only(right: _Sp.lg),
           child: PopupMenuButton<String>(
             icon: Container(
               width: 36,
@@ -310,7 +512,7 @@ class _FitnessTargetDetailsScreenState
             ),
             color: _Power.card(isDark),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(_R.lg),
             ),
             onSelected: (value) => _handleMenuAction(value, target, provider),
             itemBuilder: (ctx) => [
@@ -373,17 +575,23 @@ class _FitnessTargetDetailsScreenState
       value: value,
       child: Row(
         children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 12),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(_R.xs),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(width: 10),
           Text(
             label,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.2,
-              color: destructive
-                  ? _Power.red
-                  : _Power.textPrimary(isDark),
+              color: destructive ? _Power.red : _Power.textPrimary(isDark),
             ),
           ),
         ],
@@ -392,7 +600,7 @@ class _FitnessTargetDetailsScreenState
   }
 
   // =====================================================================
-  // MENU ACTIONS (без изменений)
+  // MENU ACTIONS
   // =====================================================================
 
   void _handleMenuAction(
@@ -431,261 +639,386 @@ class _FitnessTargetDetailsScreenState
 
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 60),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isDark ? _Power.darkCard2 : Colors.white,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Удалить цель?',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: _Power.textPrimary(isDark),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '«${target.name}» и вся история будут удалены',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _Power.textSecondary(isDark),
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
+      builder: (ctx) => _buildIOSDialog(
+        isDark,
+        title: 'Удалить цель?',
+        message: '«${target.name}» и вся история будут удалены',
+        destructive: 'Удалить',
+        onDestructive: () async {
+          HapticFeedback.mediumImpact();
+          await provider.deleteTarget(target.id);
+          if (ctx.mounted) Navigator.pop(ctx);
+          if (mounted) Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  Widget _buildIOSDialog(
+      bool isDark, {
+        required String title,
+        required String message,
+        required String destructive,
+        required VoidCallback onDestructive,
+        String cancelLabel = 'Отмена',
+      }) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 60),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? _Power.darkCard2 : Colors.white,
+          borderRadius: BorderRadius.circular(_R.md),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                _Sp.xl,
+                _Sp.xl,
+                _Sp.xl,
+                _Sp.lg,
               ),
-              Container(height: 0.5, color: _Power.separator(isDark)),
-              Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(ctx),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'Отмена',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w400,
-                            color: _Power.volt,
-                          ),
-                        ),
-                      ),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: _Power.textPrimary(isDark),
                     ),
                   ),
-                  Container(
-                    width: 0.5,
-                    height: 50,
-                    color: _Power.separator(isDark),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        HapticFeedback.mediumImpact();
-                        await provider.deleteTarget(target.id);
-                        if (ctx.mounted) Navigator.pop(ctx);
-                        if (mounted) Navigator.pop(context);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'Удалить',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: _Power.red,
-                          ),
-                        ),
-                      ),
+                  const SizedBox(height: 6),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: _Power.textSecondary(isDark),
+                      height: 1.4,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            Container(height: 0.5, color: _Power.separator(isDark)),
+            Row(
+              children: [
+                Expanded(
+                  child: _Pressable(
+                    onTap: () => Navigator.pop(context),
+                    scale: 0.96,
+                    haptic: false,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: _Sp.md),
+                      alignment: Alignment.center,
+                      child: Text(
+                        cancelLabel,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w400,
+                          color: _Power.volt,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 0.5,
+                  height: 50,
+                  color: _Power.separator(isDark),
+                ),
+                Expanded(
+                  child: _Pressable(
+                    onTap: onDestructive,
+                    scale: 0.96,
+                    haptic: false,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: _Sp.md),
+                      alignment: Alignment.center,
+                      child: Text(
+                        destructive,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: _Power.red,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // =====================================================================
-  // HERO CARD (без изменений)
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════════════════
+  // HERO CARD — full-cover image (dashboard style)
+  // ═════════════════════════════════════════════════════════════════════
   Widget _buildHeroCard(bool isDark, FitnessTarget target) {
     final progress = target.progressPercent;
     final improvement = target.lastImprovement;
-    final bool isImprovement = target.isAscending
-        ? improvement > 0
-        : improvement < 0;
+    final bool isImprovement =
+    target.isAscending ? improvement > 0 : improvement < 0;
+    final imageUrl = _resolveExerciseImageUrl(target.exerciseId);
+    final hasImage = imageUrl != null && imageUrl.isNotEmpty;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+    // Fallback: градиент в цветах цели + крупный эмодзи
+    final fallback = Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
             target.accentColor,
-            target.accentColor.withOpacity(0.75),
+            target.accentColor.withOpacity(0.6),
             _Power.heroDeep,
           ],
           stops: const [0.0, 0.6, 1.0],
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: target.accentColor.withOpacity(0.35),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
-          ),
-        ],
       ),
       child: Stack(
-        clipBehavior: Clip.none,
         children: [
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(24),
-                ),
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.0),
-                    Colors.white,
-                    Colors.white.withOpacity(0.0),
-                  ],
+            right: -40,
+            bottom: -40,
+            child: IgnorePointer(
+              child: Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.14),
+                      Colors.white.withOpacity(0.0),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
+          Positioned(
+            right: -30,
+            bottom: -30,
+            child: Text(
+              target.type.emoji,
+              style: TextStyle(
+                fontSize: 180,
+                color: Colors.white.withOpacity(0.10),
+                height: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.xs, _Sp.lg, _Sp.lg),
+      decoration: BoxDecoration(
+        color: _Power.card(isDark),
+        borderRadius: BorderRadius.circular(_R.xxl - 4),
+        boxShadow: [
+          BoxShadow(
+            color: target.accentColor.withOpacity(0.28),
+            blurRadius: 30,
+            spreadRadius: -6,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ═══ COVER ═══
+          SizedBox(
+            height: 240,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 1. Изображение / gradient fallback
+                if (hasImage) _coverImage(imageUrl!, fallback) else fallback,
+
+                // 2. Тёмный градиент поверх (чтобы белый текст читался)
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.transparent,
+                        Color(0x44000000),
+                        Color(0xCC000000),
+                      ],
+                      stops: [0.0, 0.35, 0.70, 1.0],
+                    ),
+                  ),
+                ),
+
+                // 3. Контент на обложке
+                Padding(
+                  padding: const EdgeInsets.all(_Sp.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top badges
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.94),
+                              borderRadius: BorderRadius.circular(_R.xs),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  target.type.emoji,
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  target.type.displayName.toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Color(0xFF0A0A0A),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.0,
+                                    height: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          if (target.deadline != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: _Sp.sm,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.35),
+                                borderRadius: BorderRadius.circular(_R.xs),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.20),
+                                  width: 0.6,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today_rounded,
+                                    color: target.isOverdue
+                                        ? const Color(0xFFFFD0D0)
+                                        : Colors.white.withOpacity(0.9),
+                                    size: 11,
+                                  ),
+                                  const SizedBox(width: _Sp.xs),
+                                  Text(
+                                    _formatDeadline(target.deadline!),
+                                    style: _Num.t(
+                                      TextStyle(
+                                        color: target.isOverdue
+                                            ? const Color(0xFFFFD0D0)
+                                            : Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.2,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                      const Spacer(),
+                      // Название цели
+                      Text(
+                        target.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: _Num.t(
+                          const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.0,
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        target.isAscending
+                            ? 'из ${target.formattedTarget} ${target.unit}'
+                            : 'до ${target.formattedTarget} ${target.unit}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ═══ BODY ═══
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(_Sp.xl, _Sp.lg, _Sp.xl, _Sp.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.22),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.25),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            target.type.emoji,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            target.type.displayName.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                              height: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    if (target.deadline != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              color: target.isOverdue
-                                  ? const Color(0xFFFFD0D0)
-                                  : Colors.white.withOpacity(0.9),
-                              size: 11,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _formatDeadline(target.deadline!),
-                              style: TextStyle(
-                                color: target.isOverdue
-                                    ? const Color(0xFFFFD0D0)
-                                    : Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.2,
-                                height: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 22),
+                // Big number + unit + improvement
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Flexible(
-                      child: Text(
-                        target.formattedCurrent,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 56,
-                          fontWeight: FontWeight.w900,
-                          height: 1,
-                          letterSpacing: -3,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          target.formattedCurrent,
+                          style: _Num.t(
+                            TextStyle(
+                              color: _Power.textPrimary(isDark),
+                              fontSize: 46,
+                              fontWeight: FontWeight.w900,
+                              height: 1,
+                              letterSpacing: -2.5,
+                            ),
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.only(bottom: 6),
                       child: Text(
                         target.unit,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
-                          fontSize: 16,
+                          color: _Power.textSecondary(isDark),
+                          fontSize: 15,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3,
                         ),
@@ -699,12 +1032,9 @@ class _FitnessTargetDetailsScreenState
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: (isImprovement ? _Power.green : _Power.red)
+                              .withOpacity(0.14),
                           borderRadius: BorderRadius.circular(9),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.25),
-                            width: 0.5,
-                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -713,18 +1043,24 @@ class _FitnessTargetDetailsScreenState
                               isImprovement
                                   ? Icons.trending_up_rounded
                                   : Icons.trending_down_rounded,
-                              color: Colors.white,
-                              size: 15,
+                              color: isImprovement
+                                  ? _Power.green
+                                  : _Power.red,
+                              size: 14,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: _Sp.xs),
                             Text(
                               '${improvement > 0 ? '+' : ''}${improvement.toStringAsFixed(1)}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.3,
-                                height: 1,
+                              style: _Num.t(
+                                TextStyle(
+                                  color: isImprovement
+                                      ? _Power.green
+                                      : _Power.red,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.3,
+                                  height: 1,
+                                ),
                               ),
                             ),
                           ],
@@ -732,42 +1068,16 @@ class _FitnessTargetDetailsScreenState
                       ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        target.isAscending
-                            ? 'из ${target.formattedTarget} ${target.unit}'
-                            : 'до ${target.formattedTarget} ${target.unit}',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                    ),
-                    if (target.startValue > 0 &&
-                        target.startValue != target.currentValue)
-                      Text(
-                        'СТАРТ ${_fmt(target.startValue)}',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.55),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 18),
+
+                const SizedBox(height: _Sp.lg),
+
+                // Progress bar
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: Colors.white.withOpacity(0.18),
-                    valueColor: const AlwaysStoppedAnimation(Colors.white),
+                    backgroundColor: _Power.separator(isDark),
+                    valueColor: AlwaysStoppedAnimation(target.accentColor),
                     minHeight: 8,
                   ),
                 ),
@@ -776,25 +1086,97 @@ class _FitnessTargetDetailsScreenState
                   children: [
                     Text(
                       '${(progress * 100).toInt()}% ВЫПОЛНЕНО',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
+                      style: _Num.t(
+                        TextStyle(
+                          color: target.accentColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        ),
                       ),
                     ),
                     const Spacer(),
                     Text(
                       'ОСТАЛОСЬ ${target.formattedRemaining} ${target.unit}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
+                      style: _Num.t(
+                        TextStyle(
+                          color: _Power.textTertiary(isDark),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
+                        ),
                       ),
                     ),
                   ],
                 ),
+
+                if (target.startValue > 0 &&
+                    target.startValue != target.currentValue) ...[
+                  const SizedBox(height: _Sp.md),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: _Sp.md,
+                      vertical: _Sp.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _Power.card2(isDark),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.flag_outlined,
+                          size: 12,
+                          color: _Power.textTertiary(isDark),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'СТАРТ',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                            color: _Power.textTertiary(isDark),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _fmt(target.startValue),
+                          style: _Num.t(
+                            TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.2,
+                              color: _Power.textPrimary(isDark),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          'ЦЕЛЬ',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                            color: _Power.textTertiary(isDark),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _fmt(target.targetValue),
+                          style: _Num.t(
+                            TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.2,
+                              color: target.accentColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -810,7 +1192,7 @@ class _FitnessTargetDetailsScreenState
   }
 
   // =====================================================================
-  // FORECAST CARD (без изменений)
+  // FORECAST CARD
   // =====================================================================
 
   Widget _buildForecastCard(
@@ -858,16 +1240,13 @@ class _FitnessTargetDetailsScreenState
     }
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(_Sp.lg, 0, _Sp.lg, _Sp.lg),
+      padding: const EdgeInsets.all(_Sp.lg),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: accent.withOpacity(0.25),
-          width: 0.8,
-        ),
-        boxShadow: _Power.softGlow(accent, strength: 0.10),
+        borderRadius: BorderRadius.circular(_R.xl - 2),
+        border: Border.all(color: accent.withOpacity(0.25), width: 0.8),
+        boxShadow: _Power.cardShadow(isDark, accent),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -878,13 +1257,20 @@ class _FitnessTargetDetailsScreenState
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: _Power.softGlow(accent, strength: 0.2),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      accent.withOpacity(0.22),
+                      accent.withOpacity(0.08),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(_R.md),
+                  boxShadow: _Power.softGlow(accent, strength: 0.22),
                 ),
                 child: Icon(icon, color: accent, size: 24),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: _Sp.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -933,24 +1319,26 @@ class _FitnessTargetDetailsScreenState
                   ),
                   child: Text(
                     '${speed.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.3,
-                      color: accent,
-                      height: 1,
+                    style: _Num.t(
+                      TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.3,
+                        color: accent,
+                        height: 1,
+                      ),
                     ),
                   ),
                 ),
             ],
           ),
           if (trendDays > 0 && isRealistic) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: _Sp.md),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
+                horizontal: _Sp.md,
+                vertical: _Sp.sm,
               ),
               decoration: BoxDecoration(
                 color: _Power.card2(isDark),
@@ -984,7 +1372,7 @@ class _FitnessTargetDetailsScreenState
   }
 
   // =====================================================================
-  // CHART CARD (без изменений)
+  // CHART CARD
   // =====================================================================
 
   Widget _buildChartCard(
@@ -1013,12 +1401,13 @@ class _FitnessTargetDetailsScreenState
     (chartMax - chartMin).abs() == 0 ? 1.0 : (chartMax - chartMin).abs();
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(_Sp.lg, 0, _Sp.lg, 0),
+      padding: const EdgeInsets.all(_Sp.lg),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_R.xl - 2),
         border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        boxShadow: _Power.cardShadow(isDark, target.accentColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1052,24 +1441,25 @@ class _FitnessTargetDetailsScreenState
               if (sorted.length >= 2)
                 Text(
                   '${sorted.first.date.day}.${sorted.first.date.month} — ${sorted.last.date.day}.${sorted.last.date.month}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.4,
-                    color: _Power.textTertiary(isDark),
+                  style: _Num.t(
+                    TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                      color: _Power.textTertiary(isDark),
+                    ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _Sp.lg),
           SizedBox(
             height: 160,
             child: CustomPaint(
               size: const Size(double.infinity, 160),
               painter: _TargetChartPainter(
-                points: sorted
-                    .map((e) => (value: e.value, date: e.date))
-                    .toList(),
+                points:
+                sorted.map((e) => (value: e.value, date: e.date)).toList(),
                 targetValue: target.targetValue,
                 startValue: target.startValue,
                 accentColor: target.accentColor,
@@ -1079,12 +1469,9 @@ class _FitnessTargetDetailsScreenState
               ),
             ),
           ),
-          const SizedBox(height: 14),
-          Container(
-            height: 0.5,
-            color: _Power.separator(isDark),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: _Sp.md),
+          Container(height: 0.5, color: _Power.separator(isDark)),
+          const SizedBox(height: _Sp.md),
           Row(
             children: [
               Expanded(
@@ -1129,15 +1516,17 @@ class _FitnessTargetDetailsScreenState
       children: [
         Text(
           value,
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-            height: 1,
-            color: color,
+          style: _Num.t(
+            TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              height: 1,
+              color: color,
+            ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: _Sp.xs),
         Text(
           label,
           style: TextStyle(
@@ -1152,7 +1541,7 @@ class _FitnessTargetDetailsScreenState
   }
 
   // =====================================================================
-  // ENTRY CARD (без изменений)
+  // ENTRY CARD
   // =====================================================================
 
   Widget _buildEntryCard(
@@ -1167,11 +1556,12 @@ class _FitnessTargetDetailsScreenState
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(_Sp.md),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(_R.lg - 2),
         border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        boxShadow: _Power.cardShadow(isDark, target.accentColor),
       ),
       child: Row(
         children: [
@@ -1179,24 +1569,32 @@ class _FitnessTargetDetailsScreenState
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: target.accentColor.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow:
-              _Power.softGlow(target.accentColor, strength: 0.2),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  target.accentColor.withOpacity(0.20),
+                  target.accentColor.withOpacity(0.08),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(_R.sm),
+              boxShadow: _Power.softGlow(target.accentColor, strength: 0.22),
             ),
             alignment: Alignment.center,
             child: Text(
               _fmt(entry.value),
-              style: TextStyle(
-                color: target.accentColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-                height: 1,
+              style: _Num.t(
+                TextStyle(
+                  color: target.accentColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                  height: 1,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: _Sp.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1206,24 +1604,24 @@ class _FitnessTargetDetailsScreenState
                     Expanded(
                       child: Text(
                         _formatDate(entry.date),
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                          color: _Power.textPrimary(isDark),
+                        style: _Num.t(
+                          TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                            color: _Power.textPrimary(isDark),
+                          ),
                         ),
                       ),
                     ),
                     if (hasChange)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
+                          horizontal: _Sp.sm,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: (isImprovement
-                              ? _Power.green
-                              : _Power.red)
+                          color: (isImprovement ? _Power.green : _Power.red)
                               .withOpacity(0.14),
                           borderRadius: BorderRadius.circular(7),
                         ),
@@ -1242,14 +1640,16 @@ class _FitnessTargetDetailsScreenState
                             const SizedBox(width: 3),
                             Text(
                               '${diff > 0 ? '+' : ''}${diff.toStringAsFixed(1)}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.2,
-                                height: 1,
-                                color: isImprovement
-                                    ? _Power.green
-                                    : _Power.red,
+                              style: _Num.t(
+                                TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.2,
+                                  height: 1,
+                                  color: isImprovement
+                                      ? _Power.green
+                                      : _Power.red,
+                                ),
                               ),
                             ),
                           ],
@@ -1272,7 +1672,7 @@ class _FitnessTargetDetailsScreenState
                   ),
                 ],
                 if (entry.bodyWeight != null) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: _Sp.xs),
                   Row(
                     children: [
                       Icon(
@@ -1283,11 +1683,13 @@ class _FitnessTargetDetailsScreenState
                       const SizedBox(width: 3),
                       Text(
                         'ВЕС ${entry.bodyWeight!.toStringAsFixed(1)} КГ',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.8,
-                          color: _Power.textTertiary(isDark),
+                        style: _Num.t(
+                          TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                            color: _Power.textTertiary(isDark),
+                          ),
                         ),
                       ),
                     ],
@@ -1296,12 +1698,11 @@ class _FitnessTargetDetailsScreenState
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              _confirmDeleteEntry(entry, target);
-            },
+          const SizedBox(width: _Sp.sm),
+          _Pressable(
+            onTap: () => _confirmDeleteEntry(entry, target),
+            scale: 0.88,
+            haptic: false,
             child: Container(
               width: 32,
               height: 32,
@@ -1330,89 +1731,15 @@ class _FitnessTargetDetailsScreenState
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 60),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isDark ? _Power.darkCard2 : Colors.white,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Удалить запись?',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: _Power.textPrimary(isDark),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Запись за ${_formatDate(entry.date)} будет удалена',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _Power.textSecondary(isDark),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(height: 0.5, color: _Power.separator(isDark)),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(ctx, false),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'Отмена',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w400,
-                            color: _Power.volt,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 0.5,
-                    height: 50,
-                    color: _Power.separator(isDark),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(ctx, true),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'Удалить',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: _Power.red,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+      builder: (ctx) => _buildIOSDialog(
+        isDark,
+        title: 'Удалить запись?',
+        message: 'Запись за ${_formatDate(entry.date)} будет удалена',
+        destructive: 'Удалить',
+        onDestructive: () {
+          HapticFeedback.mediumImpact();
+          Navigator.pop(ctx, true);
+        },
       ),
     );
     if (confirm == true) {
@@ -1421,7 +1748,7 @@ class _FitnessTargetDetailsScreenState
   }
 
   // =====================================================================
-  // EDIT CURRENT VALUE (без изменений)
+  // EDIT CURRENT VALUE
   // =====================================================================
 
   void _editCurrentValue(
@@ -1438,193 +1765,167 @@ class _FitnessTargetDetailsScreenState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
+      builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 12,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
         ),
-        decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: _Power.textTertiary(isDark),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'РУЧНАЯ КОРРЕКТИРОВКА',
-              style: TextStyle(
-                color: _Power.volt,
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2.2,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Текущее значение',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.7,
-                color: _Power.textPrimary(isDark),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: controller,
-              keyboardType:
-              const TextInputType.numberWithOptions(decimal: true),
-              autofocus: true,
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1.2,
-                color: _Power.textPrimary(isDark),
-              ),
-              decoration: InputDecoration(
-                hintText: '0.0',
-                hintStyle: TextStyle(
-                  color: _Power.textTertiary(isDark),
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1.2,
-                ),
-                suffixText: target.unit,
-                suffixStyle: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: _Power.textSecondary(isDark),
-                ),
-                filled: true,
-                fillColor: _Power.card2(isDark),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 18,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(
+            _Sp.xl,
+            _Sp.md,
+            _Sp.xl,
+            _Sp.xxl,
+          ),
+          decoration: BoxDecoration(
+            color: _Power.card(isDark),
+            borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(_R.xxl)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 52,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        HapticFeedback.selectionClick();
-                        Navigator.pop(ctx);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _Power.textSecondary(isDark),
-                        side: BorderSide(color: _Power.separator(isDark)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'Отмена',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
+                _buildSheetHandle(isDark),
+                const SizedBox(height: _Sp.xl),
+                const Text(
+                  'РУЧНАЯ КОРРЕКТИРОВКА',
+                  style: TextStyle(
+                    color: _Power.volt,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2.2,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: SizedBox(
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final value = double.tryParse(controller.text) ??
-                            target.currentValue;
-                        HapticFeedback.mediumImpact();
-                        Navigator.pop(ctx);
-                        await provider.addTargetEntry(
-                          target.id,
-                          value,
-                          note: 'Ручная корректировка',
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: target.accentColor,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        shadowColor:
-                        target.accentColor.withOpacity(0.5),
-                      ),
-                      child: const Text(
-                        'СОХРАНИТЬ',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
+                const SizedBox(height: _Sp.xs),
+                Text(
+                  'Текущее значение',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.7,
+                    color: _Power.textPrimary(isDark),
+                  ),
+                ),
+                const SizedBox(height: _Sp.xl),
+                _buildBigNumberField(
+                  isDark,
+                  controller,
+                  target.unit,
+                  autofocus: true,
+                ),
+                const SizedBox(height: _Sp.xl),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(ctx);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _Power.textSecondary(isDark),
+                            side: BorderSide(color: _Power.separator(isDark)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(_R.md),
+                            ),
+                          ),
+                          child: const Text(
+                            'Отмена',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final value = double.tryParse(controller.text) ??
+                                target.currentValue;
+                            HapticFeedback.mediumImpact();
+                            Navigator.pop(ctx);
+                            await provider.addTargetEntry(
+                              target.id,
+                              value,
+                              note: 'Ручная корректировка',
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: target.accentColor,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(_R.md),
+                            ),
+                            shadowColor: target.accentColor.withOpacity(0.5),
+                          ),
+                          child: const Text(
+                            'СОХРАНИТЬ',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   // =====================================================================
-  // EMPTY HISTORY (без изменений)
+  // EMPTY HISTORY
   // =====================================================================
 
   Widget _buildEmptyHistory(bool isDark) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(28),
+      margin: const EdgeInsets.symmetric(horizontal: _Sp.lg),
+      padding: const EdgeInsets.all(_R.xxl - 2),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_R.xl - 2),
         border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        boxShadow: _Power.cardShadow(isDark, _Power.volt),
       ),
       child: Column(
         children: [
           Container(
-            width: 66,
-            height: 66,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
-              color: _Power.volt.withOpacity(0.10),
+              gradient: RadialGradient(
+                colors: [
+                  _Power.volt.withOpacity(0.20),
+                  _Power.volt.withOpacity(0.06),
+                ],
+              ),
               shape: BoxShape.circle,
-              boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
+              boxShadow: _Power.softGlow(_Power.volt, strength: 0.18),
             ),
             child: const Icon(
               Icons.history_rounded,
-              size: 28,
+              size: 30,
               color: _Power.volt,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _Sp.lg),
           const Text(
             'ИСТОРИЯ',
             style: TextStyle(
@@ -1634,7 +1935,7 @@ class _FitnessTargetDetailsScreenState
               color: _Power.volt,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: _Sp.xs),
           Text(
             'Пока пусто',
             style: TextStyle(
@@ -1644,7 +1945,7 @@ class _FitnessTargetDetailsScreenState
               color: _Power.textPrimary(isDark),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: _Sp.sm),
           Text(
             'Добавьте первую запись, чтобы отслеживать прогресс',
             textAlign: TextAlign.center,
@@ -1660,7 +1961,7 @@ class _FitnessTargetDetailsScreenState
   }
 
   // =====================================================================
-  // ADD ENTRY SHEET (без изменений)
+  // ADD ENTRY SHEET
   // =====================================================================
 
   void _showAddEntrySheet(
@@ -1680,15 +1981,18 @@ class _FitnessTargetDetailsScreenState
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          padding: const EdgeInsets.fromLTRB(
+            _Sp.xl,
+            _Sp.md,
+            _Sp.xl,
+            _Sp.xxl,
+          ),
           decoration: BoxDecoration(
             color: _Power.card(isDark),
             borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(28)),
+            const BorderRadius.vertical(top: Radius.circular(_R.xxl)),
           ),
           child: SafeArea(
             top: false,
@@ -1696,37 +2000,18 @@ class _FitnessTargetDetailsScreenState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: _Power.textTertiary(isDark),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
+                _buildSheetHandle(isDark),
+                const SizedBox(height: _Sp.xl),
                 Row(
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: target.accentColor.withOpacity(0.14),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: _Power.softGlow(
-                          target.accentColor,
-                          strength: 0.2,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        target.type.emoji,
-                        style: const TextStyle(fontSize: 20),
-                      ),
+                    _buildExerciseThumb(
+                      exerciseId: target.exerciseId,
+                      size: 42,
+                      radius: 11,
+                      accent: target.accentColor,
+                      fallbackEmoji: target.type.emoji,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: _Sp.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1757,9 +2042,9 @@ class _FitnessTargetDetailsScreenState
                     ),
                   ],
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: _Sp.xxl - 2),
                 Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 8),
+                  padding: const EdgeInsets.only(left: _Sp.xs, bottom: _Sp.sm),
                   child: Text(
                     'ТЕКУЩИЙ РЕЗУЛЬТАТ (${target.unit.toUpperCase()})',
                     style: TextStyle(
@@ -1770,46 +2055,15 @@ class _FitnessTargetDetailsScreenState
                     ),
                   ),
                 ),
-                TextField(
-                  controller: controller,
-                  keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+                _buildBigNumberField(
+                  isDark,
+                  controller,
+                  target.unit,
                   autofocus: true,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.2,
-                    color: _Power.textPrimary(isDark),
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '0.0',
-                    hintStyle: TextStyle(
-                      color: _Power.textTertiary(isDark),
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.2,
-                    ),
-                    suffixText: target.unit,
-                    suffixStyle: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: _Power.textSecondary(isDark),
-                    ),
-                    filled: true,
-                    fillColor: _Power.card2(isDark),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 18,
-                    ),
-                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: _Sp.lg),
                 Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 8),
+                  padding: const EdgeInsets.only(left: _Sp.xs, bottom: _Sp.sm),
                   child: Text(
                     'ЗАМЕТКА (ОПЦИОНАЛЬНО)',
                     style: TextStyle(
@@ -1837,16 +2091,16 @@ class _FitnessTargetDetailsScreenState
                     filled: true,
                     fillColor: _Power.card2(isDark),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(_R.md),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                      horizontal: _Sp.lg,
+                      vertical: _R.md,
                     ),
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: _Sp.xxl - 2),
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -1857,12 +2111,11 @@ class _FitnessTargetDetailsScreenState
                         HapticFeedback.mediumImpact();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content:
-                            const Text('Введите корректное значение'),
+                            content: const Text('Введите корректное значение'),
                             backgroundColor: _Power.red,
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(_R.md),
                             ),
                           ),
                         );
@@ -1881,9 +2134,12 @@ class _FitnessTargetDetailsScreenState
                         SnackBar(
                           content: Row(
                             children: [
-                              const Icon(Icons.check_circle_rounded,
-                                  color: Colors.white, size: 18),
-                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              const SizedBox(width: _Sp.sm),
                               Expanded(
                                 child: Text(
                                   'Запись добавлена: $value ${target.unit}',
@@ -1894,7 +2150,7 @@ class _FitnessTargetDetailsScreenState
                           backgroundColor: target.accentColor,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(_R.md),
                           ),
                         ),
                       );
@@ -1904,7 +2160,7 @@ class _FitnessTargetDetailsScreenState
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(_R.md),
                       ),
                       shadowColor: target.accentColor.withOpacity(0.5),
                     ),
@@ -1912,7 +2168,7 @@ class _FitnessTargetDetailsScreenState
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.check_rounded, size: 22),
-                        SizedBox(width: 8),
+                        SizedBox(width: _Sp.sm),
                         Text(
                           'СОХРАНИТЬ',
                           style: TextStyle(
@@ -1934,10 +2190,72 @@ class _FitnessTargetDetailsScreenState
   }
 
   // =====================================================================
+  // SHARED WIDGETS
+  // =====================================================================
+
+  Widget _buildSheetHandle(bool isDark) {
+    return Center(
+      child: Container(
+        width: 36,
+        height: 5,
+        decoration: BoxDecoration(
+          color: _Power.textTertiary(isDark),
+          borderRadius: BorderRadius.circular(3),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBigNumberField(
+      bool isDark,
+      TextEditingController controller,
+      String unit, {
+        bool autofocus = false,
+      }) {
+    return TextField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      autofocus: autofocus,
+      style: _Num.t(
+        TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -1.2,
+          color: _Power.textPrimary(isDark),
+        ),
+      ),
+      decoration: InputDecoration(
+        hintText: '0.0',
+        hintStyle: TextStyle(
+          color: _Power.textTertiary(isDark),
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -1.2,
+        ),
+        suffixText: unit,
+        suffixStyle: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          color: _Power.textSecondary(isDark),
+        ),
+        filled: true,
+        fillColor: _Power.card2(isDark),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(_R.md),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: _Sp.lg,
+          vertical: _R.lg,
+        ),
+      ),
+    );
+  }
+
+  // =====================================================================
   // HELPERS
   // =====================================================================
 
-  /// 🆕 Хинты для новых типов boxingRounds и holdTime.
   String _getHintForType(FitnessTarget target) {
     switch (target.type) {
       case FitnessTargetType.strengthMax:
@@ -1993,7 +2311,7 @@ class _FitnessTargetDetailsScreenState
   }
 }
 
-// ==================== CUSTOM PAINTER (без изменений) ====================
+// ==================== CUSTOM PAINTER ====================
 
 class _TargetChartPainter extends CustomPainter {
   final List<({double value, DateTime date})> points;
@@ -2037,12 +2355,12 @@ class _TargetChartPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final targetPaint = Paint()
-      ..color = const Color(0xFF00C853).withOpacity(0.6)
+      ..color = const Color(0xFF00C853).withOpacity(0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
     final startPaint = Paint()
-      ..color = const Color(0xFFFF9500).withOpacity(0.5)
+      ..color = const Color(0xFFFF9500).withOpacity(0.45)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -2075,10 +2393,7 @@ class _TargetChartPainter extends CustomPainter {
       );
     }
 
-    final path = Path();
-    final fillPath = Path();
     final coords = <Offset>[];
-
     for (int i = 0; i < points.length; i++) {
       final px = points.length == 1
           ? size.width / 2
@@ -2086,33 +2401,43 @@ class _TargetChartPainter extends CustomPainter {
       final normalized =
       ((points[i].value - chartMin) / chartRange).clamp(0.0, 1.0);
       final py = size.height - normalized * size.height;
-      final point = Offset(px, py);
-      coords.add(point);
-
-      if (i == 0) {
-        path.moveTo(px, py);
-        fillPath.moveTo(px, size.height);
-        fillPath.lineTo(px, py);
-      } else {
-        path.lineTo(px, py);
-        fillPath.lineTo(px, py);
-      }
+      coords.add(Offset(px, py));
     }
 
-    if (coords.isNotEmpty) {
-      fillPath.lineTo(coords.last.dx, size.height);
-      fillPath.close();
-      canvas.drawPath(fillPath, fillPaint);
+    if (coords.isEmpty) return;
 
-      if (coords.length > 1) {
-        canvas.drawPath(path, linePaint);
-      }
+    final path = _smoothPath(coords);
+    final fillPath = Path.from(path)
+      ..lineTo(coords.last.dx, size.height)
+      ..lineTo(coords.first.dx, size.height)
+      ..close();
 
-      for (final c in coords) {
-        canvas.drawCircle(c, 6, pointBorder);
-        canvas.drawCircle(c, 4, pointPaint);
-      }
+    canvas.drawPath(fillPath, fillPaint);
+    if (coords.length > 1) canvas.drawPath(path, linePaint);
+
+    for (final c in coords) {
+      canvas.drawCircle(c, 6, pointBorder);
+      canvas.drawCircle(c, 4, pointPaint);
     }
+  }
+
+  Path _smoothPath(List<Offset> pts) {
+    final path = Path()..moveTo(pts.first.dx, pts.first.dy);
+    if (pts.length < 2) return path;
+    for (int i = 0; i < pts.length - 1; i++) {
+      final p0 = i == 0 ? pts[i] : pts[i - 1];
+      final p1 = pts[i];
+      final p2 = pts[i + 1];
+      final p3 = i + 2 < pts.length ? pts[i + 2] : pts[i + 1];
+
+      final cp1x = p1.dx + (p2.dx - p0.dx) / 6;
+      final cp1y = p1.dy + (p2.dy - p0.dy) / 6;
+      final cp2x = p2.dx - (p3.dx - p1.dx) / 6;
+      final cp2y = p2.dy - (p3.dy - p1.dy) / 6;
+
+      path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
+    }
+    return path;
   }
 
   void _drawDashedLine(

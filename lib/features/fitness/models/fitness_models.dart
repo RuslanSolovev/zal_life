@@ -618,8 +618,6 @@ class WorkoutDay {
   }
 }
 
-// ==================== ПРОГРАММА ТРЕНИРОВОК ====================
-
 class WorkoutProgram {
   final String id;
   final String name;
@@ -636,6 +634,9 @@ class WorkoutProgram {
   final String goal;
   final int sessionDurationMinutes;
 
+  // 🆕 Поле для фона
+  final String? backgroundImage;
+
   WorkoutProgram({
     required this.id,
     required this.name,
@@ -650,6 +651,7 @@ class WorkoutProgram {
     this.difficulty = 'medium',
     this.goal = 'general',
     this.sessionDurationMinutes = 60,
+    this.backgroundImage, // 🆕
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
@@ -670,6 +672,7 @@ class WorkoutProgram {
       'difficulty': difficulty,
       'goal': goal,
       'sessionDurationMinutes': sessionDurationMinutes,
+      'backgroundImage': backgroundImage, // 🆕
     };
   }
 
@@ -697,7 +700,9 @@ class WorkoutProgram {
 
     ProgramType type = ProgramType.weekly;
     try {
-      type = ProgramType.values.firstWhere((t) => t.name == map['type']);
+      type = ProgramType.values.firstWhere(
+            (t) => t.name == map['type'],
+      );
     } catch (_) {}
 
     return WorkoutProgram(
@@ -710,12 +715,11 @@ class WorkoutProgram {
       createdAt: DateTime.parse(map['createdAt']),
       updatedAt: DateTime.parse(map['updatedAt']),
       emoji: map['emoji'] as String? ?? '💪',
-      accentColorValue:
-      (map['accentColorValue'] as num?)?.toInt() ?? 0xFFFF6B35,
+      accentColorValue: (map['accentColorValue'] as num?)?.toInt() ?? 0xFFFF6B35,
       difficulty: map['difficulty'] as String? ?? 'medium',
       goal: map['goal'] as String? ?? 'general',
-      sessionDurationMinutes:
-      (map['sessionDurationMinutes'] as num?)?.toInt() ?? 60,
+      sessionDurationMinutes: (map['sessionDurationMinutes'] as num?)?.toInt() ?? 60,
+      backgroundImage: map['backgroundImage'] as String?, // 🆕
     );
   }
 
@@ -731,6 +735,8 @@ class WorkoutProgram {
     String? difficulty,
     String? goal,
     int? sessionDurationMinutes,
+    String? backgroundImage, // 🆕
+    bool clearBackgroundImage = false, // 🆕
   }) {
     return WorkoutProgram(
       id: id,
@@ -745,8 +751,10 @@ class WorkoutProgram {
       accentColorValue: accentColorValue ?? this.accentColorValue,
       difficulty: difficulty ?? this.difficulty,
       goal: goal ?? this.goal,
-      sessionDurationMinutes:
-      sessionDurationMinutes ?? this.sessionDurationMinutes,
+      sessionDurationMinutes: sessionDurationMinutes ?? this.sessionDurationMinutes,
+      backgroundImage: clearBackgroundImage
+          ? null
+          : (backgroundImage ?? this.backgroundImage), // 🆕
     );
   }
 }

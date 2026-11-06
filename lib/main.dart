@@ -1,6 +1,7 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:permission_handler/permission_handler.dart'; // ← ДОБАВЛЕНО
+import 'package:permission_handler/permission_handler.dart';
 
 import 'features/fitness/database/fitness_database.dart';
 import 'features/fitness/providers/fitness_provider.dart';
@@ -15,14 +16,7 @@ void main() async {
   // ⚠️ УДАЛИ эту строку после первого успешного запуска:
   // await FitnessDatabase().deleteDatabaseFile();
 
-  // ─── ЗАПРОС РАЗРЕШЕНИЙ ДЛЯ ФОНОВОЙ РАБОТЫ (Android) ───
-  if (await Permission.notification.isDenied) {
-    await Permission.notification.request();
-  }
-  if (await Permission.ignoreBatteryOptimizations.isDenied) {
-    await Permission.ignoreBatteryOptimizations.request();
-  }
-  // ───────────────────────────────────────────────────────
+  await _requestPermissions();
 
   final nutrition = NutritionProvider();
   await nutrition.init();
@@ -46,6 +40,28 @@ void main() async {
       child: const ZalLifeApp(),
     ),
   );
+}
+
+Future<void> _requestPermissions() async {
+  // Уведомления (нужно ДО foreground service на Android)
+  if (await Permission.notification.isDenied) {
+    await Permission.notification.request();
+  }
+
+  // Физическая активность (Android) / Motion & Fitness (iOS)
+  if (await Permission.activityRecognition.isDenied) {
+    await Permission.activityRecognition.request();
+  }
+  if (await Permission.sensors.isDenied) {
+    await Permission.sensors.request();
+  }
+
+  // Только Android: отключение оптимизации батареи
+  if (Platform.isAndroid) {
+    if (!await Permission.ignoreBatteryOptimizations.isGranted) {
+      await Permission.ignoreBatteryOptimizations.request();
+    }
+  }
 }
 
 class ZalLifeApp extends StatelessWidget {

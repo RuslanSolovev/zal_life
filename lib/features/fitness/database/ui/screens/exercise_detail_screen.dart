@@ -1,63 +1,90 @@
 // features/fitness/ui/screens/exercise_detail_screen.dart
-// 🆕 v16: format-aware детальная аналитика (сила / кардио / бокс / статика)
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
+import 'package:zal_life/features/fitness/data/exercise_image_presets.dart';
 
 import '../../../models/enums.dart';
 import '../../../models/fitness_models.dart';
 import '../../../models/helpers.dart';
 import '../../../providers/fitness_provider.dart';
-import 'package:fl_chart/fl_chart.dart';
+import '../widgets/image_picker_field.dart';
 
-// ==================== POWER MODE TOKENS ====================
+// ═══════════════════════════════════════════════════════════════════
+//  Soft Pastel Light — Design System
+// ═══════════════════════════════════════════════════════════════════
+class _P {
+  static const peach     = Color(0xFFFFB5A7);
+  static const pink      = Color(0xFFFFAFC8);
+  static const mint      = Color(0xFFA8DADC);
+  static const lavender  = Color(0xFFCDB4DB);
+  static const yellow    = Color(0xFFFFD6A5);
+  static const sky       = Color(0xFFA8D8EA);
+  static const sage      = Color(0xFFB5CBB7);
 
-class _Power {
-  static const Color heroBase = Color(0xFF050505);
-  static const Color heroDeep = Color(0xFF120700);
+  static const peachSoft    = Color(0xFFFFE9E1);
+  static const pinkSoft     = Color(0xFFFFE5EF);
+  static const mintSoft     = Color(0xFFE3F3F4);
+  static const lavenderSoft = Color(0xFFF1E8F5);
+  static const yellowSoft   = Color(0xFFFFF2E2);
+  static const skySoft      = Color(0xFFE3F1F7);
+  static const sageSoft     = Color(0xFFE8F1E6);
 
-  static const Color volt = Color(0xFFFF5500);
-  static const Color voltBright = Color(0xFFFF7A1A);
-  static const Color magma = Color(0xFFFF2D55);
-  static const Color plasma = Color(0xFFFFCC00);
-  static const Color ice = Color(0xFF00E5FF);
-  static const Color lime = Color(0xFFB4FF39);
-  static const Color green = Color(0xFF00C853);
-  static const Color red = Color(0xFFFF3B30);
+  static const peachDeep    = Color(0xFFE57154);
+  static const pinkDeep     = Color(0xFFD95C84);
+  static const mintDeep     = Color(0xFF398B95);
+  static const lavenderDeep = Color(0xFF8A5DA5);
+  static const yellowDeep   = Color(0xFFD39838);
+  static const skyDeep      = Color(0xFF3E7A9C);
+  static const sageDeep     = Color(0xFF5C7E5E);
 
-  static const Color darkBg = Color(0xFF0A0A0A);
-  static const Color darkCard = Color(0xFF1C1C1E);
-  static const Color darkCard2 = Color(0xFF2C2C2E);
-  static const Color lightBg = Color(0xFFF2F2F7);
-  static const Color lightCard = Color(0xFFFFFFFF);
+  static const bg       = Color(0xFFFAF7F2);
+  static const surface  = Color(0xFFFFFFFF);
+  static const elevated = Color(0xFFF3EEE6);
 
-  static Color bg(bool isDark) => isDark ? darkBg : lightBg;
-  static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : const Color(0xFFF9FAFB);
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
-  static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
-  static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
-  static Color separator(bool isDark) =>
-      isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
+  static const text      = Color(0xFF2B2823);
+  static const textMuted = Color(0xFF8A8278);
+  static const textSoft  = Color(0xFFBFB7AB);
 
-  static List<BoxShadow> softGlow(Color color, {double strength = 0.18}) => [
-    BoxShadow(color: color.withOpacity(strength), blurRadius: 16),
-  ];
-
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
-      [
-        BoxShadow(
-          color: color.withOpacity(strength),
-          blurRadius: blur,
-          offset: const Offset(0, 6),
-        ),
-      ];
+  static const divider = Color(0xFFEAE4DA);
 }
+
+class _T {
+  static const title1 = TextStyle(
+    fontSize: 26, fontWeight: FontWeight.w800,
+    letterSpacing: -0.6, height: 1.15,
+  );
+  static const title2 = TextStyle(
+    fontSize: 22, fontWeight: FontWeight.w800,
+    letterSpacing: -0.5, height: 1.2,
+  );
+  static const title3 = TextStyle(
+    fontSize: 18, fontWeight: FontWeight.w700,
+    letterSpacing: -0.4, height: 1.2,
+  );
+  static const headline = TextStyle(
+    fontSize: 15, fontWeight: FontWeight.w700,
+    letterSpacing: -0.2, height: 1.3,
+  );
+  static const caption = TextStyle(
+    fontSize: 12, fontWeight: FontWeight.w600,
+    letterSpacing: 0.05, height: 1.3,
+  );
+  static const caption2 = TextStyle(
+    fontSize: 11, fontWeight: FontWeight.w700,
+    letterSpacing: 0.1, height: 1.3,
+  );
+  static const overline = TextStyle(
+    fontSize: 10, fontWeight: FontWeight.w800,
+    letterSpacing: 1.4, height: 1.1,
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
 
 class ExerciseDetailScreen extends StatefulWidget {
   final Exercise exercise;
@@ -89,13 +116,25 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     super.dispose();
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 ХЕЛПЕРЫ
-  // ══════════════════════════════════════════════════════════
-
   ExerciseFormat get _format => widget.exercise.resolveFormat();
 
-  /// Универсальный тренд по экстрактору.
+  ({Color deep, Color soft}) _formatColors(ExerciseFormat format) {
+    switch (format) {
+      case ExerciseFormat.setsReps:
+        return (deep: _P.peachDeep, soft: _P.peachSoft);
+      case ExerciseFormat.continuous:
+      case ExerciseFormat.intervals:
+        return (deep: _P.skyDeep, soft: _P.skySoft);
+      case ExerciseFormat.rounds:
+        return (deep: _P.yellowDeep, soft: _P.yellowSoft);
+      case ExerciseFormat.hold:
+        return (deep: _P.sageDeep, soft: _P.sageSoft);
+      case ExerciseFormat.timedSets:
+      case ExerciseFormat.freeform:
+        return (deep: _P.mintDeep, soft: _P.mintSoft);
+    }
+  }
+
   TrendLine _computeTrendFor(
       List<ProgressRecord> progress,
       double Function(ProgressRecord) extractor,
@@ -135,7 +174,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     return TrendLine(slope: slope, intercept: intercept, confidence: r2);
   }
 
-  /// Форматирование времени в читаемый вид.
   String _fmtSec(int sec) {
     if (sec <= 0) return '0с';
     if (sec < 60) return '${sec}с';
@@ -144,7 +182,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     return s > 0 ? '${m}м ${s}с' : '${m}м';
   }
 
-  /// 🆕 Строка-сводка записи для истории.
   String _formatRecordSummary(ProgressRecord r) {
     switch (_format) {
       case ExerciseFormat.setsReps:
@@ -153,8 +190,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       case ExerciseFormat.intervals:
         final parts = <String>[];
         if ((r.bestDistance ?? 0) > 0) {
-          parts.add(
-              '${r.bestDistance!.toStringAsFixed(r.bestDistance! >= 10 ? 1 : 2)} км');
+          parts.add('${r.bestDistance!.toStringAsFixed(r.bestDistance! >= 10 ? 1 : 2)} км');
         }
         if ((r.bestDuration ?? 0) > 0) {
           parts.add(_fmtSec(r.bestDuration!));
@@ -173,73 +209,51 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     }
   }
 
-  /// 🆕 Подпись под основной строкой в истории.
   String _formatRecordSubtitle(ProgressRecord r) {
     switch (_format) {
       case ExerciseFormat.setsReps:
-        return '${r.totalSets} подх. • ${r.totalVolume.toStringAsFixed(0)} кг';
+        return '${r.totalSets} подх. · ${r.totalVolume.toStringAsFixed(0)} кг';
       case ExerciseFormat.continuous:
       case ExerciseFormat.intervals:
         if ((r.bestPace ?? 0) > 0) {
-          return '${r.totalSets} подх. • темп ${FitnessHelpers.formatPace(r.bestPace!)}/км';
+          return '${r.totalSets} подх. · темп ${FitnessHelpers.formatPace(r.bestPace!)}/км';
         }
         return '${r.totalSets} подх.';
       case ExerciseFormat.rounds:
-        return '${r.totalSets} подх.';
       case ExerciseFormat.hold:
-        return '${r.totalSets} подх.';
       case ExerciseFormat.timedSets:
       case ExerciseFormat.freeform:
         return '${r.totalSets} подх.';
     }
   }
 
-  /// 🆕 Правая часть записи в истории (акцентная метрика).
-  ({String value, String label, Color color}) _formatRecordAccent(
-      ProgressRecord r) {
+  ({String value, String label}) _formatRecordAccent(ProgressRecord r) {
     switch (_format) {
       case ExerciseFormat.setsReps:
-        return (
-        value: r.estimated1RM.toStringAsFixed(0),
-        label: '1RM',
-        color: _Power.volt,
-        );
+        return (value: r.estimated1RM.toStringAsFixed(0), label: '1RM');
       case ExerciseFormat.continuous:
       case ExerciseFormat.intervals:
-        return (
-        value: (r.bestDistance ?? 0).toStringAsFixed(2),
-        label: 'КМ',
-        color: _Power.ice,
-        );
+        return (value: (r.bestDistance ?? 0).toStringAsFixed(2), label: 'км');
       case ExerciseFormat.rounds:
-        return (
-        value: '${r.bestRounds ?? 0}',
-        label: 'РАУНД',
-        color: _Power.plasma,
-        );
+        return (value: '${r.bestRounds ?? 0}', label: 'раунд');
       case ExerciseFormat.hold:
-        return (
-        value: _fmtSec(r.bestHoldSeconds ?? 0),
-        label: 'УДЕРЖ',
-        color: _Power.lime,
-        );
+        return (value: _fmtSec(r.bestHoldSeconds ?? 0), label: 'удерж');
       case ExerciseFormat.timedSets:
       case ExerciseFormat.freeform:
-        return (
-        value: _fmtSec(r.bestDuration ?? 0),
-        label: 'ВРЕМЯ',
-        color: _Power.ice,
-        );
+        return (value: _fmtSec(r.bestDuration ?? 0), label: 'время');
     }
   }
 
+  // ═════════════════════════════════════════════════════════
+  //  BUILD
+  // ═════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
     final provider = context.watch<FitnessProvider>();
     final progressRecords = provider.getExerciseProgress(widget.exercise.id);
     final lastRecord = provider.getLastProgress(widget.exercise.id);
     final format = _format;
+    final fmtColors = _formatColors(format);
 
     final trendLine = format == ExerciseFormat.setsReps
         ? FitnessHelpers.calculateTrendLine(progressRecords)
@@ -265,15 +279,15 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
 
     final accent = widget.exercise.muscleGroups.isNotEmpty
         ? widget.exercise.muscleGroups.first.color
-        : _Power.volt;
+        : _P.peachDeep;
 
     return Scaffold(
-      backgroundColor: _Power.bg(isDark),
+      backgroundColor: _P.bg,
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
             pinned: true,
-            backgroundColor: _Power.bg(isDark).withOpacity(0.85),
+            backgroundColor: _P.bg.withOpacity(0.94),
             surfaceTintColor: Colors.transparent,
             elevation: 0,
             scrolledUnderElevation: 0,
@@ -289,16 +303,19 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.black.withOpacity(0.05),
+                    color: Colors.white,
                     shape: BoxShape.circle,
+                    border: Border.all(color: _P.divider, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _P.peachDeep.withOpacity(0.06),
+                        blurRadius: 10,
+                        spreadRadius: -2,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  child: Icon(
-                    Icons.chevron_left_rounded,
-                    color: _Power.textPrimary(isDark),
-                    size: 22,
-                  ),
+                  child: const Icon(Icons.chevron_left_rounded, color: _P.text, size: 22),
                 ),
               ),
             ),
@@ -306,12 +323,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
               widget.exercise.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-                color: _Power.textPrimary(isDark),
-              ),
+              style: _T.headline.copyWith(fontSize: 15, color: _P.text, letterSpacing: -0.2),
             ),
             centerTitle: true,
             actions: [
@@ -321,209 +333,306 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                   child: GestureDetector(
                     onTap: () {
                       HapticFeedback.selectionClick();
-                      _showEditDialog(context, isDark, provider);
+                      _showEditDialog(context, provider);
                     },
                     child: Container(
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: _Power.volt.withOpacity(0.12),
+                        color: _P.peachSoft,
                         shape: BoxShape.circle,
+                        border: Border.all(color: _P.peachDeep.withOpacity(0.20), width: 0.7),
                       ),
-                      child: const Icon(
-                        Icons.edit_rounded,
-                        color: _Power.volt,
-                        size: 18,
-                      ),
+                      child: const Icon(Icons.edit_rounded, color: _P.peachDeep, size: 17),
                     ),
                   ),
                 ),
             ],
           ),
+
+          // ═══ HERO — крупное изображение с оверлеем ═══
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.exercise.isCustom
-                        ? 'МОЁ УПРАЖНЕНИЕ'
-                        : 'УПРАЖНЕНИЕ',
-                    style: const TextStyle(
-                      color: _Power.volt,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.2,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.exercise.name,
-                    style: TextStyle(
-                      color: _Power.textPrimary(isDark),
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.2,
-                      height: 1.08,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: _buildHeroSection(accent, fmtColors),
           ),
-          SliverToBoxAdapter(
-            child: _buildHeroCard(isDark, accent),
-          ),
+
           if (widget.exercise.muscleGroups.isNotEmpty)
-            SliverToBoxAdapter(
-              child: _buildMuscleGroups(isDark),
-            ),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
-          // 🆕 Статы по формату
+            SliverToBoxAdapter(child: _buildMuscleGroups()),
+          const SliverToBoxAdapter(child: SizedBox(height: 18)),
           SliverToBoxAdapter(
-            child: _buildStatsCards(
-              isDark,
-              format,
-              lastRecord,
-              progressRecords,
-              trendLine,
-            ),
+            child: _buildStatsCards(format, fmtColors, lastRecord, progressRecords, trendLine),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          SliverToBoxAdapter(child: _buildTabs(isDark)),
-          const SliverToBoxAdapter(child: SizedBox(height: 14)),
+          const SliverToBoxAdapter(child: SizedBox(height: 22)),
+          SliverToBoxAdapter(child: _buildTabs()),
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
         ],
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildInfoTab(isDark),
-            _buildProgressTab(isDark, provider, progressRecords, trendLine),
-            _buildHistoryTab(isDark, progressRecords),
+            _buildInfoTab(),
+            _buildProgressTab(provider, progressRecords, trendLine, fmtColors),
+            _buildHistoryTab(progressRecords, fmtColors),
           ],
         ),
       ),
     );
   }
 
-  // =====================================================================
-  // HERO CARD (без изменений)
-  // =====================================================================
+  // ═════════════════════════════════════════════════════════
+  //  HERO SECTION — крупная обложка с оверлеем
+  // ═════════════════════════════════════════════════════════
+  Widget _buildHeroSection(Color accent, ({Color deep, Color soft}) fmtColors) {
+    final hasImage = widget.exercise.imageUrl != null &&
+        widget.exercise.imageUrl!.isNotEmpty;
+    final isCustom = widget.exercise.isCustom;
 
-  Widget _buildHeroCard(bool isDark, Color accent) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      height: 340,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withOpacity(0.22),
+            blurRadius: 40,
+            spreadRadius: -12,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 1. Изображение / fallback
+          if (hasImage)
+            _buildHeroImage(accent)
+          else
+            _buildHeroFallback(accent),
+
+          // 2. Градиент для читаемости белого текста снизу
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.0),
+                    Colors.black.withOpacity(0.0),
+                    Colors.black.withOpacity(0.20),
+                    Colors.black.withOpacity(0.65),
+                    Colors.black.withOpacity(0.88),
+                  ],
+                  stops: const [0.0, 0.32, 0.58, 0.82, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Контент
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Верхние chips
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _glassChip(
+                      '${widget.exercise.exerciseType.emoji} ${widget.exercise.exerciseType.displayName}',
+                    ),
+                    _glassChip(
+                      '${_format.emoji} ${_format.shortName}',
+                    ),
+                    if (isCustom) _glassChip('✦ МОЁ'),
+                  ],
+                ),
+                const Spacer(),
+                // Overline
+                Row(
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isCustom ? 'МОЁ УПРАЖНЕНИЕ' : 'УПРАЖНЕНИЕ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.8,
+                        color: Colors.white.withOpacity(0.85),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Название
+                Text(
+                  widget.exercise.name,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.9,
+                    height: 1.08,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Hero image (assets / http / file) ──
+  Widget _buildHeroImage(Color accent) {
+    final url = widget.exercise.imageUrl!;
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildHeroFallback(accent),
+      );
+    }
+    if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => _buildHeroFallback(accent),
+        errorWidget: (_, __, ___) => _buildHeroFallback(accent),
+      );
+    }
+    return Image.file(
+      File(url),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildHeroFallback(accent),
+    );
+  }
+
+  // ── Hero fallback — насыщенный accent-градиент, крупная иконка ──
+  Widget _buildHeroFallback(Color accent) {
+    return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            accent.withOpacity(0.18),
-            accent.withOpacity(0.04),
+            accent,
+            Color.lerp(accent, Colors.black, 0.25) ?? accent,
+            Color.lerp(accent, Colors.black, 0.45) ?? accent,
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: accent.withOpacity(0.3),
-          width: 0.8,
-        ),
-        boxShadow: _Power.softGlow(accent, strength: 0.12),
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              color: accent.withOpacity(0.16),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: _Power.softGlow(accent, strength: 0.25),
-            ),
+          // Большая полупрозрачная иконка справа
+          Positioned(
+            right: -50,
+            bottom: -30,
             child: Icon(
               _getExerciseIcon(widget.exercise.exerciseType),
-              size: 42,
-              color: accent,
+              size: 280,
+              color: Colors.white.withOpacity(0.07),
             ),
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _buildHeroChip(
-                isDark,
-                '${widget.exercise.exerciseType.emoji} ${widget.exercise.exerciseType.displayName}',
-                accent,
+          // Центральный эмодзи
+          Center(
+            child: Text(
+              widget.exercise.exerciseType.emoji,
+              style: TextStyle(
+                fontSize: 110,
+                color: Colors.white.withOpacity(0.14),
+                height: 1,
               ),
-              // 🆕 Бейдж формата
-              _buildHeroChip(
-                isDark,
-                '${_format.emoji} ${_format.shortName}',
-                _Power.ice,
+            ),
+          ),
+          // Мягкий блик сверху слева
+          Positioned(
+            left: -80,
+            top: -80,
+            child: Container(
+              width: 260,
+              height: 260,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.14),
+                    Colors.white.withOpacity(0.0),
+                  ],
+                ),
               ),
-              if (widget.exercise.isCustom)
-                _buildHeroChip(isDark, 'МОЁ', _Power.volt),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeroChip(bool isDark, String label, Color accent) {
+  // ── Glass chip ──
+  Widget _glassChip(String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.14),
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.32),
+          width: 0.8,
+        ),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w800,
-          letterSpacing: 0.2,
-          color: accent,
+          letterSpacing: -0.1,
+          color: Colors.white,
         ),
       ),
     );
   }
 
-  // =====================================================================
-  // MUSCLE GROUPS (без изменений)
-  // =====================================================================
-
-  Widget _buildMuscleGroups(bool isDark) {
+  // ═════════════════════════════════════════════════════════
+  //  MUSCLE GROUPS
+  // ═════════════════════════════════════════════════════════
+  Widget _buildMuscleGroups() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
         children: widget.exercise.muscleGroups.map((muscle) {
           return Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 7,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
             decoration: BoxDecoration(
-              color: muscle.color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(11),
+              color: muscle.color.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: muscle.color.withOpacity(0.28),
-                width: 0.8,
+                color: muscle.color.withOpacity(0.22),
+                width: 0.7,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(muscle.emoji, style: const TextStyle(fontSize: 13)),
-                const SizedBox(width: 6),
+                Text(muscle.emoji, style: const TextStyle(fontSize: 12)),
+                const SizedBox(width: 5),
                 Text(
                   muscle.displayName,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.1,
                     color: muscle.color,
@@ -537,13 +646,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 STATS CARDS — dispatch по формату
-  // ══════════════════════════════════════════════════════════
-
+  // ═════════════════════════════════════════════════════════
+  //  STATS CARDS
+  // ═════════════════════════════════════════════════════════
   Widget _buildStatsCards(
-      bool isDark,
       ExerciseFormat format,
+      ({Color deep, Color soft}) fmtColors,
       ProgressRecord? lastRecord,
       List<ProgressRecord> progressRecords,
       TrendLine trendLine,
@@ -551,262 +659,222 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
-        children: _statsForFormat(
-          isDark,
-          format,
-          lastRecord,
-          progressRecords,
-          trendLine,
-        ),
+        children: _statsForFormat(format, fmtColors, lastRecord, progressRecords, trendLine),
       ),
     );
   }
 
-  /// 🆕 Возвращает 3 stat-карточки, зависящие от формата.
   List<Widget> _statsForFormat(
-      bool isDark,
       ExerciseFormat format,
+      ({Color deep, Color soft}) fmtColors,
       ProgressRecord? lastRecord,
       List<ProgressRecord> progressRecords,
       TrendLine trendLine,
       ) {
     switch (format) {
-    // ─────────────────────────────────────────────────
-    // СИЛА: 1RM / Последний / Прогноз
-    // ─────────────────────────────────────────────────
       case ExerciseFormat.setsReps:
         final best1RM = progressRecords.isNotEmpty
-            ? progressRecords
-            .map((r) => r.estimated1RM)
-            .reduce((a, b) => a > b ? a : b)
+            ? progressRecords.map((r) => r.estimated1RM).reduce((a, b) => a > b ? a : b)
             : 0.0;
         return [
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.trending_up_rounded,
             title: 'ЛУЧШИЙ 1RM',
             value: best1RM > 0 ? best1RM.toStringAsFixed(1) : '—',
             unit: best1RM > 0 ? 'кг' : '',
-            color: _Power.green,
+            accent: _P.sageDeep,
+            soft: _P.sageSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.fitness_center_rounded,
             title: 'ПОСЛЕДНИЙ',
             value: lastRecord != null
                 ? '${lastRecord.bestWeight.toStringAsFixed(0)}×${lastRecord.bestReps}'
                 : '—',
             unit: lastRecord != null ? 'кг' : '',
-            color: _Power.volt,
+            accent: _P.peachDeep,
+            soft: _P.peachSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.trending_up_rounded,
             title: 'ПРОГНОЗ',
-            value: trendLine.slope > 0
-                ? '+${(trendLine.slope * 30).toStringAsFixed(1)}'
-                : '—',
+            value: trendLine.slope > 0 ? '+${(trendLine.slope * 30).toStringAsFixed(1)}' : '—',
             unit: trendLine.slope > 0 ? '/мес' : '',
-            color: _Power.ice,
+            accent: _P.skyDeep,
+            soft: _P.skySoft,
           ),
         ];
 
-    // ─────────────────────────────────────────────────
-    // КАРДИО: Лучшая дистанция / Лучший темп / Последняя
-    // ─────────────────────────────────────────────────
       case ExerciseFormat.continuous:
       case ExerciseFormat.intervals:
         final bestDistance = progressRecords.isNotEmpty
-            ? progressRecords
-            .map((r) => r.bestDistance ?? 0)
-            .reduce((a, b) => a > b ? a : b)
+            ? progressRecords.map((r) => r.bestDistance ?? 0).reduce((a, b) => a > b ? a : b)
             : 0.0;
         final bestPace = progressRecords
             .where((r) => (r.bestPace ?? 0) > 0)
             .map((r) => r.bestPace!)
             .fold<double?>(null, (a, b) => a == null ? b : (b < a ? b : a));
         return [
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.directions_run_rounded,
             title: 'ЛУЧШАЯ ДИСТ',
-            value: bestDistance > 0
-                ? bestDistance.toStringAsFixed(bestDistance >= 10 ? 1 : 2)
-                : '—',
+            value: bestDistance > 0 ? bestDistance.toStringAsFixed(bestDistance >= 10 ? 1 : 2) : '—',
             unit: bestDistance > 0 ? 'км' : '',
-            color: _Power.ice,
+            accent: _P.skyDeep,
+            soft: _P.skySoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.speed_rounded,
             title: 'ЛУЧШИЙ ТЕМП',
-            value: bestPace != null
-                ? FitnessHelpers.formatPace(bestPace)
-                : '—',
+            value: bestPace != null ? FitnessHelpers.formatPace(bestPace) : '—',
             unit: bestPace != null ? '/км' : '',
-            color: _Power.plasma,
+            accent: _P.yellowDeep,
+            soft: _P.yellowSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.flag_rounded,
             title: 'ПОСЛЕДНЯЯ',
             value: lastRecord?.bestDistance != null
-                ? lastRecord!.bestDistance!
-                .toStringAsFixed(lastRecord.bestDistance! >= 10 ? 1 : 2)
+                ? lastRecord!.bestDistance!.toStringAsFixed(lastRecord.bestDistance! >= 10 ? 1 : 2)
                 : '—',
             unit: lastRecord?.bestDistance != null ? 'км' : '',
-            color: _Power.volt,
+            accent: _P.peachDeep,
+            soft: _P.peachSoft,
           ),
         ];
 
-    // ─────────────────────────────────────────────────
-    // БОКС: Всего раундов / Лучшая тренировка / Время
-    // ─────────────────────────────────────────────────
       case ExerciseFormat.rounds:
-        final totalRounds = progressRecords.fold<int>(
-            0, (s, r) => s + (r.bestRounds ?? 0));
+        final totalRounds = progressRecords.fold<int>(0, (s, r) => s + (r.bestRounds ?? 0));
         final maxRoundsInSession = progressRecords.isNotEmpty
-            ? progressRecords
-            .map((r) => r.bestRounds ?? 0)
-            .reduce((a, b) => a > b ? a : b)
+            ? progressRecords.map((r) => r.bestRounds ?? 0).reduce((a, b) => a > b ? a : b)
             : 0;
-        final totalSec = progressRecords.fold<int>(
-            0, (s, r) => s + (r.bestDuration ?? 0));
+        final totalSec = progressRecords.fold<int>(0, (s, r) => s + (r.bestDuration ?? 0));
         return [
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.sports_mma_rounded,
             title: 'ВСЕГО РАУНД',
             value: totalRounds > 0 ? '$totalRounds' : '—',
             unit: totalRounds > 0 ? 'р.' : '',
-            color: _Power.plasma,
+            accent: _P.yellowDeep,
+            soft: _P.yellowSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.emoji_events_rounded,
             title: 'ЛУЧШАЯ',
             value: maxRoundsInSession > 0 ? '$maxRoundsInSession' : '—',
             unit: maxRoundsInSession > 0 ? 'р.' : '',
-            color: _Power.volt,
+            accent: _P.peachDeep,
+            soft: _P.peachSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.timer_rounded,
             title: 'ВРЕМЯ',
             value: totalSec > 0 ? _fmtSec(totalSec) : '—',
             unit: '',
-            color: _Power.lime,
+            accent: _P.sageDeep,
+            soft: _P.sageSoft,
           ),
         ];
 
-    // ─────────────────────────────────────────────────
-    // СТАТИКА (планка): Лучшее удержание / Последнее / Сессий
-    // ─────────────────────────────────────────────────
       case ExerciseFormat.hold:
         final bestHold = progressRecords.isNotEmpty
-            ? progressRecords
-            .map((r) => r.bestHoldSeconds ?? 0)
-            .reduce((a, b) => a > b ? a : b)
+            ? progressRecords.map((r) => r.bestHoldSeconds ?? 0).reduce((a, b) => a > b ? a : b)
             : 0;
         return [
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.self_improvement_rounded,
             title: 'ЛУЧШЕЕ',
             value: bestHold > 0 ? _fmtSec(bestHold) : '—',
             unit: '',
-            color: _Power.lime,
+            accent: _P.sageDeep,
+            soft: _P.sageSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.history_rounded,
             title: 'ПОСЛЕДНЕЕ',
-            value: lastRecord?.bestHoldSeconds != null
-                ? _fmtSec(lastRecord!.bestHoldSeconds!)
-                : '—',
+            value: lastRecord?.bestHoldSeconds != null ? _fmtSec(lastRecord!.bestHoldSeconds!) : '—',
             unit: '',
-            color: _Power.volt,
+            accent: _P.peachDeep,
+            soft: _P.peachSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.repeat_rounded,
             title: 'ТРЕНИРОВОК',
             value: '${progressRecords.length}',
             unit: '',
-            color: _Power.ice,
+            accent: _P.skyDeep,
+            soft: _P.skySoft,
           ),
         ];
 
-    // ─────────────────────────────────────────────────
-    // ВРЕМЯ / СВОБОДНО: Всего времени / Лучшая / Сессий
-    // ─────────────────────────────────────────────────
       case ExerciseFormat.timedSets:
       case ExerciseFormat.freeform:
-        final totalSec = progressRecords.fold<int>(
-            0, (s, r) => s + (r.bestDuration ?? 0));
+        final totalSec = progressRecords.fold<int>(0, (s, r) => s + (r.bestDuration ?? 0));
         final bestInSession = progressRecords.isNotEmpty
-            ? progressRecords
-            .map((r) => r.bestDuration ?? 0)
-            .reduce((a, b) => a > b ? a : b)
+            ? progressRecords.map((r) => r.bestDuration ?? 0).reduce((a, b) => a > b ? a : b)
             : 0;
         return [
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.timer_rounded,
             title: 'ВСЕГО',
             value: totalSec > 0 ? _fmtSec(totalSec) : '—',
             unit: '',
-            color: _Power.ice,
+            accent: _P.mintDeep,
+            soft: _P.mintSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.emoji_events_rounded,
             title: 'ЛУЧШАЯ',
             value: bestInSession > 0 ? _fmtSec(bestInSession) : '—',
             unit: '',
-            color: _Power.volt,
+            accent: _P.peachDeep,
+            soft: _P.peachSoft,
           ),
           const SizedBox(width: 10),
-          _buildStatCard(
-            isDark,
+          _statCard(
             icon: Icons.repeat_rounded,
             title: 'ТРЕНИРОВОК',
             value: '${progressRecords.length}',
             unit: '',
-            color: _Power.lime,
+            accent: _P.sageDeep,
+            soft: _P.sageSoft,
           ),
         ];
     }
   }
 
-  Widget _buildStatCard(
-      bool isDark, {
-        required IconData icon,
-        required String title,
-        required String value,
-        required String unit,
-        required Color color,
-      }) {
+  Widget _statCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String unit,
+    required Color accent,
+    required Color soft,
+  }) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: color.withOpacity(0.18),
-            width: 0.8,
-          ),
-          boxShadow: _Power.softGlow(color, strength: 0.06),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: accent.withOpacity(0.14), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withOpacity(0.05),
+              blurRadius: 10,
+              spreadRadius: -3,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -814,10 +882,10 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.14),
+                color: soft,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 16),
+              child: Icon(icon, color: accent, size: 16),
             ),
             const SizedBox(height: 10),
             Row(
@@ -827,12 +895,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                 Flexible(
                   child: Text(
                     value,
-                    style: TextStyle(
-                      fontSize: 18,
+                    style: const TextStyle(
+                      fontSize: 17,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: -0.8,
+                      letterSpacing: -0.7,
                       height: 1,
-                      color: _Power.textPrimary(isDark),
+                      color: _P.text,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -843,11 +911,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                     padding: const EdgeInsets.only(left: 2, bottom: 1),
                     child: Text(
                       unit,
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: _Power.textTertiary(isDark),
-                      ),
+                      style: _T.caption2.copyWith(fontSize: 9, color: _P.textMuted),
                     ),
                   ),
               ],
@@ -856,11 +920,11 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: _T.caption2.copyWith(
                 fontSize: 8,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-                color: _Power.textTertiary(isDark),
+                letterSpacing: 0.9,
+                color: _P.textMuted,
               ),
             ),
           ],
@@ -869,40 +933,38 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     );
   }
 
-  // =====================================================================
-  // TABS (без изменений)
-  // =====================================================================
-
-  Widget _buildTabs(bool isDark) {
+  // ═════════════════════════════════════════════════════════
+  //  TABS
+  // ═════════════════════════════════════════════════════════
+  Widget _buildTabs() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          color: _Power.card2(isDark),
+          color: _P.elevated,
           borderRadius: BorderRadius.circular(14),
         ),
         child: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
-          unselectedLabelColor: _Power.textSecondary(isDark),
+          unselectedLabelColor: _P.textMuted,
           indicator: BoxDecoration(
-            color: _Power.volt,
+            color: _P.peachDeep,
             borderRadius: BorderRadius.circular(11),
-            boxShadow: _Power.softGlow(_Power.volt, strength: 0.3),
+            boxShadow: [
+              BoxShadow(
+                color: _P.peachDeep.withOpacity(0.18),
+                blurRadius: 8,
+                spreadRadius: -2,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           dividerColor: Colors.transparent,
-          labelStyle: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.8,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-          ),
+          labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.6),
+          unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.3),
           tabs: const [
             Tab(text: 'ИНФО'),
             Tab(text: 'ПРОГРЕСС'),
@@ -913,18 +975,14 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     );
   }
 
-  // =====================================================================
-  // INFO TAB (без изменений)
-  // =====================================================================
-
-  Widget _buildInfoTab(bool isDark) {
+  // ═════════════════════════════════════════════════════════
+  //  INFO TAB
+  // ═════════════════════════════════════════════════════════
+  Widget _buildInfoTab() {
     final hasDescription = widget.exercise.description.isNotEmpty;
-    final hasTips = widget.exercise.techniqueTips != null &&
-        widget.exercise.techniqueTips!.isNotEmpty;
-    final hasMistakes = widget.exercise.commonMistakes != null &&
-        widget.exercise.commonMistakes!.isNotEmpty;
-    final hasVideo = widget.exercise.videoUrl != null &&
-        widget.exercise.videoUrl!.isNotEmpty;
+    final hasTips = widget.exercise.techniqueTips != null && widget.exercise.techniqueTips!.isNotEmpty;
+    final hasMistakes = widget.exercise.commonMistakes != null && widget.exercise.commonMistakes!.isNotEmpty;
+    final hasVideo = widget.exercise.videoUrl != null && widget.exercise.videoUrl!.isNotEmpty;
 
     if (!hasDescription && !hasTips && !hasMistakes && !hasVideo) {
       return Center(
@@ -934,48 +992,21 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  color: _Power.volt.withOpacity(0.10),
-                  shape: BoxShape.circle,
-                  boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
-                ),
-                child: const Icon(
-                  Icons.info_outline_rounded,
-                  size: 40,
-                  color: _Power.volt,
-                ),
+                width: 84,
+                height: 84,
+                decoration: const BoxDecoration(color: _P.peachSoft, shape: BoxShape.circle),
+                child: const Icon(Icons.info_outline_rounded, size: 36, color: _P.peachDeep),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               Text(
-                'НЕТ ОПИСАНИЯ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2.2,
-                  color: _Power.textTertiary(isDark),
-                ),
+                'Нет описания',
+                style: _T.title3.copyWith(fontSize: 17, color: _P.text, letterSpacing: -0.4),
               ),
               const SizedBox(height: 6),
               Text(
-                'Описание отсутствует',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                  color: _Power.textPrimary(isDark),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Добавьте описание через редактирование',
+                'Добавь описание через редактирование',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.4,
-                  color: _Power.textSecondary(isDark),
-                ),
+                style: _T.caption.copyWith(fontSize: 12, color: _P.textMuted),
               ),
             ],
           ),
@@ -990,57 +1021,60 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (hasDescription)
-            _buildInfoSection(
-              isDark,
+            _infoSection(
               icon: Icons.description_rounded,
               title: 'ОПИСАНИЕ',
               content: widget.exercise.description,
-              color: _Power.volt,
+              accent: _P.peachDeep,
             ),
           if (hasTips) ...[
             const SizedBox(height: 12),
-            _buildInfoSection(
-              isDark,
+            _infoSection(
               icon: Icons.lightbulb_rounded,
               title: 'СОВЕТЫ ПО ТЕХНИКЕ',
               content: widget.exercise.techniqueTips!,
-              color: _Power.plasma,
+              accent: _P.yellowDeep,
             ),
           ],
           if (hasMistakes) ...[
             const SizedBox(height: 12),
-            _buildInfoSection(
-              isDark,
+            _infoSection(
               icon: Icons.warning_rounded,
               title: 'ЧАСТЫЕ ОШИБКИ',
               content: widget.exercise.commonMistakes!,
-              color: _Power.red,
+              accent: _P.pinkDeep,
             ),
           ],
           if (hasVideo) ...[
             const SizedBox(height: 12),
-            _buildVideoLink(isDark),
+            _buildVideoLink(),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildInfoSection(
-      bool isDark, {
-        required IconData icon,
-        required String title,
-        required String content,
-        Color? color,
-      }) {
-    final accent = color ?? _Power.volt;
+  Widget _infoSection({
+    required IconData icon,
+    required String title,
+    required String content,
+    required Color accent,
+  }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _P.divider, width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: _P.peachDeep.withOpacity(0.03),
+            blurRadius: 8,
+            spreadRadius: -3,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1048,35 +1082,36 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 30,
+                height: 30,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
+                  color: accent.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(9),
                 ),
-                child: Icon(icon, color: accent, size: 16),
+                child: Icon(icon, color: accent, size: 15),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 9),
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
+                  style: _T.caption2.copyWith(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 1.6,
+                    letterSpacing: 1.2,
                     color: accent,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             content,
-            style: TextStyle(
-              fontSize: 14,
+            style: _T.headline.copyWith(
+              fontSize: 13.5,
               height: 1.55,
-              color: _Power.textPrimary(isDark).withOpacity(0.85),
+              fontWeight: FontWeight.w500,
+              color: _P.text,
             ),
           ),
         ],
@@ -1084,92 +1119,68 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     );
   }
 
-  Widget _buildVideoLink(bool isDark) {
+  Widget _buildVideoLink() {
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
-        // TODO: открыть видео в браузере
+        // TODO: open video
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _Power.separator(isDark), width: 0.5),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _P.divider, width: 0.8),
         ),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: _Power.red.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: _Power.softGlow(_Power.red, strength: 0.2),
-              ),
-              child: const Icon(
-                Icons.play_circle_rounded,
-                color: _Power.red,
-                size: 24,
-              ),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: _P.pinkSoft, borderRadius: BorderRadius.circular(11)),
+              child: const Icon(Icons.play_circle_rounded, color: _P.pinkDeep, size: 22),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 11),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'ВИДЕО-ИНСТРУКЦИЯ',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.4,
-                      color: _Power.textPrimary(isDark),
-                    ),
+                    style: _T.caption2.copyWith(fontSize: 10, color: _P.text, letterSpacing: 1.0),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Открыть в браузере',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _Power.textSecondary(isDark),
-                    ),
+                    style: _T.caption2.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: _P.textMuted),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.open_in_new_rounded,
-              color: _Power.textTertiary(isDark),
-              size: 18,
-            ),
+            const Icon(Icons.open_in_new_rounded, color: _P.textMuted, size: 17),
           ],
         ),
       ),
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 PROGRESS TAB — график по правильной метрике
-  // ══════════════════════════════════════════════════════════
-
+  // ═════════════════════════════════════════════════════════
+  //  PROGRESS TAB
+  // ═════════════════════════════════════════════════════════
   Widget _buildProgressTab(
-      bool isDark,
       FitnessProvider provider,
       List<ProgressRecord> records,
       TrendLine trendLine,
+      ({Color deep, Color soft}) fmtColors,
       ) {
     if (records.isEmpty) {
-      return _buildEmptyChart(isDark);
+      return _buildEmptyChart();
     }
 
     final format = _format;
-
-    // 🆕 Заголовок графика и способ извлечения значения
     final String chartTitle;
     final String unit;
-    final Color accent;
     final bool showPrediction;
     final double Function(ProgressRecord) extractor;
 
@@ -1177,7 +1188,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       case ExerciseFormat.setsReps:
         chartTitle = 'ДИНАМИКА 1RM';
         unit = 'кг';
-        accent = _Power.volt;
         showPrediction = true;
         extractor = (r) => r.estimated1RM;
         break;
@@ -1185,21 +1195,18 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       case ExerciseFormat.intervals:
         chartTitle = 'ДИСТАНЦИЯ';
         unit = 'км';
-        accent = _Power.ice;
         showPrediction = true;
         extractor = (r) => r.bestDistance ?? 0;
         break;
       case ExerciseFormat.rounds:
         chartTitle = 'РАУНДЫ';
         unit = 'раунд';
-        accent = _Power.plasma;
         showPrediction = true;
         extractor = (r) => (r.bestRounds ?? 0).toDouble();
         break;
       case ExerciseFormat.hold:
         chartTitle = 'УДЕРЖАНИЕ';
         unit = 'сек';
-        accent = _Power.lime;
         showPrediction = true;
         extractor = (r) => (r.bestHoldSeconds ?? 0).toDouble();
         break;
@@ -1207,13 +1214,11 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       case ExerciseFormat.freeform:
         chartTitle = 'ВРЕМЯ';
         unit = 'сек';
-        accent = _Power.ice;
         showPrediction = false;
         extractor = (r) => (r.bestDuration ?? 0).toDouble();
         break;
     }
 
-    // Собираем точки
     final spots = <FlSpot>[];
     final firstDate = records.first.date;
     for (int i = 0; i < records.length; i++) {
@@ -1226,14 +1231,10 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     if (showPrediction && trendLine.slope > 0 && spots.isNotEmpty) {
       final lastX = spots.last.x;
       for (int i = 1; i <= 30; i++) {
-        predictionSpots.add(FlSpot(
-          lastX + i,
-          trendLine.predict((lastX + i).toInt()),
-        ));
+        predictionSpots.add(FlSpot(lastX + i, trendLine.predict((lastX + i).toInt())));
       }
     }
 
-    // Проверка «все нули»
     final allZero = spots.every((s) => s.y == 0);
 
     return SingleChildScrollView(
@@ -1248,20 +1249,15 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: _Power.card(isDark),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: _Power.separator(isDark), width: 0.5),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: _P.divider, width: 0.8),
               ),
               child: Center(
                 child: Text(
                   'Нет данных по метрике «${chartTitle.toLowerCase()}»',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _Power.textSecondary(isDark),
-                  ),
+                  style: _T.caption.copyWith(fontSize: 13, color: _P.textMuted),
                 ),
               ),
             )
@@ -1271,10 +1267,17 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.fromLTRB(12, 20, 20, 12),
               decoration: BoxDecoration(
-                color: _Power.card(isDark),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: _Power.separator(isDark), width: 0.5),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: _P.divider, width: 0.8),
+                boxShadow: [
+                  BoxShadow(
+                    color: fmtColors.deep.withOpacity(0.05),
+                    blurRadius: 14,
+                    spreadRadius: -4,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
               child: LineChart(
                 LineChartData(
@@ -1282,10 +1285,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                     show: true,
                     drawVerticalLine: false,
                     horizontalInterval: 10,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: _Power.separator(isDark),
-                      strokeWidth: 0.5,
-                    ),
+                    getDrawingHorizontalLine: (value) => FlLine(color: _P.divider, strokeWidth: 0.6),
                   ),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
@@ -1295,11 +1295,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                         reservedSize: 44,
                         getTitlesWidget: (value, meta) => Text(
                           _shortLabelFor(value, unit),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: _Power.textTertiary(isDark),
-                          ),
+                          style: _T.caption2.copyWith(fontSize: 10, color: _P.textMuted),
                         ),
                       ),
                     ),
@@ -1308,43 +1304,35 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                         showTitles: true,
                         interval: 7,
                         getTitlesWidget: (value, meta) {
-                          final date =
-                          firstDate.add(Duration(days: value.toInt()));
+                          final date = firstDate.add(Duration(days: value.toInt()));
                           return Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               '${date.day}.${date.month}',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: _Power.textTertiary(isDark),
-                              ),
+                              style: _T.caption2.copyWith(fontSize: 9, color: _P.textMuted),
                             ),
                           );
                         },
                       ),
                     ),
-                    topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
-                      color: accent,
+                      color: fmtColors.deep,
                       barWidth: 3,
                       dotData: FlDotData(
                         show: true,
-                        getDotPainter: (spot, percent, barData, index) =>
-                            FlDotCirclePainter(
-                              radius: 4,
-                              color: accent,
-                              strokeWidth: 2,
-                              strokeColor: _Power.bg(isDark),
-                            ),
+                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                          radius: 4,
+                          color: fmtColors.deep,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
+                        ),
                       ),
                       belowBarData: BarAreaData(
                         show: true,
@@ -1352,8 +1340,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            accent.withOpacity(0.25),
-                            accent.withOpacity(0.0),
+                            fmtColors.deep.withOpacity(0.20),
+                            fmtColors.deep.withOpacity(0.0),
                           ],
                         ),
                       ),
@@ -1362,7 +1350,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                       LineChartBarData(
                         spots: predictionSpots,
                         isCurved: true,
-                        color: accent.withOpacity(0.35),
+                        color: fmtColors.deep.withOpacity(0.35),
                         barWidth: 2,
                         dashArray: [5, 5],
                         dotData: const FlDotData(show: false),
@@ -1370,14 +1358,14 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                   ],
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (spot) => _Power.card2(isDark),
-                      tooltipRoundedRadius: 12,
+                      getTooltipColor: (spot) => _P.elevated,
+                      tooltipRoundedRadius: 10,
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((spot) {
                           return LineTooltipItem(
                             _formatChartValue(spot.y, unit),
                             TextStyle(
-                              color: accent,
+                              color: fmtColors.deep,
                               fontWeight: FontWeight.w900,
                               fontSize: 13,
                             ),
@@ -1389,16 +1377,15 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                 ),
               ),
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildLegendDot(isDark, accent, chartTitle),
+                _legendDot(fmtColors.deep, chartTitle),
                 const SizedBox(width: 16),
                 if (predictionSpots.isNotEmpty)
-                  _buildLegendDot(
-                      isDark, accent.withOpacity(0.35), 'Прогноз 30 дней'),
+                  _legendDot(fmtColors.deep.withOpacity(0.35), 'Прогноз 30 дней'),
               ],
             ),
           ),
@@ -1422,7 +1409,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     if (unit == 'сек') {
       if (value >= 3600) return '${(value / 3600).toStringAsFixed(1)}ч';
       if (value >= 60) return '${(value / 60).toStringAsFixed(0)}м';
-      return '${value.toStringAsFixed(0)}';
+      return value.toStringAsFixed(0);
     }
     if (unit == 'кг' && value >= 1000) {
       return '${(value / 1000).toStringAsFixed(1)}k';
@@ -1430,32 +1417,25 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     return value.toStringAsFixed(0);
   }
 
-  Widget _buildLegendDot(bool isDark, Color color, String label) {
+  Widget _legendDot(Color color, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(3),
-          ),
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
         ),
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: _Power.textSecondary(isDark),
-          ),
+          style: _T.caption2.copyWith(fontSize: 11, color: _P.textMuted),
         ),
       ],
     );
   }
 
-  Widget _buildEmptyChart(bool isDark) {
+  Widget _buildEmptyChart() {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(40, 40, 40, 40),
@@ -1464,56 +1444,32 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
           Container(
             width: 80,
             height: 80,
-            decoration: BoxDecoration(
-              color: _Power.volt.withOpacity(0.10),
-              shape: BoxShape.circle,
-              boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
-            ),
-            child: const Icon(
-              Icons.show_chart_rounded,
-              size: 36,
-              color: _Power.volt,
-            ),
+            decoration: const BoxDecoration(color: _P.peachSoft, shape: BoxShape.circle),
+            child: const Icon(Icons.show_chart_rounded, size: 34, color: _P.peachDeep),
           ),
-          const SizedBox(height: 20),
-          const Text(
-            'НЕТ ДАННЫХ',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 2.2,
-              color: _Power.volt,
-            ),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 18),
           Text(
-            'Прогресс появится здесь',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.6,
-              color: _Power.textPrimary(isDark),
-            ),
+            'Нет данных',
+            style: _T.title3.copyWith(fontSize: 17, color: _P.text, letterSpacing: -0.4),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            'Начните тренироваться!',
+            'Прогресс появится после тренировок',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: _Power.textSecondary(isDark),
-            ),
+            style: _T.caption.copyWith(fontSize: 12, color: _P.textMuted),
           ),
         ],
       ),
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 HISTORY TAB — запись по формату
-  // ══════════════════════════════════════════════════════════
-
-  Widget _buildHistoryTab(bool isDark, List<ProgressRecord> records) {
+  // ═════════════════════════════════════════════════════════
+  //  HISTORY TAB
+  // ═════════════════════════════════════════════════════════
+  Widget _buildHistoryTab(
+      List<ProgressRecord> records,
+      ({Color deep, Color soft}) fmtColors,
+      ) {
     if (records.isEmpty) {
       return Center(
         child: Padding(
@@ -1521,17 +1477,13 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
           child: Text(
             'История появится после тренировок',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: _Power.textSecondary(isDark),
-            ),
+            style: _T.caption.copyWith(fontSize: 13, color: _P.textMuted),
           ),
         ),
       );
     }
 
-    final sortedRecords = List<ProgressRecord>.from(records)
-      ..sort((a, b) => b.date.compareTo(a.date));
+    final sortedRecords = List<ProgressRecord>.from(records)..sort((a, b) => b.date.compareTo(a.date));
 
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
@@ -1539,15 +1491,14 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       itemCount: sortedRecords.length,
       itemBuilder: (context, index) {
         final record = sortedRecords[index];
-        return _buildHistoryRow(isDark, record, index);
+        return _historyRow(record, fmtColors);
       },
     );
   }
 
-  Widget _buildHistoryRow(
-      bool isDark,
+  Widget _historyRow(
       ProgressRecord record,
-      int index,
+      ({Color deep, Color soft}) fmtColors,
       ) {
     final accent = _formatRecordAccent(record);
 
@@ -1555,49 +1506,43 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _P.divider, width: 0.8),
       ),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: accent.color.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow:
-              _Power.softGlow(accent.color, strength: 0.15),
+              color: fmtColors.soft,
+              borderRadius: BorderRadius.circular(11),
             ),
             alignment: Alignment.center,
-            child: Icon(
-              _getHistoryIcon(accent.label),
-              color: accent.color,
-              size: 18,
-            ),
+            child: Icon(_historyIcon(accent.label), color: fmtColors.deep, size: 17),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '${record.date.day.toString().padLeft(2, '0')}.${record.date.month.toString().padLeft(2, '0')}.${record.date.year}',
-                  style: TextStyle(
-                    fontSize: 13,
+                  style: _T.caption.copyWith(
+                    fontSize: 12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.2,
-                    color: _Power.textPrimary(isDark),
+                    color: _P.text,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   _formatRecordSubtitle(record),
-                  style: TextStyle(
-                    fontSize: 11,
+                  style: _T.caption2.copyWith(
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w600,
-                    color: _Power.textSecondary(isDark),
+                    color: _P.textMuted,
                   ),
                 ),
               ],
@@ -1608,11 +1553,11 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
             children: [
               Text(
                 _formatRecordSummary(record),
-                style: TextStyle(
-                  fontSize: 14,
+                style: _T.caption.copyWith(
+                  fontSize: 13,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.3,
-                  color: _Power.textPrimary(isDark),
+                  color: _P.text,
                 ),
               ),
               const SizedBox(height: 2),
@@ -1621,7 +1566,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: accent.color,
+                  color: fmtColors.deep,
                 ),
               ),
             ],
@@ -1631,226 +1576,241 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     );
   }
 
-  IconData _getHistoryIcon(String label) {
+  IconData _historyIcon(String label) {
     switch (label) {
       case '1RM':
         return Icons.trending_up_rounded;
-      case 'КМ':
+      case 'км':
         return Icons.directions_run_rounded;
-      case 'РАУНД':
+      case 'раунд':
         return Icons.sports_mma_rounded;
-      case 'УДЕРЖ':
+      case 'удерж':
         return Icons.self_improvement_rounded;
-      case 'ВРЕМЯ':
+      case 'время':
         return Icons.timer_rounded;
       default:
         return Icons.check_rounded;
     }
   }
 
-  // =====================================================================
-  // EDIT DIALOG (без изменений)
-  // =====================================================================
-
-  void _showEditDialog(
-      BuildContext context,
-      bool isDark,
-      FitnessProvider provider,
-      ) {
+  // ═════════════════════════════════════════════════════════
+  //  EDIT DIALOG
+  // ═════════════════════════════════════════════════════════
+  void _showEditDialog(BuildContext context, FitnessProvider provider) {
     final nameController = TextEditingController(text: widget.exercise.name);
-    final descController =
-    TextEditingController(text: widget.exercise.description);
-    final tipsController =
-    TextEditingController(text: widget.exercise.techniqueTips ?? '');
-    final mistakesController =
-    TextEditingController(text: widget.exercise.commonMistakes ?? '');
+    final descController = TextEditingController(text: widget.exercise.description);
+    final tipsController = TextEditingController(text: widget.exercise.techniqueTips ?? '');
+    final mistakesController = TextEditingController(text: widget.exercise.commonMistakes ?? '');
+
+    String? editImageUrl = widget.exercise.imageUrl;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 12,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-        ),
-        decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius:
-          const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: _Power.textTertiary(isDark),
-                    borderRadius: BorderRadius.circular(3),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 12,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: _P.textSoft,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'РЕДАКТИРОВАТЬ',
-                style: TextStyle(
-                  color: _Power.volt,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2.2,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Упражнение',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.8,
-                  color: _Power.textPrimary(isDark),
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildField(
-                controller: nameController,
-                label: 'НАЗВАНИЕ',
-                isDark: isDark,
-              ),
-              const SizedBox(height: 12),
-              _buildField(
-                controller: descController,
-                label: 'ОПИСАНИЕ',
-                isDark: isDark,
-                maxLines: 4,
-              ),
-              const SizedBox(height: 12),
-              _buildField(
-                controller: tipsController,
-                label: 'СОВЕТЫ',
-                isDark: isDark,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 12),
-              _buildField(
-                controller: mistakesController,
-                label: 'ОШИБКИ',
-                isDark: isDark,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: OutlinedButton(
-                        onPressed: () {
-                          HapticFeedback.selectionClick();
-                          Navigator.pop(ctx);
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _Power.textSecondary(isDark),
-                          side: BorderSide(color: _Power.separator(isDark)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: _P.peachSoft,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.edit_rounded, color: _P.peachDeep, size: 20),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'РЕДАКТИРОВАТЬ',
+                            style: _T.overline.copyWith(
+                              color: _P.peachDeep,
+                              fontSize: 9,
+                              letterSpacing: 1.4,
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          'Отмена',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
+                          const SizedBox(height: 2),
+                          Text(
+                            'Упражнение',
+                            style: _T.title2.copyWith(
+                              color: _P.text,
+                              fontSize: 20,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                _buildField(controller: nameController, label: 'НАЗВАНИЕ'),
+
+                const SizedBox(height: 14),
+                ImagePickerField(
+                  label: 'ИЗОБРАЖЕНИЕ',
+                  value: editImageUrl,
+                  hint: widget.exercise.exerciseType == ExerciseType.cardio
+                      ? ExerciseTypeHint.cardio
+                      : widget.exercise.exerciseType == ExerciseType.boxing
+                      ? ExerciseTypeHint.boxing
+                      : widget.exercise.exerciseType == ExerciseType.yoga
+                      ? ExerciseTypeHint.yoga
+                      : ExerciseTypeHint.strength,
+                  onChanged: (v) => setSheetState(() => editImageUrl = v),
+                ),
+
+                const SizedBox(height: 12),
+                _buildField(controller: descController, label: 'ОПИСАНИЕ', maxLines: 4),
+                const SizedBox(height: 12),
+                _buildField(controller: tipsController, label: 'СОВЕТЫ', maxLines: 3),
+                const SizedBox(height: 12),
+                _buildField(controller: mistakesController, label: 'ОШИБКИ', maxLines: 3),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(ctx);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _P.text,
+                            side: const BorderSide(color: _P.divider, width: 1),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                          ),
+                          child: Text(
+                            'Отмена',
+                            style: _T.headline.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: _P.text,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          HapticFeedback.mediumImpact();
-                          final updated = widget.exercise.copyWith(
-                            name: nameController.text.trim(),
-                            description: descController.text.trim(),
-                            techniqueTips:
-                            tipsController.text.trim().isNotEmpty
-                                ? tipsController.text.trim()
-                                : null,
-                            commonMistakes:
-                            mistakesController.text.trim().isNotEmpty
-                                ? mistakesController.text.trim()
-                                : null,
-                          );
-                          await provider.updateExercise(updated);
-                          if (ctx.mounted) Navigator.pop(ctx);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _Power.volt,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            HapticFeedback.mediumImpact();
+
+                            final updated = Exercise(
+                              id: widget.exercise.id,
+                              name: nameController.text.trim(),
+                              description: descController.text.trim(),
+                              muscleGroups: widget.exercise.muscleGroups,
+                              imageUrl: editImageUrl,
+                              exerciseType: widget.exercise.exerciseType,
+                              isCustom: widget.exercise.isCustom,
+                              videoUrl: widget.exercise.videoUrl,
+                              techniqueTips: tipsController.text.trim().isNotEmpty
+                                  ? tipsController.text.trim()
+                                  : null,
+                              commonMistakes: mistakesController.text.trim().isNotEmpty
+                                  ? mistakesController.text.trim()
+                                  : null,
+                              createdAt: widget.exercise.createdAt,
+                              updatedAt: DateTime.now(),
+                              defaultFormat: widget.exercise.defaultFormat,
+                            );
+
+                            await provider.updateExercise(updated);
+                            if (ctx.mounted) Navigator.pop(ctx);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _P.peachDeep,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
                           ),
-                          shadowColor: _Power.volt.withOpacity(0.5),
+                          child: Text(
+                            'СОХРАНИТЬ',
+                            style: _T.caption2.copyWith(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
                         ),
-                        child: const Text(
-                          'СОХРАНИТЬ',
-                          style: TextStyle(
-                            fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: TextButton(
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      Navigator.pop(ctx);
+                      _confirmDelete(context, provider);
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: _P.pinkDeep,
+                      backgroundColor: _P.pinkSoft,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.delete_outline_rounded, size: 17),
+                        const SizedBox(width: 6),
+                        Text(
+                          'УДАЛИТЬ УПРАЖНЕНИЕ',
+                          style: _T.caption2.copyWith(
+                            color: _P.pinkDeep,
+                            fontSize: 11,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: 1.0,
+                            letterSpacing: 0.8,
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: TextButton(
-                  onPressed: () {
-                    HapticFeedback.mediumImpact();
-                    Navigator.pop(ctx);
-                    _confirmDelete(context, isDark, provider);
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: _Power.red,
-                    backgroundColor: _Power.red.withOpacity(0.10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.delete_outline_rounded, size: 18),
-                      SizedBox(width: 6),
-                      Text(
-                        'УДАЛИТЬ УПРАЖНЕНИЕ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1860,56 +1820,56 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
   Widget _buildField({
     required TextEditingController controller,
     required String label,
-    required bool isDark,
     int maxLines = 1,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          padding: const EdgeInsets.only(left: 2, bottom: 5),
           child: Text(
             label,
-            style: TextStyle(
+            style: _T.overline.copyWith(
               fontSize: 9,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.6,
-              color: _Power.textTertiary(isDark),
+              letterSpacing: 1.2,
+              color: _P.textMuted,
             ),
           ),
         ),
         TextField(
           controller: controller,
           maxLines: maxLines,
-          style: TextStyle(
-            fontSize: 15,
+          style: _T.headline.copyWith(
+            fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: _Power.textPrimary(isDark),
+            color: _P.text,
           ),
           decoration: InputDecoration(
             filled: true,
-            fillColor: _Power.card2(isDark),
+            fillColor: _P.bg,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(13),
               borderSide: BorderSide.none,
             ),
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: const BorderSide(color: _P.divider, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: const BorderSide(color: _P.peachDeep, width: 1.4),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
           ),
         ),
       ],
     );
   }
 
-  // =====================================================================
-  // DELETE CONFIRM (без изменений)
-  // =====================================================================
-
-  void _confirmDelete(
-      BuildContext context,
-      bool isDark,
-      FitnessProvider provider,
-      ) {
+  // ═════════════════════════════════════════════════════════
+  //  DELETE CONFIRM
+  // ═════════════════════════════════════════════════════════
+  void _confirmDelete(BuildContext context, FitnessProvider provider) {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -1917,8 +1877,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
         insetPadding: const EdgeInsets.symmetric(horizontal: 60),
         child: Container(
           decoration: BoxDecoration(
-            color: isDark ? _Power.darkCard2 : Colors.white,
-            borderRadius: BorderRadius.circular(14),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1930,25 +1890,25 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                     Text(
                       'Удалить упражнение?',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 17,
+                      style: _T.headline.copyWith(
+                        fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: _Power.textPrimary(isDark),
+                        color: _P.text,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       '«${widget.exercise.name}» будет удалено безвозвратно',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _Power.textSecondary(isDark),
+                      style: _T.caption.copyWith(
+                        fontSize: 12,
+                        color: _P.textMuted,
                       ),
                     ),
                   ],
                 ),
               ),
-              Container(height: 0.5, color: _Power.separator(isDark)),
+              Container(height: 0.8, color: _P.divider),
               Row(
                 children: [
                   Expanded(
@@ -1957,22 +1917,18 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           'Отмена',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w400,
-                            color: _Power.volt,
+                          style: _T.headline.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: _P.peachDeep,
                           ),
                         ),
                       ),
                     ),
                   ),
-                  Container(
-                    width: 0.5,
-                    height: 50,
-                    color: _Power.separator(isDark),
-                  ),
+                  Container(width: 0.8, height: 50, color: _P.divider),
                   Expanded(
                     child: GestureDetector(
                       onTap: () async {
@@ -1984,12 +1940,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           'Удалить',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: _Power.red,
+                          style: _T.headline.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: _P.pinkDeep,
                           ),
                         ),
                       ),
@@ -2004,10 +1960,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
     );
   }
 
-  // =====================================================================
-  // HELPERS
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  HELPERS
+  // ═════════════════════════════════════════════════════════
   IconData _getExerciseIcon(ExerciseType type) {
     switch (type) {
       case ExerciseType.strength:

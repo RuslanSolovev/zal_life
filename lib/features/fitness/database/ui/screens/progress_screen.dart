@@ -1,9 +1,14 @@
 // features/fitness/ui/screens/progress_screen.dart
-// 🆕 v16: format-aware аналитика (сила / кардио / бокс / статика)
+// 🎨 design refinement: tokens, pressable, layered elevation, tabular figures
+import 'dart:io';
+import 'dart:ui' show FontFeature;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import '../../../models/fitness_models.dart';
 import '../../../models/enums.dart';
 import '../../../models/helpers.dart';
@@ -30,17 +35,19 @@ class _Power {
   static const Color darkCard2 = Color(0xFF2C2C2E);
   static const Color lightBg = Color(0xFFF2F2F7);
   static const Color lightCard = Color(0xFFFFFFFF);
+  static const Color lightCard2 = Color(0xFFF9FAFB);
 
   static Color bg(bool isDark) => isDark ? darkBg : lightBg;
   static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : const Color(0xFFF9FAFB);
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
+  static Color card2(bool isDark) => isDark ? darkCard2 : lightCard2;
+  static Color textPrimary(bool isDark) =>
+      isDark ? Colors.white : const Color(0xFF0A0A0A);
   static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
+      ? Colors.white.withOpacity(0.62)
+      : const Color(0xFF3C3C43).withOpacity(0.62);
   static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
+      ? Colors.white.withOpacity(0.32)
+      : const Color(0xFF3C3C43).withOpacity(0.32);
   static Color separator(bool isDark) =>
       isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
 
@@ -48,8 +55,11 @@ class _Power {
     BoxShadow(color: color.withOpacity(strength), blurRadius: 16),
   ];
 
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
+  static List<BoxShadow> glow(
+      Color color, {
+        double strength = 0.4,
+        double blur = 24,
+      }) =>
       [
         BoxShadow(
           color: color.withOpacity(strength),
@@ -57,7 +67,206 @@ class _Power {
           offset: const Offset(0, 6),
         ),
       ];
+
+  static List<BoxShadow> cardShadow(bool isDark, Color tint) => isDark
+      ? [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.45),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: Colors.black.withOpacity(0.25),
+      blurRadius: 14,
+      offset: const Offset(0, 6),
+    ),
+  ]
+      : [
+    BoxShadow(
+      color: tint.withOpacity(0.04),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: tint.withOpacity(0.06),
+      blurRadius: 16,
+      offset: const Offset(0, 6),
+    ),
+  ];
 }
+
+class _R {
+  static const xs = 8.0;
+  static const sm = 12.0;
+  static const md = 14.0;
+  static const lg = 18.0;
+  static const xl = 22.0;
+  static const xxl = 28.0;
+}
+
+class _Sp {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 20.0;
+  static const xxl = 24.0;
+}
+
+class _Num {
+  static const _feat = <FontFeature>[FontFeature.tabularFigures()];
+  static TextStyle t(TextStyle base) => base.copyWith(fontFeatures: _feat);
+}
+
+// ==================== EXERCISE IMAGE HELPERS ====================
+
+/// Универсальный thumbnail упражнения:
+/// - `assets/…` → Image.asset
+/// - `http(s)://…` → CachedNetworkImage
+/// - прочее → Image.file
+/// - нет url / ошибка → эмодзи-фолбэк в градиентном боксе
+class _ExerciseThumb extends StatelessWidget {
+  final Exercise exercise;
+  final double size;
+  final double radius;
+  final bool isDark;
+  final Color? accentOverride;
+  final double fallbackEmojiScale;
+
+  const _ExerciseThumb({
+    required this.exercise,
+    required this.size,
+    required this.isDark,
+    this.radius = 14,
+    this.accentOverride,
+    this.fallbackEmojiScale = 0.45,
+  });
+
+  Color get _accent => accentOverride ??
+      (exercise.muscleGroups.isNotEmpty
+          ? exercise.muscleGroups.first.color
+          : _Power.volt);
+
+  Widget _fallback() {
+    return Center(
+      child: Text(
+        exercise.exerciseType.emoji,
+        style: TextStyle(fontSize: size * fallbackEmojiScale, height: 1),
+      ),
+    );
+  }
+
+  Widget _image() {
+    final url = exercise.imageUrl;
+    if (url == null || url.isEmpty) return _fallback();
+
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallback(),
+      );
+    }
+    if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => _fallback(),
+        errorWidget: (_, __, ___) => _fallback(),
+      );
+    }
+    return Image.file(
+      File(url),
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _fallback(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: hasImage
+            ? null
+            : LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _accent.withOpacity(0.22),
+            _accent.withOpacity(0.06),
+          ],
+        ),
+        color: hasImage ? _Power.card2(isDark) : null,
+        borderRadius: BorderRadius.circular(radius),
+        border: hasImage
+            ? Border.all(color: _accent.withOpacity(0.20), width: 0.8)
+            : null,
+        boxShadow: _Power.softGlow(_accent, strength: 0.20),
+      ),
+      clipBehavior: Clip.antiAlias,
+      alignment: Alignment.center,
+      child: _image(),
+    );
+  }
+}
+
+// ==================== PRESSABLE ====================
+
+class _Pressable extends StatefulWidget {
+  const _Pressable({
+    required this.child,
+    required this.onTap,
+    this.scale = 0.97,
+    this.haptic = true,
+  });
+
+  final Widget child;
+  final VoidCallback onTap;
+  final double scale;
+  final bool haptic;
+
+  @override
+  State<_Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<_Pressable> {
+  bool _pressed = false;
+  void _set(bool v) {
+    if (_pressed != v) setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _set(true),
+      onTapUp: (_) => _set(false),
+      onTapCancel: () => _set(false),
+      onTap: () {
+        if (widget.haptic) HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? widget.scale : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ==================== SCREEN ====================
 
 class ProgressScreen extends StatefulWidget {
   final bool isDark;
@@ -104,22 +313,19 @@ class _ProgressScreenState extends State<ProgressScreen>
       if (query.isEmpty) {
         _searchResults = [];
       } else {
-        _searchResults = provider.exercises.where((e) =>
+        _searchResults = provider.exercises
+            .where((e) =>
         e.name.toLowerCase().contains(query) ||
             e.description.toLowerCase().contains(query) ||
             e.muscleGroups
-                .any((m) => m.displayName.toLowerCase().contains(query))).toList();
+                .any((m) => m.displayName.toLowerCase().contains(query)))
+            .toList();
       }
     });
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 ХЕЛПЕРЫ
-  // ══════════════════════════════════════════════════════════
-
   ExerciseFormat _formatFor(Exercise ex) => ex.resolveFormat();
 
-  /// Форматирование значения в тултипе графика.
   String _formatChartValue(double v, String unit) {
     if (unit == 'сек') {
       if (v >= 60) return '${(v / 60).toStringAsFixed(1)} мин';
@@ -131,7 +337,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     return '${v.toStringAsFixed(0)} $unit';
   }
 
-  /// Человекочитаемое значение для stat box.
   String _fmtBoxValue(double v, String unit) {
     if (unit == 'сек') {
       if (v >= 3600) return '${(v / 3600).toStringAsFixed(1)} ч';
@@ -144,7 +349,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     return v.toStringAsFixed(0);
   }
 
-  /// Простой линейный тренд по экстрактору (для non-1RM метрик).
   TrendLine _computeTrend(
       List<ProgressRecord> progress,
       double Function(ProgressRecord) extractor,
@@ -169,8 +373,7 @@ class _ProgressScreenState extends State<ProgressScreen>
     }
     final denom = n * sumX2 - sumX * sumX;
     if (denom == 0) {
-      return TrendLine(
-          slope: 0, intercept: sumY / n, confidence: 0);
+      return TrendLine(slope: 0, intercept: sumY / n, confidence: 0);
     }
     final slope = (n * sumXY - sumX * sumY) / denom;
     final intercept = (sumY - slope * sumX) / n;
@@ -222,22 +425,21 @@ class _ProgressScreenState extends State<ProgressScreen>
   }
 
   // =====================================================================
-  // HEADER (без изменений)
+  // HEADER
   // =====================================================================
 
   Widget _buildHeader(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.sm, _Sp.lg, _Sp.xs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  Navigator.pop(context);
-                },
+              _Pressable(
+                onTap: () => Navigator.pop(context),
+                scale: 0.9,
+                haptic: false,
                 child: Container(
                   width: 36,
                   height: 36,
@@ -254,19 +456,34 @@ class _ProgressScreenState extends State<ProgressScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: _R.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'ПРОГРЕСС',
-                      style: TextStyle(
-                        color: _Power.volt,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2.2,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: _Power.volt,
+                            borderRadius: BorderRadius.circular(1),
+                            boxShadow:
+                            _Power.softGlow(_Power.volt, strength: 0.6),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'ПРОГРЕСС',
+                          style: TextStyle(
+                            color: _Power.volt,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2.2,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -284,15 +501,16 @@ class _ProgressScreenState extends State<ProgressScreen>
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: _R.md),
           Container(
             decoration: BoxDecoration(
               color: _Power.card(isDark),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(_R.md),
               border: Border.all(
                 color: _Power.separator(isDark),
                 width: 0.5,
               ),
+              boxShadow: _Power.cardShadow(isDark, _Power.volt),
             ),
             child: TextField(
               controller: _searchController,
@@ -314,18 +532,17 @@ class _ProgressScreenState extends State<ProgressScreen>
                   size: 20,
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
-                    ? GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    _searchController.clear();
-                  },
+                    ? _Pressable(
+                  onTap: () => _searchController.clear(),
+                  scale: 0.85,
+                  haptic: false,
                   child: Container(
                     margin: const EdgeInsets.all(10),
                     width: 26,
                     height: 26,
                     decoration: BoxDecoration(
-                      color: _Power.textTertiary(isDark)
-                          .withOpacity(0.5),
+                      color:
+                      _Power.textTertiary(isDark).withOpacity(0.5),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -339,8 +556,8 @@ class _ProgressScreenState extends State<ProgressScreen>
                 filled: false,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
+                  horizontal: _R.md,
+                  vertical: _R.md,
                 ),
               ),
             ),
@@ -351,17 +568,17 @@ class _ProgressScreenState extends State<ProgressScreen>
   }
 
   // =====================================================================
-  // TAB BAR — переименован «ТОННАЖ» → «ОБЪЁМ»
+  // TAB BAR
   // =====================================================================
 
   Widget _buildTabBar(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.sm, _Sp.lg, _R.md),
       child: Container(
         padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
           color: _Power.card2(isDark),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(_R.md),
         ),
         child: TabBar(
           controller: _tabController,
@@ -369,7 +586,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           unselectedLabelColor: _Power.textSecondary(isDark),
           indicator: BoxDecoration(
             color: _Power.volt,
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(_R.sm - 1),
             boxShadow: _Power.softGlow(_Power.volt, strength: 0.35),
           ),
           indicatorSize: TabBarIndicatorSize.tab,
@@ -395,7 +612,7 @@ class _ProgressScreenState extends State<ProgressScreen>
   }
 
   // =====================================================================
-  // SEARCH OVERLAY (без изменений)
+  // SEARCH OVERLAY
   // =====================================================================
 
   Widget _buildSearchOverlay(bool isDark, FitnessProvider provider) {
@@ -405,15 +622,16 @@ class _ProgressScreenState extends State<ProgressScreen>
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(_Sp.lg, _R.md, _Sp.lg, _Sp.sm),
               child: Container(
                 decoration: BoxDecoration(
                   color: _Power.card(isDark),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(_R.md),
                   border: Border.all(
                     color: _Power.volt.withOpacity(0.4),
                     width: 0.8,
                   ),
+                  boxShadow: _Power.cardShadow(isDark, _Power.volt),
                 ),
                 child: TextField(
                   controller: _searchController,
@@ -434,11 +652,10 @@ class _ProgressScreenState extends State<ProgressScreen>
                       color: _Power.volt,
                       size: 20,
                     ),
-                    suffixIcon: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        _searchController.clear();
-                      },
+                    suffixIcon: _Pressable(
+                      onTap: () => _searchController.clear(),
+                      scale: 0.85,
+                      haptic: false,
                       child: Container(
                         margin: const EdgeInsets.all(10),
                         width: 26,
@@ -457,8 +674,8 @@ class _ProgressScreenState extends State<ProgressScreen>
                     filled: false,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
+                      horizontal: _R.md,
+                      vertical: _R.md,
                     ),
                   ),
                 ),
@@ -469,7 +686,12 @@ class _ProgressScreenState extends State<ProgressScreen>
                   ? _buildSearchEmpty(isDark)
                   : ListView.builder(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  _Sp.lg,
+                  _Sp.sm,
+                  _Sp.lg,
+                  _Sp.xxl,
+                ),
                 itemCount: _searchResults.length,
                 itemBuilder: (context, index) {
                   final ex = _searchResults[index];
@@ -480,9 +702,8 @@ class _ProgressScreenState extends State<ProgressScreen>
                       ? ex.muscleGroups.first.color
                       : _Power.volt;
 
-                  return GestureDetector(
+                  return _Pressable(
                     onTap: () {
-                      HapticFeedback.selectionClick();
                       _searchController.clear();
                       Navigator.push(
                         context,
@@ -494,33 +715,31 @@ class _ProgressScreenState extends State<ProgressScreen>
                         ),
                       );
                     },
+                    scale: 0.98,
+                    haptic: false,
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: _Sp.sm),
+                      padding: const EdgeInsets.all(_R.md),
                       decoration: BoxDecoration(
                         color: _Power.card(isDark),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(_R.md),
                         border: Border.all(
                           color: _Power.separator(isDark),
                           width: 0.5,
                         ),
+                        boxShadow: _Power.cardShadow(isDark, accent),
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: accent.withOpacity(0.14),
-                              borderRadius: BorderRadius.circular(11),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              ex.exerciseType.emoji,
-                              style: const TextStyle(fontSize: 18),
-                            ),
+                          // 🆕 Изображение упражнения
+                          _ExerciseThumb(
+                            exercise: ex,
+                            size: 44,
+                            radius: _R.sm - 1,
+                            isDark: isDark,
+                            accentOverride: accent,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: _R.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment:
@@ -541,7 +760,8 @@ class _ProgressScreenState extends State<ProgressScreen>
                                 Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
+                                      padding: const EdgeInsets
+                                          .symmetric(
                                           horizontal: 5, vertical: 1),
                                       decoration: BoxDecoration(
                                         color: _Power.ice
@@ -564,12 +784,12 @@ class _ProgressScreenState extends State<ProgressScreen>
                                     if (summary.totalWorkouts > 0)
                                       Text(
                                         '${summary.totalWorkouts} трен.',
-                                        style: TextStyle(
+                                        style: _Num.t(TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w600,
                                           color: _Power.textTertiary(
                                               isDark),
-                                        ),
+                                        )),
                                       )
                                     else
                                       Text(
@@ -603,7 +823,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  /// 🆕 Главное число в поиске — по формату.
   Widget _buildSearchPrimaryValue(
       ExerciseFormat format, ExerciseDetailedSummary summary, bool isDark) {
     String value = '—';
@@ -641,13 +860,13 @@ class _ProgressScreenState extends State<ProgressScreen>
       children: [
         Text(
           value,
-          style: TextStyle(
+          style: _Num.t(TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w900,
             letterSpacing: -0.3,
             color: color,
             height: 1,
-          ),
+          )),
         ),
         const SizedBox(height: 3),
         Text(
@@ -669,20 +888,25 @@ class _ProgressScreenState extends State<ProgressScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 88,
-            height: 88,
+            width: 96,
+            height: 96,
             decoration: BoxDecoration(
-              color: _Power.volt.withOpacity(0.10),
+              gradient: RadialGradient(
+                colors: [
+                  _Power.volt.withOpacity(0.20),
+                  _Power.volt.withOpacity(0.02),
+                ],
+              ),
               shape: BoxShape.circle,
-              boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
+              boxShadow: _Power.softGlow(_Power.volt, strength: 0.18),
             ),
             child: const Icon(
               Icons.search_off_rounded,
-              size: 40,
+              size: 42,
               color: _Power.volt,
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: _Sp.xl),
           const Text(
             'ПОИСК',
             style: TextStyle(
@@ -702,7 +926,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               color: _Power.textPrimary(isDark),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: _Sp.sm),
           Text(
             'Попробуйте изменить запрос',
             style: TextStyle(
@@ -715,9 +939,9 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // TAB 1: EXERCISE PROGRESS — format-aware
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // TAB 1: EXERCISE PROGRESS
+  // =====================================================================
 
   Widget _buildExerciseProgress(bool isDark, FitnessProvider provider) {
     final exercises = provider.exercises
@@ -741,7 +965,7 @@ class _ProgressScreenState extends State<ProgressScreen>
 
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.xs, _Sp.lg, _Sp.xxl),
       itemCount: exercises.length,
       itemBuilder: (context, index) {
         final exercise = exercises[index];
@@ -749,16 +973,20 @@ class _ProgressScreenState extends State<ProgressScreen>
         final progress = provider.getExerciseProgress(exercise.id);
         final lastRecord = progress.last;
         final format = _formatFor(exercise);
+        final accent = exercise.muscleGroups.isNotEmpty
+            ? exercise.muscleGroups.first.color
+            : _Power.volt;
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: _R.md),
           decoration: BoxDecoration(
             color: _Power.card(isDark),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(_R.lg),
             border: Border.all(
               color: _Power.separator(isDark),
               width: 0.5,
             ),
+            boxShadow: _Power.cardShadow(isDark, accent),
           ),
           child: Theme(
             data: Theme.of(context).copyWith(
@@ -768,32 +996,18 @@ class _ProgressScreenState extends State<ProgressScreen>
             ),
             child: ExpansionTile(
               tilePadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              const EdgeInsets.symmetric(horizontal: _R.md, vertical: 6),
               childrenPadding:
-              const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              const EdgeInsets.fromLTRB(_R.md, 0, _R.md, _R.md),
               iconColor: _Power.volt,
               collapsedIconColor: _Power.textSecondary(isDark),
-              leading: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: exercise.muscleGroups.isNotEmpty
-                      ? exercise.muscleGroups.first.color
-                      .withOpacity(0.14)
-                      : _Power.volt.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(13),
-                  boxShadow: _Power.softGlow(
-                    exercise.muscleGroups.isNotEmpty
-                        ? exercise.muscleGroups.first.color
-                        : _Power.volt,
-                    strength: 0.15,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  exercise.exerciseType.emoji,
-                  style: const TextStyle(fontSize: 22),
-                ),
+              leading: _ExerciseThumb(
+                exercise: exercise,
+                size: 48,
+                radius: _R.md - 1,
+                isDark: isDark,
+                accentOverride: accent,
+                fallbackEmojiScale: 0.42,
               ),
               title: Text(
                 exercise.name,
@@ -805,12 +1019,12 @@ class _ProgressScreenState extends State<ProgressScreen>
                 ),
               ),
               subtitle: Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: _Sp.xs),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 1),
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                       decoration: BoxDecoration(
                         color: _Power.ice.withOpacity(0.14),
                         borderRadius: BorderRadius.circular(5),
@@ -829,33 +1043,26 @@ class _ProgressScreenState extends State<ProgressScreen>
                     const SizedBox(width: 6),
                     Text(
                       '${summary.totalWorkouts} ТРЕН. • ${summary.totalSets} ПОДХ.',
-                      style: TextStyle(
+                      style: _Num.t(TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.8,
                         color: _Power.textTertiary(isDark),
-                      ),
+                      )),
                     ),
                   ],
                 ),
               ),
               children: [
-                // 🆕 Статы по формату
-                _buildStatsGrid(
-                    isDark, format, summary, lastRecord, progress),
-
-                // 🆕 Графики по формату
-                const SizedBox(height: 14),
-                ..._buildChartsForFormat(
-                    isDark, format, progress),
-
-                const SizedBox(height: 14),
+                _buildStatsGrid(isDark, format, summary, lastRecord, progress),
+                const SizedBox(height: _R.md),
+                ..._buildChartsForFormat(isDark, format, progress),
+                const SizedBox(height: _R.md),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      HapticFeedback.selectionClick();
+                  child: _Pressable(
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -866,29 +1073,33 @@ class _ProgressScreenState extends State<ProgressScreen>
                         ),
                       );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _Power.volt,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                    scale: 0.97,
+                    haptic: false,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _Power.volt,
+                        borderRadius: BorderRadius.circular(_R.md),
+                        boxShadow:
+                        _Power.softGlow(_Power.volt, strength: 0.4),
                       ),
-                      shadowColor: _Power.volt.withOpacity(0.5),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.history_rounded, size: 18),
-                        SizedBox(width: 8),
-                        Text(
-                          'ПОДРОБНАЯ ИСТОРИЯ',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.0,
+                      alignment: Alignment.center,
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.history_rounded,
+                              size: 18, color: Colors.white),
+                          SizedBox(width: _Sp.sm),
+                          Text(
+                            'ПОДРОБНАЯ ИСТОРИЯ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -900,9 +1111,9 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 STATS GRID — dispatch по формату
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // STATS GRID
+  // =====================================================================
 
   Widget _buildStatsGrid(
       bool isDark,
@@ -913,8 +1124,7 @@ class _ProgressScreenState extends State<ProgressScreen>
       ) {
     switch (format) {
       case ExerciseFormat.setsReps:
-        return _buildStrengthStatsGrid(
-            isDark, summary, lastRecord, progress);
+        return _buildStrengthStatsGrid(isDark, summary, lastRecord, progress);
       case ExerciseFormat.continuous:
       case ExerciseFormat.intervals:
         return _buildCardioStatsGrid(isDark, summary, lastRecord);
@@ -947,7 +1157,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                   : '',
               _Power.ice,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'МАКС',
@@ -959,7 +1169,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: _Sp.sm),
         Row(
           children: [
             _buildStatBox(
@@ -969,7 +1179,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               '',
               _Power.plasma,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               '1RM',
@@ -979,7 +1189,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: _Sp.sm),
         Row(
           children: [
             _buildStatBox(
@@ -989,7 +1199,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               '',
               _Power.magma,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ПОДХОДОВ',
@@ -1023,7 +1233,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               '',
               _Power.ice,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ВСЕГО ВРЕМЯ',
@@ -1033,7 +1243,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: _Sp.sm),
         Row(
           children: [
             _buildStatBox(
@@ -1045,7 +1255,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               '',
               _Power.plasma,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ПОСЛЕДНЯЯ',
@@ -1059,7 +1269,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: _Sp.sm),
         Row(
           children: [
             _buildStatBox(
@@ -1069,7 +1279,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               '',
               _Power.magma,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ПОДХОДОВ',
@@ -1102,7 +1312,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               'раундов',
               _Power.plasma,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ВРЕМЯ',
@@ -1112,7 +1322,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: _Sp.sm),
         Row(
           children: [
             _buildStatBox(
@@ -1126,7 +1336,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                   : '',
               _Power.volt,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ТРЕНИРОВОК',
@@ -1159,7 +1369,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               '',
               _Power.lime,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ВСЕГО',
@@ -1169,7 +1379,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: _Sp.sm),
         Row(
           children: [
             _buildStatBox(
@@ -1184,7 +1394,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                   : '',
               _Power.volt,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ТРЕНИРОВОК',
@@ -1216,7 +1426,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               '',
               _Power.ice,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ПОСЛЕДНЯЯ',
@@ -1231,7 +1441,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: _Sp.sm),
         Row(
           children: [
             _buildStatBox(
@@ -1241,7 +1451,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               '',
               _Power.magma,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             _buildStatBox(
               isDark,
               'ПОДХОДОВ',
@@ -1264,10 +1474,10 @@ class _ProgressScreenState extends State<ProgressScreen>
       ) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(_R.md),
         decoration: BoxDecoration(
           color: _Power.card2(isDark),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(_R.sm),
           border: Border.all(
             color: accentColor.withOpacity(0.2),
             width: 0.8,
@@ -1288,23 +1498,23 @@ class _ProgressScreenState extends State<ProgressScreen>
             const SizedBox(height: 6),
             Text(
               value,
-              style: TextStyle(
+              style: _Num.t(TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.5,
                 height: 1,
                 color: accentColor,
-              ),
+              )),
             ),
             if (date.isNotEmpty) ...[
               const SizedBox(height: 3),
               Text(
                 date,
-                style: TextStyle(
+                style: _Num.t(TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                   color: _Power.textTertiary(isDark),
-                ),
+                )),
               ),
             ],
           ],
@@ -1313,9 +1523,9 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 ГРАФИКИ ПО ФОРМАТУ
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // CHARTS
+  // =====================================================================
 
   List<Widget> _buildChartsForFormat(
       bool isDark,
@@ -1334,7 +1544,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             color: _Power.volt,
             showTrend: true,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: _R.md),
           _buildModernChart(
             isDark,
             title: 'ОБЪЁМ ТРЕНИРОВКИ',
@@ -1358,7 +1568,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             color: _Power.ice,
             showTrend: true,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: _R.md),
           _buildModernChart(
             isDark,
             title: 'ВРЕМЯ',
@@ -1412,10 +1622,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     }
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 УНИВЕРСАЛЬНЫЙ ГРАФИК
-  // ══════════════════════════════════════════════════════════
-
   Widget _buildModernChart(
       bool isDark, {
         required String title,
@@ -1427,10 +1633,10 @@ class _ProgressScreenState extends State<ProgressScreen>
       }) {
     if (progress.length < 2) {
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(_Sp.xl),
         decoration: BoxDecoration(
           color: _Power.card2(isDark),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(_R.md),
         ),
         child: Column(
           children: [
@@ -1443,7 +1649,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                 color: _Power.textTertiary(isDark),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: _R.md),
             Text(
               'Недостаточно данных',
               style: TextStyle(
@@ -1470,13 +1676,12 @@ class _ProgressScreenState extends State<ProgressScreen>
       if (y < minY) minY = y;
     }
 
-    // Если все значения 0 — показываем пустое сообщение
     if (maxY == 0) {
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(_Sp.xl),
         decoration: BoxDecoration(
           color: _Power.card2(isDark),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(_R.md),
         ),
         child: Column(
           children: [
@@ -1489,7 +1694,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                 color: _Power.textTertiary(isDark),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: _R.md),
             Text(
               'Нет данных по этой метрике',
               style: TextStyle(
@@ -1503,7 +1708,6 @@ class _ProgressScreenState extends State<ProgressScreen>
       );
     }
 
-    // Тренд/прогноз
     TrendLine? trendLine;
     if (showTrend && spots.length >= 2) {
       trendLine = _computeTrend(progress, extractor);
@@ -1525,10 +1729,10 @@ class _ProgressScreenState extends State<ProgressScreen>
     final adjustedMinY = minY > padding ? minY - padding : 0.0;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(_R.md),
       decoration: BoxDecoration(
         color: _Power.card2(isDark),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(_R.md),
         border: Border.all(
           color: _Power.separator(isDark),
           width: 0.5,
@@ -1552,15 +1756,15 @@ class _ProgressScreenState extends State<ProgressScreen>
               if (trendLine != null && trendLine.slope != 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: _Sp.sm,
+                    vertical: _Sp.xs,
                   ),
                   decoration: BoxDecoration(
                     color: (trendLine.slope > 0
                         ? _Power.green
                         : _Power.red)
                         .withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(_R.xs),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1574,10 +1778,10 @@ class _ProgressScreenState extends State<ProgressScreen>
                             ? _Power.green
                             : _Power.red,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: _Sp.xs),
                       Text(
                         '${trendLine.slope > 0 ? "+" : ""}${(trendLine.slope * 30).toStringAsFixed(1)}/мес',
-                        style: TextStyle(
+                        style: _Num.t(TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.2,
@@ -1585,14 +1789,14 @@ class _ProgressScreenState extends State<ProgressScreen>
                           color: trendLine.slope > 0
                               ? _Power.green
                               : _Power.red,
-                        ),
+                        )),
                       ),
                     ],
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _Sp.lg),
           SizedBox(
             height: 190,
             child: LineChart(
@@ -1614,11 +1818,11 @@ class _ProgressScreenState extends State<ProgressScreen>
                       reservedSize: 44,
                       getTitlesWidget: (value, meta) => Text(
                         _shortLabelFor(value, unit),
-                        style: TextStyle(
+                        style: _Num.t(TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                           color: _Power.textTertiary(isDark),
-                        ),
+                        )),
                       ),
                     ),
                   ),
@@ -1630,14 +1834,14 @@ class _ProgressScreenState extends State<ProgressScreen>
                         final date =
                         firstDate.add(Duration(days: value.toInt()));
                         return Padding(
-                          padding: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.only(top: _Sp.xs),
                           child: Text(
                             '${date.day}.${date.month}',
-                            style: TextStyle(
+                            style: _Num.t(TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
                               color: _Power.textTertiary(isDark),
-                            ),
+                            )),
                           ),
                         );
                       },
@@ -1704,11 +1908,11 @@ class _ProgressScreenState extends State<ProgressScreen>
                       return touchedSpots.map((spot) {
                         return LineTooltipItem(
                           _formatChartValue(spot.y, unit),
-                          TextStyle(
+                          _Num.t(TextStyle(
                             color: color,
                             fontWeight: FontWeight.w900,
                             fontSize: 12,
-                          ),
+                          )),
                         );
                       }).toList();
                     },
@@ -1722,7 +1926,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  /// 🆕 Короткий лейбл для оси Y.
   String _shortLabelFor(double value, String unit) {
     if (unit == 'сек') {
       if (value >= 3600) return '${(value / 3600).toStringAsFixed(1)}ч';
@@ -1736,9 +1939,9 @@ class _ProgressScreenState extends State<ProgressScreen>
     return value.toStringAsFixed(0);
   }
 
-  // ══════════════════════════════════════════════════════════
-  // TAB 2: VOLUME PROGRESS — мультиметрики
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // TAB 2: VOLUME PROGRESS
+  // =====================================================================
 
   Widget _buildVolumeProgress(bool isDark, FitnessProvider provider) {
     final tonnageMap = provider.getTonnageByExercise();
@@ -1789,7 +1992,7 @@ class _ProgressScreenState extends State<ProgressScreen>
 
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.xs, _Sp.lg, _Sp.xxl),
       itemCount: entries.length,
       itemBuilder: (context, index) {
         final entry = entries[index];
@@ -1807,36 +2010,30 @@ class _ProgressScreenState extends State<ProgressScreen>
 
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(_R.md),
           decoration: BoxDecoration(
             color: _Power.card(isDark),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(_R.lg - 2),
             border: Border.all(
               color: _Power.separator(isDark),
               width: 0.5,
             ),
+            boxShadow: _Power.cardShadow(isDark, accent),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: accent.withOpacity(0.14),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow:
-                      _Power.softGlow(accent, strength: 0.15),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      exData.exerciseType.emoji,
-                      style: const TextStyle(fontSize: 18),
-                    ),
+                  _ExerciseThumb(
+                    exercise: exData,
+                    size: 44,
+                    radius: _R.sm,
+                    isDark: isDark,
+                    accentOverride: accent,
+                    fallbackEmojiScale: 0.4,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: _R.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1876,12 +2073,12 @@ class _ProgressScreenState extends State<ProgressScreen>
                             const SizedBox(width: 6),
                             Text(
                               '${info.totalWorkouts} ТРЕНИРОВОК',
-                              style: TextStyle(
+                              style: _Num.t(TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.0,
                                 color: _Power.textTertiary(isDark),
-                              ),
+                              )),
                             ),
                           ],
                         ),
@@ -1891,8 +2088,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                   _buildVolumePrimaryBadge(info, format, isDark),
                 ],
               ),
-              const SizedBox(height: 12),
-              // 🆕 Мультиметрики (kg / km / rounds / sec / punches / kcal / reps)
+              const SizedBox(height: _R.md),
               _buildVolumeMetricChips(info, isDark),
             ],
           ),
@@ -1901,7 +2097,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  /// 🆕 Приоритет для сортировки по типу.
   int _groupPriority(Exercise ex) {
     switch (ex.exerciseType) {
       case ExerciseType.strength:
@@ -1918,7 +2113,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     }
   }
 
-  /// 🆕 Правая «главная цифра» в карточке — по формату.
   Widget _buildVolumePrimaryBadge(
       ExerciseTonnageInfo info, ExerciseFormat format, bool isDark) {
     String value = '—';
@@ -1946,10 +2140,10 @@ class _ProgressScreenState extends State<ProgressScreen>
     } else if ((info.byMetric['sec'] ?? 0) > 0) {
       final sec = info.byMetric['sec']!;
       if (sec >= 3600) {
-        value = '${(sec / 3600).toStringAsFixed(1)}';
+        value = (sec / 3600).toStringAsFixed(1);
         label = 'ЧАС';
       } else if (sec >= 60) {
-        value = '${(sec / 60).toStringAsFixed(0)}';
+        value = (sec / 60).toStringAsFixed(0);
         label = 'МИН';
       } else {
         value = sec.toStringAsFixed(0);
@@ -1963,13 +2157,13 @@ class _ProgressScreenState extends State<ProgressScreen>
       children: [
         Text(
           value,
-          style: TextStyle(
+          style: _Num.t(TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w900,
             letterSpacing: -0.6,
             height: 1,
             color: color,
-          ),
+          )),
         ),
         const SizedBox(height: 2),
         Text(
@@ -1985,7 +2179,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  /// 🆕 Все непустые метрики упражнения в виде чипов.
   Widget _buildVolumeMetricChips(ExerciseTonnageInfo info, bool isDark) {
     final chips = <Widget>[];
 
@@ -1997,7 +2190,6 @@ class _ProgressScreenState extends State<ProgressScreen>
             : info.totalVolume.toStringAsFixed(0),
         label: 'КГ',
         color: _Power.volt,
-        isDark: isDark,
       ));
     }
     if ((info.byMetric['km'] ?? 0) > 0) {
@@ -2007,7 +2199,6 @@ class _ProgressScreenState extends State<ProgressScreen>
         value: km.toStringAsFixed(km >= 10 ? 1 : 2),
         label: 'КМ',
         color: _Power.ice,
-        isDark: isDark,
       ));
     }
     if ((info.byMetric['sec'] ?? 0) > 0) {
@@ -2019,7 +2210,6 @@ class _ProgressScreenState extends State<ProgressScreen>
             : '${(sec / 60).toStringAsFixed(0)}м',
         label: 'ВРЕМЯ',
         color: _Power.lime,
-        isDark: isDark,
       ));
     }
     if ((info.byMetric['rounds'] ?? 0) > 0) {
@@ -2028,7 +2218,6 @@ class _ProgressScreenState extends State<ProgressScreen>
         value: info.byMetric['rounds']!.toStringAsFixed(0),
         label: 'РАУНД',
         color: _Power.plasma,
-        isDark: isDark,
       ));
     }
     if ((info.byMetric['punches'] ?? 0) > 0) {
@@ -2037,7 +2226,6 @@ class _ProgressScreenState extends State<ProgressScreen>
         value: info.byMetric['punches']!.toStringAsFixed(0),
         label: 'УДАР',
         color: _Power.magma,
-        isDark: isDark,
       ));
     }
     if ((info.byMetric['kcal'] ?? 0) > 0) {
@@ -2046,7 +2234,6 @@ class _ProgressScreenState extends State<ProgressScreen>
         value: info.byMetric['kcal']!.toStringAsFixed(0),
         label: 'ККАЛ',
         color: _Power.magma,
-        isDark: isDark,
       ));
     }
     if ((info.byMetric['reps'] ?? 0) > 0 && info.totalVolume == 0) {
@@ -2055,13 +2242,10 @@ class _ProgressScreenState extends State<ProgressScreen>
         value: info.byMetric['reps']!.toStringAsFixed(0),
         label: 'ПОВТ',
         color: _Power.volt,
-        isDark: isDark,
       ));
     }
 
-    if (chips.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (chips.isEmpty) return const SizedBox.shrink();
 
     return Wrap(
       spacing: 6,
@@ -2075,7 +2259,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     required String value,
     required String label,
     required Color color,
-    required bool isDark,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -2094,13 +2277,13 @@ class _ProgressScreenState extends State<ProgressScreen>
           const SizedBox(width: 5),
           Text(
             value,
-            style: TextStyle(
+            style: _Num.t(TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.2,
               height: 1,
               color: color,
-            ),
+            )),
           ),
           const SizedBox(width: 3),
           Text(
@@ -2118,9 +2301,9 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // TAB 3: MUSCLE PROGRESS — кг + чипы (км / раунды / сек)
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // TAB 3: MUSCLE PROGRESS
+  // =====================================================================
 
   Widget _buildMuscleProgress(bool isDark, FitnessProvider provider) {
     final muscleMap = provider.getTonnageByMuscle();
@@ -2134,7 +2317,6 @@ class _ProgressScreenState extends State<ProgressScreen>
       );
     }
 
-    // 🆕 «Главная метрика» мышцы (кг → км → раунд → сек)
     double primaryOf(MuscleTonnageInfo? s) {
       if (s == null) return 0;
       if (s.totalVolume > 0) return s.totalVolume;
@@ -2150,7 +2332,6 @@ class _ProgressScreenState extends State<ProgressScreen>
           (max, s) => primaryOf(s) > max ? primaryOf(s) : max,
     );
 
-    // 🆕 Фильтр: показываем, если есть хоть одна метрика
     final visibleMuscles = MuscleGroup.values
         .where((m) => m != MuscleGroup.fullBody)
         .where((m) {
@@ -2173,12 +2354,12 @@ class _ProgressScreenState extends State<ProgressScreen>
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.xs, _Sp.lg, _Sp.xxl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(_R.lg),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -2188,11 +2369,12 @@ class _ProgressScreenState extends State<ProgressScreen>
                   _Power.volt.withOpacity(0.02),
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(_R.lg - 2),
               border: Border.all(
                 color: _Power.volt.withOpacity(0.2),
                 width: 0.8,
               ),
+              boxShadow: _Power.cardShadow(isDark, _Power.volt),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2203,7 +2385,14 @@ class _ProgressScreenState extends State<ProgressScreen>
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: _Power.volt.withOpacity(0.14),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            _Power.volt.withOpacity(0.22),
+                            _Power.volt.withOpacity(0.06),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       alignment: Alignment.center,
@@ -2225,7 +2414,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: _Sp.sm),
                 Text(
                   'За всё время тренировок',
                   style: TextStyle(
@@ -2237,7 +2426,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: _R.md),
           ...visibleMuscles.map((muscle) {
             final stats = muscleMap[muscle];
             final primary = primaryOf(stats);
@@ -2245,14 +2434,15 @@ class _ProgressScreenState extends State<ProgressScreen>
 
             return Container(
               margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(_R.md),
               decoration: BoxDecoration(
                 color: _Power.card(isDark),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(_R.lg - 2),
                 border: Border.all(
                   color: _Power.separator(isDark),
                   width: 0.5,
                 ),
+                boxShadow: _Power.cardShadow(isDark, muscle.color),
               ),
               child: Column(
                 children: [
@@ -2262,10 +2452,17 @@ class _ProgressScreenState extends State<ProgressScreen>
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: muscle.color.withOpacity(0.14),
-                          borderRadius: BorderRadius.circular(11),
-                          boxShadow:
-                          _Power.softGlow(muscle.color, strength: 0.2),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              muscle.color.withOpacity(0.22),
+                              muscle.color.withOpacity(0.06),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(_R.sm - 1),
+                          boxShadow: _Power.softGlow(muscle.color,
+                              strength: 0.2),
                         ),
                         alignment: Alignment.center,
                         child: Text(
@@ -2273,7 +2470,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                           style: const TextStyle(fontSize: 18),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: _R.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2291,51 +2488,50 @@ class _ProgressScreenState extends State<ProgressScreen>
                               const SizedBox(height: 3),
                               Text(
                                 '${stats.totalWorkouts} ТРЕН. • ${stats.totalSets} ПОДХ.',
-                                style: TextStyle(
+                                style: _Num.t(TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 0.8,
                                   color: _Power.textTertiary(isDark),
-                                ),
+                                )),
                               ),
                             ],
                           ],
                         ),
                       ),
-                      // 🆕 Мультиметрики справа
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           if ((stats?.totalVolume ?? 0) > 0)
                             Text(
                               '${((stats?.totalVolume ?? 0) / 1000).toStringAsFixed(1)}k',
-                              style: TextStyle(
+                              style: _Num.t(TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: -0.6,
                                 height: 1,
                                 color: muscle.color,
-                              ),
+                              )),
                             ),
                           if ((stats?.byMetric['km'] ?? 0) > 0)
                             Text(
                               '${(stats!.byMetric['km']!).toStringAsFixed(1)} км',
-                              style: const TextStyle(
+                              style: _Num.t(const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                                 height: 1,
                                 color: _Power.ice,
-                              ),
+                              )),
                             ),
                           if ((stats?.byMetric['rounds'] ?? 0) > 0)
                             Text(
                               '${stats!.byMetric['rounds']!.toStringAsFixed(0)} р.',
-                              style: const TextStyle(
+                              style: _Num.t(const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                                 height: 1,
                                 color: _Power.plasma,
-                              ),
+                              )),
                             ),
                           if ((stats?.byMetric['sec'] ?? 0) > 0 &&
                               (stats?.totalVolume ?? 0) == 0 &&
@@ -2343,25 +2539,24 @@ class _ProgressScreenState extends State<ProgressScreen>
                               (stats?.byMetric['rounds'] ?? 0) == 0)
                             Text(
                               _fmtBoxValue(stats!.byMetric['sec']!, 'сек'),
-                              style: const TextStyle(
+                              style: _Num.t(const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                                 height: 1,
                                 color: _Power.lime,
-                              ),
+                              )),
                             ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: _R.md),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: progress.clamp(0.05, 1.0),
                       backgroundColor: _Power.separator(isDark),
-                      valueColor:
-                      AlwaysStoppedAnimation<Color>(muscle.color),
+                      valueColor: AlwaysStoppedAnimation<Color>(muscle.color),
                       minHeight: 6,
                     ),
                   ),
@@ -2391,20 +2586,25 @@ class _ProgressScreenState extends State<ProgressScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
-                color: _Power.volt.withOpacity(0.10),
+                gradient: RadialGradient(
+                  colors: [
+                    _Power.volt.withOpacity(0.20),
+                    _Power.volt.withOpacity(0.02),
+                  ],
+                ),
                 shape: BoxShape.circle,
-                boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
+                boxShadow: _Power.softGlow(_Power.volt, strength: 0.18),
               ),
               child: const Icon(
                 Icons.show_chart_rounded,
-                size: 40,
+                size: 42,
                 color: _Power.volt,
               ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: _Sp.xl),
             Text(
               caps,
               style: const TextStyle(

@@ -1,58 +1,157 @@
 // features/fitness/ui/screens/wellbeing_screen.dart
+import 'dart:ui' show FontFeature;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../../../models/fitness_models.dart';
 import '../../../providers/fitness_provider.dart';
 
-// ==================== POWER MODE TOKENS ====================
+// ==================== DESIGN TOKENS ====================
 
-class _Power {
-  static const Color heroBase = Color(0xFF050505);
-  static const Color heroDeep = Color(0xFF120700);
+class _C {
+  // Surfaces
+  static const lightBg = Color(0xFFF5F5F7);
+  static const lightSurface = Color(0xFFFFFFFF);
+  static const lightSurface2 = Color(0xFFFAFAFB);
+  static const lightBorder = Color(0xFFE5E5EA);
 
-  static const Color volt = Color(0xFFFF5500);
-  static const Color voltBright = Color(0xFFFF7A1A);
-  static const Color magma = Color(0xFFFF2D55);
-  static const Color plasma = Color(0xFFFFCC00);
-  static const Color ice = Color(0xFF00E5FF);
-  static const Color lime = Color(0xFFB4FF39);
-  static const Color green = Color(0xFF00C853);
-  static const Color red = Color(0xFFFF3B30);
+  static const darkBg = Color(0xFF0F1012);
+  static const darkSurface = Color(0xFF1A1B1E);
+  static const darkSurface2 = Color(0xFF232427);
+  static const darkBorder = Color(0xFF2C2D31);
 
-  static const Color darkBg = Color(0xFF0A0A0A);
-  static const Color darkCard = Color(0xFF1C1C1E);
-  static const Color darkCard2 = Color(0xFF2C2C2E);
-  static const Color lightBg = Color(0xFFF2F2F7);
-  static const Color lightCard = Color(0xFFFFFFFF);
+  // Text
+  static const lightText = Color(0xFF1A1A1C);
+  static const lightMuted = Color(0xFF6E6F73);
+  static const lightSubtle = Color(0xFFA0A1A6);
+  static const darkText = Color(0xFFF2F2F5);
+  static const darkMuted = Color(0xFF9B9CA1);
+  static const darkSubtle = Color(0xFF63646A);
 
-  static Color bg(bool isDark) => isDark ? darkBg : lightBg;
-  static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : const Color(0xFFF9FAFB);
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
-  static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
-  static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
-  static Color separator(bool isDark) =>
-      isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
+  // Single slate accent
+  static const accent = Color(0xFF4B5B76);
+  static const accentLight = Color(0xFFE8ECF3);
+  static const accentDark = Color(0xFF7D8BB0);
 
-  static List<BoxShadow> softGlow(Color color, {double strength = 0.18}) => [
-    BoxShadow(color: color.withOpacity(strength), blurRadius: 16),
-  ];
-
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
-      [
-        BoxShadow(
-          color: color.withOpacity(strength),
-          blurRadius: blur,
-          offset: const Offset(0, 6),
-        ),
-      ];
+  // Muted mood scale
+  static const low = Color(0xFFB5564E);   // red muted
+  static const mid = Color(0xFFB8884E);   // amber muted
+  static const high = Color(0xFF5B8F72);  // green muted
 }
+
+class _R {
+  static const sm = 10.0;
+  static const md = 14.0;
+  static const lg = 18.0;
+  static const xl = 22.0;
+}
+
+class _Sp {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 20.0;
+  static const xxl = 24.0;
+  static const xxxl = 32.0;
+}
+
+class _T {
+  static const _feat = <FontFeature>[FontFeature.tabularFigures()];
+
+  static TextStyle overline(bool isDark) => TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.6,
+    color: isDark ? _C.darkSubtle : _C.lightSubtle,
+  );
+
+  static TextStyle title(bool isDark) => TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.6,
+    color: isDark ? _C.darkText : _C.lightText,
+  );
+
+  static TextStyle section(bool isDark) => TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.1,
+    color: isDark ? _C.darkText : _C.lightText,
+  );
+
+  static TextStyle body(bool isDark) => TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    height: 1.45,
+    color: isDark ? _C.darkText : _C.lightText,
+  );
+
+  static TextStyle muted(bool isDark) => TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    height: 1.4,
+    color: isDark ? _C.darkMuted : _C.lightMuted,
+  );
+
+  static TextStyle number(bool isDark, {double size = 20, FontWeight weight = FontWeight.w600}) =>
+      TextStyle(
+        fontSize: size,
+        fontWeight: weight,
+        letterSpacing: -0.4,
+        fontFeatures: _feat,
+        height: 1,
+        color: isDark ? _C.darkText : _C.lightText,
+      );
+}
+
+// ==================== PRESSABLE ====================
+
+class _Pressable extends StatefulWidget {
+  const _Pressable({
+    required this.child,
+    required this.onTap,
+    this.scale = 0.98,
+  });
+
+  final Widget child;
+  final VoidCallback onTap;
+  final double scale;
+
+  @override
+  State<_Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<_Pressable> {
+  bool _pressed = false;
+  void _set(bool v) {
+    if (_pressed != v) setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _set(true),
+      onTapUp: (_) => _set(false),
+      onTapCancel: () => _set(false),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? widget.scale : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ==================== SCREEN ====================
 
 class WellbeingScreen extends StatefulWidget {
   final bool isDark;
@@ -66,22 +165,14 @@ class WellbeingScreen extends StatefulWidget {
   State<WellbeingScreen> createState() => _WellbeingScreenState();
 }
 
-class _WellbeingScreenState extends State<WellbeingScreen>
-    with TickerProviderStateMixin {
+class _WellbeingScreenState extends State<WellbeingScreen> {
   int _energy = 7;
   int _sleep = 7;
   int _motivation = 7;
   String? _notes;
-  List<String> _painAreas = [];
+  final List<String> _painAreas = [];
   bool _isSubmitting = false;
   bool _showStats = false;
-
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-  late AnimationController _slideController;
-  late Animation<Offset> _slideAnimation;
-  late AnimationController _statsController;
-  late Animation<double> _statsAnimation;
 
   final List<String> _moodEmojis = [
     '😫', '😩', '😐', '🙂', '😊', '😁', '🤩', '🔥', '💪', '🚀'
@@ -90,8 +181,7 @@ class _WellbeingScreenState extends State<WellbeingScreen>
     'Ужасно', 'Плохо', 'Средне', 'Нормально', 'Хорошо',
     'Отлично', 'Замечательно', 'Супер', 'Великолепно', 'Невероятно'
   ];
-
-  final List<String> _motivationQuotes = [
+  final List<String> _quotes = [
     'Каждый день — шанс стать лучше',
     'Ты сильнее, чем думаешь',
     'Продолжай в том же духе',
@@ -105,55 +195,6 @@ class _WellbeingScreenState extends State<WellbeingScreen>
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..forward();
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOutCubic,
-    );
-
-    _slideController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
-
-    _statsController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    _statsAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _statsController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-
-    _slideController.forward();
-  }
-
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    _slideController.dispose();
-    _statsController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
     final provider = context.watch<FitnessProvider>();
@@ -161,46 +202,39 @@ class _WellbeingScreenState extends State<WellbeingScreen>
     final notes = provider.wellbeingNotes;
 
     return Scaffold(
-      backgroundColor: _Power.bg(isDark),
+      backgroundColor: isDark ? _C.darkBg : _C.lightBg,
       body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(child: _buildHeader(isDark, provider)),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(isDark, todayWellbeing),
-                        const SizedBox(height: 16),
-                        if (notes.isNotEmpty) _buildStatsToggle(isDark, provider),
-                        if (todayWellbeing != null) ...[
-                          const SizedBox(height: 16),
-                          _buildTodayCard(isDark, todayWellbeing),
-                        ],
-                        const SizedBox(height: 16),
-                        _buildFormCard(isDark, provider),
-                        const SizedBox(height: 24),
-                        if (notes.isNotEmpty) ...[
-                          _buildHistoryHeader(isDark, notes),
-                          const SizedBox(height: 12),
-                          ...notes.take(10).map((note) =>
-                              _buildHistoryCard(isDark, note, provider)),
-                        ],
-                        const SizedBox(height: 40),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // Header
+            SliverToBoxAdapter(child: _buildHeader(isDark, provider)),
+
+            // Content
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(_Sp.xl, _Sp.xl, _Sp.xl, 40),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildGreeting(isDark, todayWellbeing),
+                  const SizedBox(height: _Sp.xxl),
+
+                  if (todayWellbeing != null) ...[
+                    _buildTodayCard(isDark, todayWellbeing),
+                    const SizedBox(height: _Sp.xxl),
+                  ],
+
+                  _buildFormCard(isDark, provider),
+                  const SizedBox(height: _Sp.xxl),
+
+                  if (notes.isNotEmpty) ...[
+                    _buildStatsSection(isDark, provider),
+                    const SizedBox(height: _Sp.xxl),
+                    _buildHistorySection(isDark, notes, provider),
+                  ],
+                ]),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -211,125 +245,58 @@ class _WellbeingScreenState extends State<WellbeingScreen>
   // =====================================================================
 
   Widget _buildHeader(bool isDark, FitnessProvider provider) {
-    final stats = provider.getWellbeingStats();
-    final avgMood = stats['avgEnergy'] ?? 0;
-    final hasNotes = provider.wellbeingNotes.isNotEmpty;
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(_Sp.xl, _Sp.md, _Sp.xl, 0),
+      child: Row(
         children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.black.withOpacity(0.05),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.chevron_left_rounded,
-                    color: _Power.textPrimary(isDark),
-                    size: 22,
-                  ),
+          _Pressable(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isDark ? _C.darkSurface : _C.lightSurface,
+                borderRadius: BorderRadius.circular(_R.sm),
+                border: Border.all(
+                  color: isDark ? _C.darkBorder : _C.lightBorder,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'ЗДОРОВЬЕ',
-                      style: TextStyle(
-                        color: _Power.green,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2.2,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'Самочувствие',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.8,
-                        height: 1.1,
-                        color: _Power.textPrimary(isDark),
-                      ),
-                    ),
-                  ],
-                ),
+              child: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: isDark ? _C.darkText : _C.lightText,
+                size: 15,
               ),
-              // Info button
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  _showInfoDialog(context, isDark);
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: _Power.ice.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.info_outline_rounded,
-                    color: _Power.ice,
-                    size: 18,
-                  ),
-                ),
-              ),
-              if (hasNotes) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getColorForValue(avgMood.toInt())
-                        .withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(11),
-                    boxShadow: _Power.softGlow(
-                      _getColorForValue(avgMood.toInt()),
-                      strength: 0.2,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _getEmojiForValue(avgMood.toInt()),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        avgMood.toStringAsFixed(1),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.3,
-                          height: 1,
-                          color: _getColorForValue(avgMood.toInt()),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            ),
+          ),
+          const SizedBox(width: _Sp.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('WELLBEING', style: _T.overline(isDark)),
+                const SizedBox(height: 2),
+                Text('Самочувствие', style: _T.title(isDark)),
               ],
-            ],
+            ),
+          ),
+          _Pressable(
+            onTap: () => _showInfoDialog(context, isDark),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isDark ? _C.darkSurface : _C.lightSurface,
+                borderRadius: BorderRadius.circular(_R.sm),
+                border: Border.all(
+                  color: isDark ? _C.darkBorder : _C.lightBorder,
+                ),
+              ),
+              child: Icon(
+                Icons.info_outline_rounded,
+                color: isDark ? _C.darkMuted : _C.lightMuted,
+                size: 18,
+              ),
+            ),
           ),
         ],
       ),
@@ -341,306 +308,47 @@ class _WellbeingScreenState extends State<WellbeingScreen>
   // =====================================================================
 
   Widget _buildGreeting(bool isDark, WellbeingNote? todayWellbeing) {
-    final timeOfDay = DateTime.now().hour;
+    final hour = DateTime.now().hour;
     String greeting;
-    String emoji;
-
-    if (timeOfDay < 6) {
+    if (hour < 6) {
       greeting = 'Доброй ночи';
-      emoji = '🌙';
-    } else if (timeOfDay < 12) {
+    } else if (hour < 12) {
       greeting = 'Доброе утро';
-      emoji = '🌅';
-    } else if (timeOfDay < 18) {
+    } else if (hour < 18) {
       greeting = 'Добрый день';
-      emoji = '☀️';
     } else {
       greeting = 'Добрый вечер';
-      emoji = '🌆';
     }
 
     final hasRecord = todayWellbeing != null;
-    final randomQuote =
-    _motivationQuotes[DateTime.now().day % _motivationQuotes.length];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _Power.green.withOpacity(0.10),
-            _Power.green.withOpacity(0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: _Power.green.withOpacity(0.2),
-          width: 0.8,
-        ),
-        boxShadow: _Power.softGlow(_Power.green, strength: 0.1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: _Power.green.withOpacity(0.14),
-              shape: BoxShape.circle,
-              boxShadow: _Power.softGlow(_Power.green, strength: 0.25),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              emoji,
-              style: const TextStyle(fontSize: 26),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  greeting,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.4,
-                    height: 1.1,
-                    color: _Power.textPrimary(isDark),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  hasRecord ? 'Сегодня уже записано' : randomQuote,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight:
-                    hasRecord ? FontWeight.w800 : FontWeight.w500,
-                    color: hasRecord
-                        ? _Power.green
-                        : _Power.textSecondary(isDark),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          if (hasRecord)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: _Power.green,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow:
-                _Power.softGlow(_Power.green, strength: 0.4),
-              ),
-              child: const Icon(
-                Icons.check_rounded,
-                color: Colors.white,
-                size: 16,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // =====================================================================
-  // STATS TOGGLE
-  // =====================================================================
-
-  Widget _buildStatsToggle(bool isDark, FitnessProvider provider) {
-    final stats = provider.getWellbeingStats();
-    final total = stats['total']?.toInt() ?? 0;
-    final avgEnergy = stats['avgEnergy'] ?? 0;
-    final avgSleep = stats['avgSleep'] ?? 0;
-    final avgMotivation = stats['avgMotivation'] ?? 0;
+    final quote = _quotes[DateTime.now().day % _quotes.length];
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            setState(() {
-              _showStats = !_showStats;
-              if (_showStats) {
-                _statsController.forward(from: 0);
-              }
-            });
-          },
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: _Power.card(isDark),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _Power.separator(isDark),
-                width: 0.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _Power.ice.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.analytics_rounded,
-                    color: _Power.ice,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'СТАТИСТИКА',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.6,
-                      color: _Power.textPrimary(isDark),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _Power.ice.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$total',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.2,
-                      height: 1,
-                      color: _Power.ice,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                AnimatedRotation(
-                  duration: const Duration(milliseconds: 300),
-                  turns: _showStats ? 0.5 : 0,
-                  child: Icon(
-                    Icons.expand_more_rounded,
-                    color: _Power.textTertiary(isDark),
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
+        Text(
+          greeting,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+            color: isDark ? _C.darkText : _C.lightText,
           ),
         ),
-        // Stats content
-        AnimatedSize(
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: _showStats
-              ? Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: FadeTransition(
-              opacity: _statsAnimation,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: _Power.card(isDark),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _Power.separator(isDark),
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    _buildAvgStat(
-                      isDark,
-                      '⚡',
-                      'ЭНЕРГИЯ',
-                      avgEnergy,
-                    ),
-                    Container(
-                      width: 0.5,
-                      height: 44,
-                      color: _Power.separator(isDark),
-                    ),
-                    _buildAvgStat(
-                      isDark,
-                      '😴',
-                      'СОН',
-                      avgSleep,
-                    ),
-                    Container(
-                      width: 0.5,
-                      height: 44,
-                      color: _Power.separator(isDark),
-                    ),
-                    _buildAvgStat(
-                      isDark,
-                      '🎯',
-                      'МОТИВ',
-                      avgMotivation,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-              : const SizedBox.shrink(),
+        const SizedBox(height: 4),
+        Text(
+          hasRecord ? 'Сегодня уже записано' : quote,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            fontStyle: hasRecord ? FontStyle.normal : FontStyle.italic,
+            height: 1.4,
+            color: hasRecord
+                ? (isDark ? _C.accentDark : _C.accent)
+                : (isDark ? _C.darkMuted : _C.lightMuted),
+          ),
         ),
       ],
-    );
-  }
-
-  Widget _buildAvgStat(
-      bool isDark,
-      String emoji,
-      String label,
-      double value,
-      ) {
-    final color = _getColorForValue(value.round());
-    return Expanded(
-      child: Column(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 6),
-          Text(
-            value.toStringAsFixed(1),
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.6,
-              height: 1,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
-              color: _Power.textTertiary(isDark),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -650,149 +358,77 @@ class _WellbeingScreenState extends State<WellbeingScreen>
 
   Widget _buildTodayCard(bool isDark, WellbeingNote note) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(_Sp.lg),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _Power.green.withOpacity(0.12),
-            _Power.green.withOpacity(0.03),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: _Power.green.withOpacity(0.25),
-          width: 0.8,
-        ),
-        boxShadow: _Power.softGlow(_Power.green, strength: 0.1),
+        color: isDark ? _C.darkSurface : _C.lightSurface,
+        borderRadius: BorderRadius.circular(_R.md),
+        border: Border.all(color: isDark ? _C.darkBorder : _C.lightBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: _Power.green.withOpacity(0.16),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow:
-                  _Power.softGlow(_Power.green, strength: 0.2),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.today_rounded,
-                  color: _Power.green,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'СЕГОДНЯ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.8,
-                  color: _Power.green,
-                ),
-              ),
+              Text('СЕГОДНЯ', style: _T.overline(isDark)),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: _Power.card2(isDark),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Text(
-                  _formatDate(note.date),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.2,
-                    color: _Power.textSecondary(isDark),
-                  ),
+              Icon(
+                Icons.check_circle_rounded,
+                size: 14,
+                color: isDark ? _C.accentDark : _C.accent,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _formatDate(note.date),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? _C.darkMuted : _C.lightMuted,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: _Sp.lg),
           Row(
             children: [
-              _buildMoodStat(isDark, '⚡', 'ЭНЕРГИЯ', note.energyLevel),
-              _buildMoodStat(isDark, '😴', 'СОН', note.sleepQuality),
-              _buildMoodStat(
-                  isDark, '🎯', 'МОТИВ', note.motivationLevel),
+              _buildTodayMetric(
+                isDark,
+                'Энергия',
+                note.energyLevel,
+              ),
+              _buildTodayMetric(
+                isDark,
+                'Сон',
+                note.sleepQuality,
+              ),
+              _buildTodayMetric(
+                isDark,
+                'Мотивация',
+                note.motivationLevel,
+              ),
             ],
           ),
           if (note.painAreas.isNotEmpty &&
               !note.painAreas.contains('Нет болей')) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-              decoration: BoxDecoration(
-                color: _Power.volt.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _Power.volt.withOpacity(0.25),
-                  width: 0.8,
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.healing_rounded,
-                    color: _Power.volt,
-                    size: 15,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'БОЛИ: ${note.painAreas.join(" • ").toUpperCase()}',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                        color: _Power.volt,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            const SizedBox(height: _Sp.lg),
+            Container(height: 1, color: isDark ? _C.darkBorder : _C.lightBorder),
+            const SizedBox(height: _Sp.md),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: note.painAreas.map((area) {
+                return _buildPainChip(isDark, area);
+              }).toList(),
             ),
           ],
           if (note.notes != null && note.notes!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _Power.card(isDark).withOpacity(0.6),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('💭', style: TextStyle(fontSize: 13)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '«${note.notes!}»',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        height: 1.4,
-                        color: _Power.textSecondary(isDark),
-                      ),
-                    ),
-                  ),
-                ],
+            const SizedBox(height: _Sp.md),
+            Text(
+              '«${note.notes!}»',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontStyle: FontStyle.italic,
+                height: 1.5,
+                color: isDark ? _C.darkMuted : _C.lightMuted,
               ),
             ),
           ],
@@ -801,75 +437,184 @@ class _WellbeingScreenState extends State<WellbeingScreen>
     );
   }
 
-  Widget _buildMoodStat(
-      bool isDark,
-      String emoji,
-      String label,
-      int value,
-      ) {
-    final color = _getColorForValue(value);
-    final moodEmoji = _moodEmojis[value.clamp(1, 10) - 1];
-    final moodLabel = _moodLabels[value.clamp(1, 10) - 1];
-
+  Widget _buildTodayMetric(bool isDark, String label, int value) {
+    final color = _colorForValue(value);
     return Expanded(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.14),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: color.withOpacity(0.4),
-                width: 1.2,
-              ),
-              boxShadow: _Power.softGlow(color, strength: 0.25),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              moodEmoji,
-              style: const TextStyle(fontSize: 30),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: isDark ? _C.darkMuted : _C.lightMuted,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
                 '$value',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
-                  height: 1,
-                  color: color,
-                ),
+                style: _T.number(isDark, size: 28, weight: FontWeight.w600)
+                    .copyWith(color: color),
               ),
+              const SizedBox(width: 2),
               Text(
                 '/10',
                 style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: _Power.textTertiary(isDark),   // ← теперь с аргументом
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: isDark ? _C.darkSubtle : _C.lightSubtle,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 3),
-          Text(
-            moodLabel.toUpperCase(),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.8,
-              color: _Power.textTertiary(isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPainChip(bool isDark, String area) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: isDark ? _C.darkSurface2 : _C.lightSurface2,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isDark
+              ? _C.low.withOpacity(0.30)
+              : _C.low.withOpacity(0.20),
+        ),
+      ),
+      child: Text(
+        area,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: _C.low,
+        ),
+      ),
+    );
+  }
+
+  // =====================================================================
+  // STATS SECTION
+  // =====================================================================
+
+  Widget _buildStatsSection(bool isDark, FitnessProvider provider) {
+    final stats = provider.getWellbeingStats();
+    final total = stats['total']?.toInt() ?? 0;
+    final avgEnergy = stats['avgEnergy'] ?? 0;
+    final avgSleep = stats['avgSleep'] ?? 0;
+    final avgMotivation = stats['avgMotivation'] ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Pressable(
+          onTap: () => setState(() => _showStats = !_showStats),
+          child: Container(
+            padding: const EdgeInsets.all(_Sp.lg),
+            decoration: BoxDecoration(
+              color: isDark ? _C.darkSurface : _C.lightSurface,
+              borderRadius: BorderRadius.circular(_R.md),
+              border:
+              Border.all(color: isDark ? _C.darkBorder : _C.lightBorder),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.insights_rounded,
+                  size: 16,
+                  color: isDark ? _C.darkMuted : _C.lightMuted,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Средние показатели',
+                  style: _T.section(isDark),
+                ),
+                const SizedBox(width: _Sp.sm),
+                Text(
+                  '$total записей',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: isDark ? _C.darkSubtle : _C.lightSubtle,
+                  ),
+                ),
+                const Spacer(),
+                AnimatedRotation(
+                  turns: _showStats ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 20,
+                    color: isDark ? _C.darkMuted : _C.lightMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 220),
+          firstChild: const SizedBox.shrink(),
+          secondChild: Padding(
+            padding: const EdgeInsets.only(top: _Sp.sm),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: _Sp.lg),
+              decoration: BoxDecoration(
+                color: isDark ? _C.darkSurface : _C.lightSurface,
+                borderRadius: BorderRadius.circular(_R.md),
+                border:
+                Border.all(color: isDark ? _C.darkBorder : _C.lightBorder),
+              ),
+              child: Row(
+                children: [
+                  _buildAvgStat(isDark, 'Энергия', avgEnergy),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: isDark ? _C.darkBorder : _C.lightBorder,
+                  ),
+                  _buildAvgStat(isDark, 'Сон', avgSleep),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: isDark ? _C.darkBorder : _C.lightBorder,
+                  ),
+                  _buildAvgStat(isDark, 'Мотивация', avgMotivation),
+                ],
+              ),
+            ),
+          ),
+          crossFadeState: _showStats
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvgStat(bool isDark, String label, double value) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value.toStringAsFixed(1),
+            style: _T.number(isDark, size: 22, weight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: isDark ? _C.darkMuted : _C.lightMuted,
+            ),
           ),
         ],
       ),
@@ -881,200 +626,85 @@ class _WellbeingScreenState extends State<WellbeingScreen>
   // =====================================================================
 
   Widget _buildFormCard(bool isDark, FitnessProvider provider) {
-    final hasTodayRecord = provider.getTodayWellbeing() != null;
+    final hasToday = provider.getTodayWellbeing() != null;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(_Sp.lg),
       decoration: BoxDecoration(
-        color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: _Power.separator(isDark),
-          width: 0.5,
-        ),
+        color: isDark ? _C.darkSurface : _C.lightSurface,
+        borderRadius: BorderRadius.circular(_R.md),
+        border: Border.all(color: isDark ? _C.darkBorder : _C.lightBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: _Power.volt.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow:
-                  _Power.softGlow(_Power.volt, strength: 0.2),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.edit_note_rounded,
-                  color: _Power.volt,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      hasTodayRecord
-                          ? 'ОБНОВИТЬ'
-                          : 'ЗАПИСАТЬ САМОЧУВСТВИЕ',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.6,
-                        color: _Power.textPrimary(isDark),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Оцените состояние от 1 до 10',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _Power.textTertiary(isDark),
-                      ),
-                    ),
-                  ],
-                ),
+              Text(
+                hasToday ? 'ОБНОВИТЬ' : 'НОВАЯ ЗАПИСЬ',
+                style: _T.overline(isDark),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: _Sp.lg),
 
-          _buildAnimatedSlider(
-            isDark,
-            'ЭНЕРГИЯ',
-            Icons.flash_on_rounded,
-            _energy.toDouble(),
-                (v) => setState(() => _energy = v.toInt()),
-          ),
-          const SizedBox(height: 4),
-          _buildAnimatedSlider(
-            isDark,
-            'СОН',
-            Icons.bed_rounded,
-            _sleep.toDouble(),
-                (v) => setState(() => _sleep = v.toInt()),
-          ),
-          const SizedBox(height: 4),
-          _buildAnimatedSlider(
-            isDark,
-            'МОТИВАЦИЯ',
-            Icons.rocket_launch_rounded,
-            _motivation.toDouble(),
-                (v) => setState(() => _motivation = v.toInt()),
-          ),
+          _buildSlider(isDark, 'Энергия', _energy, (v) => setState(() => _energy = v)),
+          const SizedBox(height: _Sp.lg),
+          _buildSlider(isDark, 'Сон', _sleep, (v) => setState(() => _sleep = v)),
+          const SizedBox(height: _Sp.lg),
+          _buildSlider(isDark, 'Мотивация', _motivation, (v) => setState(() => _motivation = v)),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: _Sp.xxl),
           _buildPainSelector(isDark),
-          const SizedBox(height: 20),
+          const SizedBox(height: _Sp.xxl),
           _buildNotesField(isDark),
-          const SizedBox(height: 22),
-          _buildSubmitButton(isDark, provider, hasTodayRecord),
+          const SizedBox(height: _Sp.xl),
+          _buildSubmitButton(isDark, provider, hasToday),
         ],
       ),
     );
   }
 
   // =====================================================================
-  // ANIMATED SLIDER
+  // SLIDER
   // =====================================================================
 
-  Widget _buildAnimatedSlider(
+  Widget _buildSlider(
       bool isDark,
       String label,
-      IconData icon,
-      double value,
-      Function(double) onChanged,
+      int value,
+      ValueChanged<int> onChanged,
       ) {
-    final intValue = value.toInt();
-    final emoji = _moodEmojis[intValue.clamp(1, 10) - 1];
-    final color = _getColorForValue(intValue);
-    final moodLabel = _moodLabels[intValue.clamp(1, 10) - 1];
-
+    final color = _colorForValue(value);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon, color: color, size: 16),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-                color: _Power.textPrimary(isDark),
-              ),
-            ),
+            Text(label, style: _T.section(isDark)),
             const Spacer(),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Container(
-                key: ValueKey(intValue),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: color.withOpacity(0.35),
-                    width: 0.8,
-                  ),
-                  boxShadow: _Power.softGlow(color, strength: 0.2),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      emoji,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(width: 6),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '$intValue/10',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                            letterSpacing: -0.3,
-                            height: 1,
-                            color: color,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          moodLabel.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 7,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.6,
-                            height: 1,
-                            color: color.withOpacity(0.8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Text(
+                '$value',
+                style: _T.number(isDark, size: 14, weight: FontWeight.w600)
+                    .copyWith(color: color),
+              ),
+            ),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 68,
+              child: Text(
+                _moodLabels[value.clamp(1, 10) - 1].toLowerCase(),
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: isDark ? _C.darkSubtle : _C.lightSubtle,
                 ),
               ),
             ),
@@ -1083,44 +713,35 @@ class _WellbeingScreenState extends State<WellbeingScreen>
         const SizedBox(height: 4),
         SliderTheme(
           data: SliderThemeData(
-            trackHeight: 5,
+            trackHeight: 3,
             thumbShape: const RoundSliderThumbShape(
-              enabledThumbRadius: 11,
-              pressedElevation: 8,
+              enabledThumbRadius: 8,
+              pressedElevation: 0,
+              elevation: 0,
             ),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+            overlayColor: color.withOpacity(0.10),
             thumbColor: color,
             activeTrackColor: color,
-            inactiveTrackColor: _Power.separator(isDark),
-            overlayColor: color.withOpacity(0.2),
-            overlayShape: const RoundSliderOverlayShape(
-              overlayRadius: 22,
-            ),
-            valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
-            valueIndicatorColor: color,
-            valueIndicatorTextStyle: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-            ),
+            inactiveTrackColor: isDark ? _C.darkBorder : _C.lightBorder,
           ),
           child: Slider(
-            value: value,
+            value: value.toDouble(),
             min: 1,
             max: 10,
             divisions: 9,
-            onChanged: onChanged,
-            label: '$intValue',
+            label: '$value',
+            onChanged: (v) => onChanged(v.toInt()),
           ),
         ),
       ],
     );
   }
 
-  Color _getColorForValue(int value) {
-    if (value <= 3) return _Power.red;
-    if (value <= 5) return _Power.volt;
-    if (value <= 7) return _Power.plasma;
-    return _Power.green;
+  Color _colorForValue(int value) {
+    if (value <= 3) return _C.low;
+    if (value <= 6) return _C.mid;
+    return _C.high;
   }
 
   String _getEmojiForValue(int value) {
@@ -1132,7 +753,7 @@ class _WellbeingScreenState extends State<WellbeingScreen>
   // =====================================================================
 
   Widget _buildPainSelector(bool isDark) {
-    final painOptions = [
+    final options = [
       'Спина', 'Плечи', 'Колени', 'Шея',
       'Голова', 'Ноги', 'Руки', 'Нет болей',
     ];
@@ -1142,133 +763,77 @@ class _WellbeingScreenState extends State<WellbeingScreen>
       children: [
         Row(
           children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: _Power.volt.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.healing_rounded,
-                color: _Power.volt,
-                size: 16,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'БОЛЕВЫЕ ТОЧКИ',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-                color: _Power.textPrimary(isDark),
-              ),
-            ),
-            if (_painAreas.isNotEmpty) ...[
-              const Spacer(),
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _painAreas.clear());
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _Power.red.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: const Text(
-                    'ОЧИСТИТЬ',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.8,
-                      height: 1,
-                      color: _Power.red,
-                    ),
+            Text('БОЛЕВЫЕ ТОЧКИ', style: _T.overline(isDark)),
+            const Spacer(),
+            if (_painAreas.isNotEmpty)
+              _Pressable(
+                onTap: () => setState(() => _painAreas.clear()),
+                child: Text(
+                  'Очистить',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? _C.accentDark : _C.accent,
                   ),
                 ),
               ),
-            ],
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: _Sp.md),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: painOptions.map((area) {
+          spacing: 6,
+          runSpacing: 6,
+          children: options.map((area) {
             final isSelected = _painAreas.contains(area);
             final isNoPain = area == 'Нет болей';
-            final accent = isNoPain ? _Power.green : _Power.volt;
+            final accent = isNoPain
+                ? _C.high
+                : (isSelected ? _C.low : null);
 
-            return GestureDetector(
+            return _Pressable(
               onTap: () {
-                HapticFeedback.selectionClick();
                 setState(() {
                   if (isSelected) {
                     _painAreas.remove(area);
                   } else {
                     if (isNoPain) {
-                      _painAreas.clear();
-                      _painAreas.add(area);
+                      _painAreas
+                        ..clear()
+                        ..add(area);
                     } else {
-                      _painAreas.remove('Нет болей');
-                      _painAreas.add(area);
+                      _painAreas
+                        ..remove('Нет болей')
+                        ..add(area);
                     }
                   }
                 });
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+                  horizontal: 11,
+                  vertical: 7,
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? accent.withOpacity(0.14)
-                      : _Power.card2(isDark),
-                  borderRadius: BorderRadius.circular(11),
+                      ? (accent!.withOpacity(0.10))
+                      : (isDark ? _C.darkSurface2 : _C.lightSurface2),
+                  borderRadius: BorderRadius.circular(7),
                   border: Border.all(
-                    color: isSelected ? accent : Colors.transparent,
-                    width: 1.2,
+                    color: isSelected
+                        ? accent!.withOpacity(0.45)
+                        : (isDark ? _C.darkBorder : _C.lightBorder),
                   ),
-                  boxShadow: isSelected
-                      ? _Power.softGlow(accent, strength: 0.25)
-                      : null,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isSelected) ...[
-                      Icon(
-                        isNoPain
-                            ? Icons.check_rounded
-                            : Icons.warning_rounded,
-                        color: accent,
-                        size: 13,
-                      ),
-                      const SizedBox(width: 5),
-                    ],
-                    Text(
-                      area,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.w900
-                            : FontWeight.w600,
-                        letterSpacing: -0.1,
-                        color: isSelected
-                            ? accent
-                            : _Power.textPrimary(isDark),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  area,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected
+                        ? accent!
+                        : (isDark ? _C.darkText : _C.lightText),
+                  ),
                 ),
               ),
             );
@@ -1286,70 +851,45 @@ class _WellbeingScreenState extends State<WellbeingScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: _Power.ice.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.note_rounded,
-                color: _Power.ice,
-                size: 15,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'ЗАМЕТКИ',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-                color: _Power.textPrimary(isDark),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
+        Text('ЗАМЕТКИ', style: _T.overline(isDark)),
+        const SizedBox(height: _Sp.md),
         TextField(
           maxLines: 3,
           style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: _Power.textPrimary(isDark),
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            height: 1.4,
+            color: isDark ? _C.darkText : _C.lightText,
           ),
           decoration: InputDecoration(
             hintText: 'Как вы себя чувствуете?',
             hintStyle: TextStyle(
-              color: _Power.textTertiary(isDark),
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
+              color: isDark ? _C.darkSubtle : _C.lightSubtle,
             ),
             filled: true,
-            fillColor: _Power.card2(isDark),
+            fillColor: isDark ? _C.darkSurface2 : _C.lightSurface2,
+            contentPadding: const EdgeInsets.all(_Sp.md),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(_R.sm),
+              borderSide: BorderSide(
+                color: isDark ? _C.darkBorder : _C.lightBorder,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(_R.sm),
               borderSide: BorderSide(
-                color: _Power.separator(isDark),
-                width: 0.5,
+                color: isDark ? _C.darkBorder : _C.lightBorder,
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: _Power.volt,
-                width: 1.5,
+              borderRadius: BorderRadius.circular(_R.sm),
+              borderSide: BorderSide(
+                color: isDark ? _C.accentDark : _C.accent,
+                width: 1.2,
               ),
             ),
-            contentPadding: const EdgeInsets.all(14),
           ),
           onChanged: (v) => _notes = v.isEmpty ? null : v,
         ),
@@ -1364,26 +904,17 @@ class _WellbeingScreenState extends State<WellbeingScreen>
   Widget _buildSubmitButton(
       bool isDark,
       FitnessProvider provider,
-      bool hasTodayRecord,
+      bool hasToday,
       ) {
     return SizedBox(
       width: double.infinity,
-      height: 54,
-      child: ElevatedButton(
+      height: 50,
+      child: FilledButton(
         onPressed: _isSubmitting
             ? null
             : () async {
-          if (!hasTodayRecord) {
-            if (_energy == 0 || _sleep == 0 || _motivation == 0) {
-              HapticFeedback.mediumImpact();
-              _showSnack('Оцените все показатели', _Power.plasma);
-              return;
-            }
-          }
-
           HapticFeedback.mediumImpact();
           setState(() => _isSubmitting = true);
-
           try {
             await provider.addWellbeingNote(
               energyLevel: _energy,
@@ -1392,145 +923,96 @@ class _WellbeingScreenState extends State<WellbeingScreen>
               painAreas: _painAreas,
               notes: _notes,
             );
-
             if (!mounted) return;
-
             _showSnack(
-              hasTodayRecord
+              hasToday
                   ? 'Самочувствие обновлено'
                   : 'Самочувствие записано',
-              _Power.green,
               success: true,
             );
-
             setState(() {
               _notes = null;
-              _painAreas = [];
+              _painAreas.clear();
               _energy = 7;
               _sleep = 7;
               _motivation = 7;
             });
           } catch (e) {
             if (!mounted) return;
-            _showSnack('Ошибка: $e', _Power.red);
+            _showSnack('Ошибка: $e');
           } finally {
             if (mounted) setState(() => _isSubmitting = false);
           }
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _Power.green,
+        style: FilledButton.styleFrom(
+          backgroundColor: isDark ? _C.accentDark : _C.accent,
           foregroundColor: Colors.white,
-          elevation: 0,
+          disabledBackgroundColor:
+          (isDark ? _C.accentDark : _C.accent).withOpacity(0.5),
+          disabledForegroundColor: Colors.white70,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(_R.sm),
           ),
-          shadowColor: _Power.green.withOpacity(0.5),
+          elevation: 0,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: _isSubmitting
+            ? const SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
+          ),
+        )
+            : Text(
+          hasToday ? 'Обновить' : 'Сохранить',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =====================================================================
+  // HISTORY
+  // =====================================================================
+
+  Widget _buildHistorySection(
+      bool isDark,
+      List<WellbeingNote> notes,
+      FitnessProvider provider,
+      ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            if (_isSubmitting)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            else
-              Icon(
-                hasTodayRecord
-                    ? Icons.refresh_rounded
-                    : Icons.check_rounded,
-                size: 20,
-              ),
-            const SizedBox(width: 8),
+            Text('ИСТОРИЯ', style: _T.overline(isDark)),
+            const Spacer(),
             Text(
-              _isSubmitting
-                  ? 'СОХРАНЕНИЕ…'
-                  : (hasTodayRecord ? 'ОБНОВИТЬ' : 'СОХРАНИТЬ'),
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
+              '${notes.length}',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isDark ? _C.darkSubtle : _C.lightSubtle,
               ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: _Sp.md),
+        ...notes.take(10).map((note) => _buildHistoryRow(isDark, note, provider)),
+      ],
     );
   }
 
-  // =====================================================================
-  // HISTORY HEADER
-  // =====================================================================
-
-  Widget _buildHistoryHeader(bool isDark, List<WellbeingNote> notes) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 14,
-            decoration: BoxDecoration(
-              color: _Power.volt,
-              borderRadius: BorderRadius.circular(2),
-              boxShadow: _Power.softGlow(_Power.volt, strength: 0.6),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            'ИСТОРИЯ',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.8,
-              color: _Power.textPrimary(isDark),
-            ),
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 9,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: _Power.volt.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '${notes.length}',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.2,
-                height: 1,
-                color: _Power.volt,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // =====================================================================
-  // HISTORY CARD
-  // =====================================================================
-
-  Widget _buildHistoryCard(
+  Widget _buildHistoryRow(
       bool isDark,
       WellbeingNote note,
       FitnessProvider provider,
       ) {
-    final avg = ((note.energyLevel +
-        note.sleepQuality +
-        note.motivationLevel) /
-        3)
-        .toStringAsFixed(1);
-
     return Dismissible(
       key: Key(note.id),
       direction: DismissDirection.endToStart,
@@ -1538,189 +1020,99 @@ class _WellbeingScreenState extends State<WellbeingScreen>
         HapticFeedback.mediumImpact();
         await provider.deleteWellbeingNote(note.id);
         if (!mounted) return;
-        _showSnack('Запись удалена', _Power.red);
+        _showSnack('Запись удалена');
       },
       background: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: _Sp.sm),
+        padding: const EdgeInsets.only(right: _Sp.xl),
         decoration: BoxDecoration(
-          color: _Power.red,
-          borderRadius: BorderRadius.circular(16),
+          color: _C.low,
+          borderRadius: BorderRadius.circular(_R.sm),
         ),
         alignment: Alignment.centerRight,
         child: const Icon(
-          Icons.delete_rounded,
+          Icons.delete_outline_rounded,
           color: Colors.white,
-          size: 24,
+          size: 20,
         ),
       ),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: _Sp.sm),
+        padding: const EdgeInsets.all(_Sp.md),
         decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _Power.separator(isDark),
-            width: 0.5,
-          ),
+          color: isDark ? _C.darkSurface : _C.lightSurface,
+          borderRadius: BorderRadius.circular(_R.sm),
+          border: Border.all(color: isDark ? _C.darkBorder : _C.lightBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date + mood chips
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _Power.card2(isDark),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _formatDate(note.date).toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.8,
-                      color: _Power.textPrimary(isDark),
-                    ),
+                Text(
+                  _formatDate(note.date),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? _C.darkText : _C.lightText,
                   ),
                 ),
                 const Spacer(),
-                _buildMoodChip(isDark, note.energyLevel),
+                _buildMiniMetric(isDark, note.energyLevel),
                 const SizedBox(width: 4),
-                _buildMoodChip(isDark, note.sleepQuality),
+                _buildMiniMetric(isDark, note.sleepQuality),
                 const SizedBox(width: 4),
-                _buildMoodChip(isDark, note.motivationLevel),
+                _buildMiniMetric(isDark, note.motivationLevel),
               ],
             ),
-
-            // Pain
             if (note.painAreas.isNotEmpty &&
                 !note.painAreas.contains('Нет болей')) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: note.painAreas.map((area) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _Power.volt.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      area.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.6,
-                        height: 1,
-                        color: _Power.volt,
-                      ),
-                    ),
-                  );
-                }).toList(),
+              const SizedBox(height: 6),
+              Text(
+                note.painAreas.join(' · '),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: _C.low,
+                ),
               ),
             ],
-
-            // Notes
             if (note.notes != null && note.notes!.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('💭', style: TextStyle(fontSize: 12)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      note.notes!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        height: 1.4,
-                        color: _Power.textSecondary(isDark),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 6),
+              Text(
+                note.notes!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  height: 1.4,
+                  color: isDark ? _C.darkMuted : _C.lightMuted,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
-
-            // Average
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 9,
-                vertical: 5,
-              ),
-              decoration: BoxDecoration(
-                color: _Power.card2(isDark),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.analytics_rounded,
-                    size: 11,
-                    color: _Power.textTertiary(isDark),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'СРЕДНЕЕ: $avg',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
-                      height: 1,
-                      color: _Power.textTertiary(isDark),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMoodChip(bool isDark, int value) {
-    final color = _getColorForValue(value);
-    final emoji = _moodEmojis[value.clamp(1, 10) - 1];
-
+  Widget _buildMiniMetric(bool isDark, int value) {
+    final color = _colorForValue(value);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.14),
-        borderRadius: BorderRadius.circular(7),
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(4),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 11)),
-          const SizedBox(width: 3),
-          Text(
-            '$value',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.2,
-              height: 1,
-              color: color,
-            ),
-          ),
-        ],
+      child: Text(
+        '$value',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          fontFeatures: const [FontFeature.tabularFigures()],
+          color: color,
+        ),
       ),
     );
   }
@@ -1735,11 +1127,14 @@ class _WellbeingScreenState extends State<WellbeingScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: const EdgeInsets.fromLTRB(
+          _Sp.xl, _Sp.md, _Sp.xl, _Sp.xxl,
+        ),
         decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius:
-          const BorderRadius.vertical(top: Radius.circular(28)),
+          color: isDark ? _C.darkSurface : _C.lightSurface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(_R.lg),
+          ),
         ),
         child: SafeArea(
           top: false,
@@ -1750,114 +1145,59 @@ class _WellbeingScreenState extends State<WellbeingScreen>
               Center(
                 child: Container(
                   width: 36,
-                  height: 5,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: _Power.textTertiary(isDark),
-                    borderRadius: BorderRadius.circular(3),
+                    color: isDark ? _C.darkBorder : _C.lightBorder,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'О САМОЧУВСТВИИ',
-                style: TextStyle(
-                  color: _Power.green,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2.2,
-                ),
-              ),
+              const SizedBox(height: _Sp.xl),
+              Text('О САМОЧУВСТВИИ', style: _T.overline(isDark)),
               const SizedBox(height: 4),
-              Text(
-                'Как это работает',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.7,
-                  color: _Power.textPrimary(isDark),
-                ),
-              ),
-              const SizedBox(height: 18),
-              _buildInfoItem(isDark, '⚡', 'ЭНЕРГИЯ',
-                  'Уровень бодрости и активности'),
-              const SizedBox(height: 10),
-              _buildInfoItem(isDark, '😴', 'СОН',
-                  'Качество и продолжительность сна'),
-              const SizedBox(height: 10),
-              _buildInfoItem(isDark, '🎯', 'МОТИВАЦИЯ',
-                  'Желание тренироваться'),
-              const SizedBox(height: 10),
-              _buildInfoItem(isDark, '🔴', 'БОЛИ',
-                  'Отметьте зоны дискомфорта'),
-              const SizedBox(height: 10),
-              _buildInfoItem(
-                  isDark, '💭', 'ЗАМЕТКИ', 'Детали и наблюдения'),
-              const SizedBox(height: 16),
+              Text('Как это работает', style: _T.title(isDark)),
+              const SizedBox(height: _Sp.xl),
+              _buildInfoRow(isDark, 'Энергия', 'Уровень бодрости и активности'),
+              _buildInfoRow(isDark, 'Сон', 'Качество и продолжительность сна'),
+              _buildInfoRow(isDark, 'Мотивация', 'Желание тренироваться'),
+              _buildInfoRow(isDark, 'Болевые точки', 'Отметьте зоны дискомфорта'),
+              _buildInfoRow(isDark, 'Заметки', 'Детали и наблюдения'),
+              const SizedBox(height: _Sp.xl),
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(_Sp.md),
                 decoration: BoxDecoration(
-                  color: _Power.green.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: _Power.green.withOpacity(0.25),
-                    width: 0.8,
+                  color: isDark ? _C.darkSurface2 : _C.lightSurface2,
+                  borderRadius: BorderRadius.circular(_R.sm),
+                ),
+                child: Text(
+                  'Записывайте самочувствие ежедневно, чтобы отслеживать прогресс и вовремя замечать изменения.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.5,
+                    fontWeight: FontWeight.w400,
+                    color: isDark ? _C.darkMuted : _C.lightMuted,
                   ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: _Power.green.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.lightbulb_rounded,
-                        color: _Power.green,
-                        size: 15,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Записывайте самочувствие ежедневно, чтобы отслеживать прогресс и вовремя замечать изменения',
-                        style: TextStyle(
-                          fontSize: 12,
-                          height: 1.4,
-                          fontWeight: FontWeight.w600,
-                          color: _Power.textSecondary(isDark),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: _Sp.lg),
               SizedBox(
                 width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    HapticFeedback.selectionClick();
-                    Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _Power.green,
+                height: 48,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: isDark ? _C.accentDark : _C.accent,
                     foregroundColor: Colors.white,
-                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(_R.sm),
                     ),
+                    elevation: 0,
                   ),
                   child: const Text(
-                    'ПОНЯТНО',
+                    'Понятно',
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -1869,22 +1209,22 @@ class _WellbeingScreenState extends State<WellbeingScreen>
     );
   }
 
-  Widget _buildInfoItem(
-      bool isDark,
-      String emoji,
-      String label,
-      String description,
-      ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _Power.card2(isDark),
-        borderRadius: BorderRadius.circular(12),
-      ),
+  Widget _buildInfoRow(bool isDark, String label, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: _Sp.md),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 12),
+          Container(
+            margin: const EdgeInsets.only(top: 6),
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isDark ? _C.darkSubtle : _C.lightSubtle,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1892,10 +1232,9 @@ class _WellbeingScreenState extends State<WellbeingScreen>
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
-                    color: _Power.textPrimary(isDark),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? _C.darkText : _C.lightText,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1903,8 +1242,8 @@ class _WellbeingScreenState extends State<WellbeingScreen>
                   description,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _Power.textSecondary(isDark),
+                    fontWeight: FontWeight.w400,
+                    color: isDark ? _C.darkMuted : _C.lightMuted,
                   ),
                 ),
               ],
@@ -1919,23 +1258,23 @@ class _WellbeingScreenState extends State<WellbeingScreen>
   // HELPERS
   // =====================================================================
 
-  void _showSnack(String text, Color color, {bool success = false}) {
+  void _showSnack(String text, {bool success = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            if (success)
-              const Icon(Icons.check_circle_rounded,
-                  color: Colors.white, size: 18),
-            if (success) const SizedBox(width: 8),
+            if (success) ...[
+              const Icon(Icons.check_rounded, color: Colors.white, size: 16),
+              const SizedBox(width: _Sp.sm),
+            ],
             Expanded(child: Text(text)),
           ],
         ),
-        backgroundColor: color,
+        backgroundColor: success ? _C.high : _C.low,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(_R.sm),
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -1979,18 +1318,12 @@ extension WellbeingStats on FitnessProvider {
     }
 
     final total = wellbeingNotes.length.toDouble();
-    final avgEnergy = wellbeingNotes
-        .map((n) => n.energyLevel)
-        .reduce((a, b) => a + b) /
-        total;
-    final avgSleep = wellbeingNotes
-        .map((n) => n.sleepQuality)
-        .reduce((a, b) => a + b) /
-        total;
-    final avgMotivation = wellbeingNotes
-        .map((n) => n.motivationLevel)
-        .reduce((a, b) => a + b) /
-        total;
+    final avgEnergy =
+        wellbeingNotes.map((n) => n.energyLevel).reduce((a, b) => a + b) / total;
+    final avgSleep =
+        wellbeingNotes.map((n) => n.sleepQuality).reduce((a, b) => a + b) / total;
+    final avgMotivation =
+        wellbeingNotes.map((n) => n.motivationLevel).reduce((a, b) => a + b) / total;
 
     return {
       'avgEnergy': double.parse(avgEnergy.toStringAsFixed(1)),

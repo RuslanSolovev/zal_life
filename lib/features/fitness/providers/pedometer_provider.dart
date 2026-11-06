@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:accurate_step_counter/accurate_step_counter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:pedometer/pedometer.dart' as ios_pedometer;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,13 +58,22 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
   static const _kCadence1 = 'pedo_cadence1';
   static const _kCadence2 = 'pedo_cadence2';
   static const _kCadence3 = 'pedo_cadence3';
+  static const _kAckAchievements = 'pedo_ack_ach';
+
+  static const _bootChannel = MethodChannel('com.example.zal_life/boot');
 
   int _steps = 0;
   int _goal = 10000;
   String _todayKey = '';
 
+  // ─── Android ───
   final _stepCounter = AccurateStepCounter();
-  StreamSubscription<int>? _todayStepsSub;
+  StreamSubscription<int>? _androidStepsSub;
+  bool _androidStarted = false;
+
+  // ─── iOS ───
+  StreamSubscription<ios_pedometer.StepCount>? _iosStepsSub;
+  int _iosBaseline = -1;
 
   bool _isWalking = false;
   DateTime? _lastStepTime;
@@ -72,6 +84,15 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
   int _zone2Seconds = 0;
   int _zone3Seconds = 0;
   Timer? _cadenceTimer;
+  Timer? _keepAliveTimer;
+  Timer? _watchdogTimer;
+
+  DateTime _lastStreamUpdate = DateTime.now();
+  DateTime? _processStartTime;
+
+  // ─── Android: защита от ребута ───
+  int _sensorResetBaseline = -1;
+  bool _sensorWasReset = false;
 
   DateTime? _walkStartTime;
   bool _isContinuousWalk = false;
@@ -90,7 +111,10 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
   Map<int, int> _hourlySteps = {};
   List<StepDay> _history = [];
 
-  // ─── Геттеры (Базовые) ───
+  final Set<int> _shownMilestones = {};
+  final Set<String> _acknowledgedAchievements = {};
+
+  // ─── Геттеры ───
   int get steps => _steps;
   int get goal => _goal;
   double get progress => _goal > 0 ? (_steps / _goal).clamp(0.0, 1.0) : 0.0;
@@ -105,12 +129,11 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
   Map<int, int> get hourlySteps => _hourlySteps;
   List<StepDay> get history => _history;
 
-  // ─── Каденс и Прогулка ───
   int get cadence {
     final now = DateTime.now();
     _recentStepTimes.removeWhere((t) => now.difference(t).inSeconds > 60);
     if (_recentStepTimes.isEmpty) {
-      return _isWalking ? 90 : 0; // Если идем, показываем средний темп
+      return _isWalking ? 90 : 0;
     }
     return _recentStepTimes.length;
   }
@@ -121,29 +144,24 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool get isContinuousWalk => _isContinuousWalk;
   Duration get walkDuration => _walkDuration;
 
-  // ─── Калибровка (Сегодня) ───
   double get distanceKm => (_steps * (_heightCm * 0.415) / 100000.0);
   double get calories => _steps * (_weightKg * 0.0005);
   int get activeMinutes => (_steps / 100).round();
   bool get isOnFire => _steps > (_goal * 1.5);
 
-  // Средняя скорость (км/ч) за сегодня
   double get averageSpeed {
     if (activeMinutes == 0) return 0.0;
     return (distanceKm / (activeMinutes / 60.0)).clamp(0.0, 20.0);
   }
 
-  // ─── Данные за всё время ───
   double get totalDistanceKmAllTime =>
       _history.fold<double>(0, (sum, d) => sum + (d.steps * (_heightCm * 0.415) / 100000.0));
 
-  int get totalStepsAllTime =>
-      _history.fold<int>(0, (sum, d) => sum + d.steps);
+  int get totalStepsAllTime => _history.fold<int>(0, (sum, d) => sum + d.steps);
 
   double get totalCaloriesAllTime =>
       _history.fold<double>(0, (sum, d) => sum + (d.steps * (_weightKg * 0.0005)));
 
-  // ─── Данные за неделю ───
   int get weeklySteps {
     final last7 = _history.length > 7 ? _history.sublist(_history.length - 7) : _history;
     return last7.fold<int>(0, (sum, d) => sum + d.steps);
@@ -154,7 +172,6 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     return last7.fold<double>(0, (sum, d) => sum + (d.steps * (_heightCm * 0.415) / 100000.0));
   }
 
-  // ─── Рекорды и Индекс ───
   int get bestDaySteps {
     if (_history.isEmpty) return _steps;
     final maxHist = _history.fold<int>(0, (m, d) => d.steps > m ? d.steps : m);
@@ -163,14 +180,13 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   int get activityScore {
     double score = 0;
-    score += progress * 40; // 40% за шаги
-    score += (distanceKm / 8.0).clamp(0.0, 1.0) * 20; // 20% за 8 км
-    score += (calories / 500.0).clamp(0.0, 1.0) * 20; // 20% за 500 ккал
-    score += (activeMinutes / 30.0).clamp(0.0, 1.0) * 20; // 20% за 30 мин
+    score += progress * 40;
+    score += (distanceKm / 8.0).clamp(0.0, 1.0) * 20;
+    score += (calories / 500.0).clamp(0.0, 1.0) * 20;
+    score += (activeMinutes / 30.0).clamp(0.0, 1.0) * 20;
     return score.round().clamp(0, 100);
   }
 
-  // Улучшенный стрик
   int get currentStreak {
     if (_history.isEmpty) return 0;
     int streak = 0;
@@ -182,25 +198,84 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     return streak;
   }
 
+  // ═══ УРОВНИ / AP / ПРОГНОЗ ═══
+
+  int get level => (totalStepsAllTime / 50000).floor() + 1;
+  double get levelProgress => (totalStepsAllTime % 50000) / 50000;
+  int get stepsToNextLevel => 50000 - (totalStepsAllTime % 50000);
+  int get achievementPoints => achievements.where((a) => a.unlocked).length * 10;
+
+  double get monthlyProjection {
+    if (_history.length < 2) return totalDistanceKmAllTime;
+    final avgDaily = weeklyDistance / 7;
+    final now = DateTime.now();
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    return avgDaily * daysInMonth;
+  }
+
+  int get lastWeekSteps {
+    if (_history.length < 8) return 0;
+    final end = _history.length - 7;
+    final start = math.max(0, end - 7);
+    return _history.sublist(start, end).fold<int>(0, (s, d) => s + d.steps);
+  }
+
+  int get weekDiffPercent {
+    final lw = lastWeekSteps;
+    if (lw == 0) return weeklySteps > 0 ? 100 : 0;
+    return ((weeklySteps - lw) / lw * 100).round();
+  }
+
+  int? get pendingMilestone {
+    const milestones = [1000, 2000, 5000, 10000, 15000, 20000, 30000];
+    for (final m in milestones.reversed) {
+      if (_steps >= m && !_shownMilestones.contains(m)) return m;
+    }
+    return null;
+  }
+
+  List<Achievement> get newAchievements => achievements
+      .where((a) => a.unlocked && !_acknowledgedAchievements.contains(a.id))
+      .toList();
+
+  Future<void> acknowledgeMilestone(int m) async {
+    _shownMilestones.add(m);
+  }
+
+  Future<void> acknowledgeAchievements() async {
+    final pending = newAchievements;
+    if (pending.isEmpty) return;
+    for (final a in pending) {
+      _acknowledgedAchievements.add(a.id);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kAckAchievements, _acknowledgedAchievements.toList());
+  }
+
+  int _getUptimeMinutes() {
+    _processStartTime ??= DateTime.now();
+    return DateTime.now().difference(_processStartTime!).inMinutes;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  INIT
+  // ═══════════════════════════════════════════════════════════
   Future<void> init() async {
     if (_initialized) return;
     _initialized = true;
 
+    _processStartTime = DateTime.now();
+
     WidgetsBinding.instance.addObserver(this);
 
     try {
-      final status = await Permission.activityRecognition.status;
-      if (status.isDenied) {
-        final result = await Permission.activityRecognition.request();
-        if (!result.isGranted) {
-          _permissionDenied = true;
-          _available = false;
-          _error = 'Доступ к физической активности запрещён';
-          await _loadFromPrefs();
-          notifyListeners();
-          return;
-        }
-      } else if (status.isPermanentlyDenied) {
+      if (await Permission.activityRecognition.isDenied) {
+        await Permission.activityRecognition.request();
+      }
+      if (await Permission.sensors.isDenied) {
+        await Permission.sensors.request();
+      }
+      if (await Permission.activityRecognition.isPermanentlyDenied) {
         _permissionDenied = true;
         _available = false;
         _error = 'Разрешите доступ в настройках';
@@ -209,30 +284,146 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
         return;
       }
     } catch (e) {
-      debugPrint('Permission: $e');
+      debugPrint('[Pedometer] Permission error: $e');
     }
 
     await _loadFromPrefs();
 
+    if (Platform.isAndroid) {
+      await _checkIfRebootedAndroid();
+    }
+
+    await _startTracking();
+    _startCadenceTimer();
+
+    if (Platform.isAndroid) {
+      _startKeepAlive();
+      _startWatchdog();
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> _checkIfRebootedAndroid() async {
+    if (!Platform.isAndroid) return;
     try {
-      await _stepCounter.startTracking();
-      _todayStepsSub = _stepCounter.watchTodaySteps().listen(
-        _onTodaySteps,
-        onError: (Object e) {
-          _available = false;
-          _error = '$e';
-          _permissionDenied = true;
-          notifyListeners();
-        },
-      );
+      final wasRebooted = await _bootChannel.invokeMethod<bool>('isAfterBoot') ?? false;
+      if (wasRebooted) {
+        debugPrint('[Pedometer/Android] Phone was rebooted! Enabling reset protection.');
+        _sensorWasReset = true;
+        _sensorResetBaseline = -1;
+      }
+      await _bootChannel.invokeMethod('markBootChecked');
+    } catch (e) {
+      debugPrint('[Pedometer/Android] Boot check unavailable: $e');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  TRACKING
+  // ═══════════════════════════════════════════════════════════
+  Future<void> _startTracking() async {
+    try {
+      if (Platform.isIOS) {
+        _startIOS();
+      } else {
+        await _startAndroid();
+      }
+      _lastStreamUpdate = DateTime.now();
     } catch (e) {
       _available = false;
       _error = '$e';
       notifyListeners();
+      debugPrint('[Pedometer] Start error: $e');
     }
+  }
 
-    _startCadenceTimer();
-    notifyListeners();
+  Future<void> _startAndroid() async {
+    if (_androidStarted) return;
+    await _stepCounter.startTracking();
+    _androidStarted = true;
+    _androidStepsSub = _stepCounter.watchTodaySteps().listen(
+      _onStepsAndroid,
+      onError: (e) {
+        _available = false;
+        _error = '$e';
+        notifyListeners();
+        debugPrint('[Pedometer/Android] Stream error: $e');
+      },
+    );
+    debugPrint('[Pedometer/Android] Started via accurate_step_counter');
+  }
+
+  void _startIOS() {
+    _iosBaseline = -1;
+    _iosStepsSub = ios_pedometer.Pedometer.stepCountStream.listen(
+      _onStepsIOS,
+      onError: (e) {
+        _available = false;
+        _error = '$e';
+        notifyListeners();
+        debugPrint('[Pedometer/iOS] Stream error: $e');
+      },
+    );
+    debugPrint('[Pedometer/iOS] Started via CMPedometer');
+  }
+
+  Future<void> _emergencyRestart() async {
+    debugPrint('[Pedometer] ⚠️ EMERGENCY RESTART');
+    try {
+      if (Platform.isIOS) {
+        await _iosStepsSub?.cancel();
+        _startIOS();
+      } else {
+        await _androidStepsSub?.cancel();
+        await _stepCounter.stop();
+        _androidStarted = false;
+        await Future.delayed(const Duration(milliseconds: 500));
+        await _startAndroid();
+        await _fetchFreshSteps();
+      }
+      _lastStreamUpdate = DateTime.now();
+    } catch (e) {
+      debugPrint('[Pedometer] Emergency restart error: $e');
+    }
+  }
+
+  Future<void> _fetchFreshSteps() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final current = await _stepCounter.getTodaySteps();
+      if (current > _steps) {
+        debugPrint('[Pedometer/Android] Fetch fresh: $current (was $_steps)');
+        _onStepsAndroid(current);
+      } else if (current < _steps) {
+        debugPrint('[Pedometer/Android] Fetch lower, ignoring: $current vs $_steps');
+      }
+    } catch (e) {
+      debugPrint('[Pedometer/Android] Fetch unavailable: $e');
+    }
+  }
+
+  void _startKeepAlive() {
+    _keepAliveTimer?.cancel();
+    _keepAliveTimer = Timer.periodic(const Duration(minutes: 2), (_) async {
+      await _fetchFreshSteps();
+    });
+  }
+
+  void _startWatchdog() {
+    _watchdogTimer?.cancel();
+    _watchdogTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
+      final silence = DateTime.now().difference(_lastStreamUpdate);
+      if (silence.inMinutes < 10) return;
+
+      debugPrint('[Pedometer/Android] Watchdog: silent ${silence.inMinutes}m');
+      final before = _steps;
+      await _fetchFreshSteps();
+      if (_steps == before) {
+        debugPrint('[Pedometer/Android] Watchdog: fetch failed, EMERGENCY RESTART');
+        await _emergencyRestart();
+      }
+    });
   }
 
   Future<void> checkPermissionStatus() async {
@@ -246,26 +437,20 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _syncStepsNow();
+    if (state != AppLifecycleState.resumed) return;
+    if (Platform.isIOS) {
+      _startIOS();
+    } else {
+      _fetchFreshSteps();
     }
   }
 
-  Future<void> _syncStepsNow() async {
-    await _todayStepsSub?.cancel();
-    try {
-      _todayStepsSub = _stepCounter.watchTodaySteps().listen(
-        _onTodaySteps,
-        onError: (Object e) {
-          _available = false;
-          _error = '$e';
-          notifyListeners();
-        },
-      );
-    } catch (_) {}
-  }
+  // ═══════════════════════════════════════════════════════════
+  //  ANDROID: обработчик шагов
+  // ═══════════════════════════════════════════════════════════
+  void _onStepsAndroid(int systemSteps) {
+    _lastStreamUpdate = DateTime.now();
 
-  void _onTodaySteps(int systemSteps) {
     final now = DateTime.now();
     final key = _dateKey(now);
 
@@ -274,37 +459,126 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
       _todayKey = key;
       _hourlySteps = {};
       _steps = 0;
+      _sensorWasReset = false;
+      _sensorResetBaseline = -1;
+      _shownMilestones.clear();
     }
 
-    final delta = systemSteps - _steps;
+    // ─── ЗАЩИТА ОТ РЕБУТА — ПЕРВОЙ ───
+    if (_sensorWasReset) {
+      if (_sensorResetBaseline < 0) {
+        _sensorResetBaseline = systemSteps;
+        debugPrint('[Pedometer/Android] Reset baseline = $systemSteps, keep _steps=$_steps');
+        return;
+      }
+      final added = systemSteps - _sensorResetBaseline;
+      if (added > 0) {
+        _steps += added;
+        _sensorResetBaseline = systemSteps;
+        _hourlySteps[now.hour] = (_hourlySteps[now.hour] ?? 0) + added;
+        _lastStepTime = now;
+        for (int i = 0; i < added; i++) {
+          _recentStepTimes.add(now);
+        }
+        _recentStepTimes.removeWhere((t) => now.difference(t).inSeconds > 60);
+        _cadence = _recentStepTimes.length;
+        _updateWalkingState();
+        _persistThrottled();
+        _loadHistory();
+        notifyListeners();
+      }
+      return;
+    }
 
+    // ─── АНТИ-ГЛИТЧ + FALLBACK-ДЕТЕКТ РЕБУТА ───
+    if (systemSteps < _steps - 5) {
+      final uptime = _getUptimeMinutes();
+      if (uptime < 10) {
+        debugPrint(
+          '[Pedometer/Android] 🔄 Reboot detected via uptime ($uptime min) — '
+              'system=$systemSteps < memory=$_steps',
+        );
+        _sensorWasReset = true;
+        _sensorResetBaseline = systemSteps;
+        return;
+      }
+
+      debugPrint(
+        '[Pedometer/Android] 🛑 Anti-glitch: system=$systemSteps < memory=$_steps → IGNORING',
+      );
+      return;
+    }
+
+    // ─── НОРМАЛЬНОЕ ОБНОВЛЕНИЕ ───
+    final delta = systemSteps - _steps;
     if (delta > 0) {
       _steps = systemSteps;
       _hourlySteps[now.hour] = (_hourlySteps[now.hour] ?? 0) + delta;
       _lastStepTime = now;
-
       for (int i = 0; i < delta; i++) {
         _recentStepTimes.add(now);
       }
       _recentStepTimes.removeWhere((t) => now.difference(t).inSeconds > 60);
       _cadence = _recentStepTimes.length;
-
       _updateWalkingState();
-      _persistThrottled();
-      _loadHistory();
-      notifyListeners();
-    } else if (delta < 0) {
-      _steps = systemSteps;
       _persistThrottled();
       _loadHistory();
       notifyListeners();
     }
   }
 
+  // ═══════════════════════════════════════════════════════════
+  //  iOS: обработчик шагов
+  // ═══════════════════════════════════════════════════════════
+  void _onStepsIOS(ios_pedometer.StepCount event) {
+    _lastStreamUpdate = DateTime.now();
+
+    final now = DateTime.now();
+    final key = _dateKey(now);
+
+    if (key != _todayKey) {
+      _persistHistory(_todayKey, _steps);
+      _todayKey = key;
+      _hourlySteps = {};
+      _steps = 0;
+      _iosBaseline = -1;
+      _shownMilestones.clear();
+    }
+
+    if (_iosBaseline < 0) {
+      _iosBaseline = event.steps - _steps;
+      debugPrint('[Pedometer/iOS] Baseline set: $_iosBaseline (raw=${event.steps}, saved=$_steps)');
+      return;
+    }
+
+    final stepsToday = event.steps - _iosBaseline;
+    final delta = stepsToday - _steps;
+
+    if (delta > 0) {
+      _steps = stepsToday;
+      _hourlySteps[now.hour] = (_hourlySteps[now.hour] ?? 0) + delta;
+      _lastStepTime = now;
+      for (int i = 0; i < delta; i++) {
+        _recentStepTimes.add(now);
+      }
+      _recentStepTimes.removeWhere((t) => now.difference(t).inSeconds > 60);
+      _cadence = _recentStepTimes.length;
+      _updateWalkingState();
+      _persistThrottled();
+      _loadHistory();
+      notifyListeners();
+    } else if (delta < 0) {
+      _iosBaseline = event.steps - _steps;
+      debugPrint('[Pedometer/iOS] Re-baseline: $_iosBaseline');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  Каденс, зоны, прогулка
+  // ═══════════════════════════════════════════════════════════
   void _startCadenceTimer() {
     _cadenceTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _updateWalkingState();
-
       if (_isWalking || _recentStepTimes.isNotEmpty) {
         _cadence = cadence;
         if (_cadence < 100) {
@@ -328,7 +602,6 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
         _walkStartTime ??= now;
         notifyListeners();
       }
-
       if (now.difference(_walkStartTime!).inMinutes >= 5 && !_isContinuousWalk) {
         _isContinuousWalk = true;
         _walkTimer?.cancel();
@@ -351,12 +624,20 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════
+  //  PERSISTENCE
+  // ═══════════════════════════════════════════════════════════
   Future<void> _loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     _todayKey = _dateKey(DateTime.now());
 
     _heightCm = prefs.getDouble(_kHeight) ?? 175.0;
     _weightKg = prefs.getDouble(_kWeight) ?? 70.0;
+
+    if (_acknowledgedAchievements.isEmpty) {
+      final ack = prefs.getStringList(_kAckAchievements) ?? [];
+      _acknowledgedAchievements.addAll(ack);
+    }
 
     final savedDate = prefs.getString(_kDate);
     if (savedDate != _todayKey) {
@@ -369,6 +650,7 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
       _zone1Seconds = 0;
       _zone2Seconds = 0;
       _zone3Seconds = 0;
+      _shownMilestones.clear();
       await prefs.setString(_kDate, _todayKey);
       await prefs.setInt(_kSteps, 0);
       await prefs.remove(_kHourly);
@@ -381,9 +663,16 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
       _zone2Seconds = prefs.getInt(_kCadence2) ?? 0;
       _zone3Seconds = prefs.getInt(_kCadence3) ?? 0;
       final hourlyStr = prefs.getString(_kHourly);
-      if (hourlyStr != null) {
-        final Map<String, dynamic> decoded = jsonDecode(hourlyStr);
-        _hourlySteps = decoded.map((k, v) => MapEntry(int.parse(k), v as int));
+      if (hourlyStr != null && hourlyStr.isNotEmpty) {
+        try {
+          final Map<String, dynamic> decoded = jsonDecode(hourlyStr);
+          _hourlySteps = decoded.map(
+                (k, v) => MapEntry(int.parse(k), (v as num).toInt()),
+          );
+        } catch (e) {
+          debugPrint('[Pedometer] hourly decode error: $e');
+          _hourlySteps = {};
+        }
       }
     }
     _goal = prefs.getInt(_kGoal) ?? 10000;
@@ -423,11 +712,19 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  /// ⚠️ ВАЖНО: _hourlySteps — Map<int,int>. jsonEncode не умеет int-ключи.
   Future<void> _persist() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_kSteps, _steps);
-    await prefs.setString(_kDate, _todayKey);
-    await prefs.setString(_kHourly, jsonEncode(_hourlySteps));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_kSteps, _steps);
+      await prefs.setString(_kDate, _todayKey);
+      final hourlyStr = jsonEncode(
+        _hourlySteps.map((k, v) => MapEntry(k.toString(), v)),
+      );
+      await prefs.setString(_kHourly, hourlyStr);
+    } catch (e) {
+      debugPrint('[Pedometer] _persist error: $e');
+    }
   }
 
   void _persistThrottled() {
@@ -472,7 +769,8 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     _error = null;
     _available = true;
     _initialized = false;
-    await _todayStepsSub?.cancel();
+    await _androidStepsSub?.cancel();
+    await _iosStepsSub?.cancel();
     await init();
   }
 
@@ -480,11 +778,25 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     await openAppSettings();
   }
 
-  // ─── 6 Квестов ───
+  Future<void> requestBatteryOptimization() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _bootChannel.invokeMethod('requestIgnoreBatteryOptimizations');
+    } catch (e) {
+      debugPrint('[Pedometer] Battery opt request failed: $e');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  QUESTS & ACHIEVEMENTS
+  // ═══════════════════════════════════════════════════════════
   List<DailyQuest> get quests {
     final hour = DateTime.now().hour;
-    final morningSteps = _hourlySteps.entries.where((e) => e.key < 10).fold(0, (sum, e) => sum + e.value);
-    final nightSteps = _hourlySteps.entries.where((e) => e.key >= 22).fold(0, (sum, e) => sum + e.value);
+    final morningSteps = _hourlySteps.entries
+        .where((e) => e.key < 10)
+        .fold(0, (sum, e) => sum + e.value);
+    final nightSteps =
+    _hourlySteps.entries.where((e) => e.key >= 22).fold(0, (sum, e) => sum + e.value);
 
     return [
       DailyQuest(
@@ -533,27 +845,110 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     ];
   }
 
-  // ─── 14 Достижений ───
   List<Achievement> get achievements {
     final totalSteps = totalStepsAllTime;
     final totalCalories = totalCaloriesAllTime;
     final maxHistory = _history.fold<int>(0, (m, d) => d.steps > m ? d.steps : m);
 
     return [
-      Achievement(id: 'first', emoji: '👟', title: 'Первый шаг', description: '1 шаг', unlocked: totalSteps > 0),
-      Achievement(id: '5k', emoji: '🚶', title: '5 000', description: '5 000 за день', unlocked: maxHistory >= 5000),
-      Achievement(id: '10k', emoji: '🔥', title: '10 000', description: '10 000 за день', unlocked: maxHistory >= 10000),
-      Achievement(id: '15k', emoji: '⚡', title: '15 000', description: '15 000 за день', unlocked: maxHistory >= 15000),
-      Achievement(id: '20k', emoji: '🏃', title: '20 000', description: '20 000 за день', unlocked: maxHistory >= 20000),
-      Achievement(id: 'streak_3', emoji: '✨', title: 'Серия 3', description: '3 дня подряд', unlocked: currentStreak >= 3),
-      Achievement(id: 'streak_7', emoji: '🌟', title: 'Серия 7', description: '7 дней подряд', unlocked: currentStreak >= 7),
-      Achievement(id: 'streak_30', emoji: '👑', title: 'Серия 30', description: '30 дней подряд', unlocked: currentStreak >= 30),
-      Achievement(id: 'dist_10', emoji: '🚩', title: '10 км', description: '10 км суммарно', unlocked: totalDistanceKmAllTime >= 10),
-      Achievement(id: 'dist_100', emoji: '🌍', title: '100 км', description: '100 км суммарно', unlocked: totalDistanceKmAllTime >= 100),
-      Achievement(id: 'marathon', emoji: '🏅', title: 'Марафон', description: '42 км суммарно', unlocked: totalDistanceKmAllTime >= 42.2),
-      Achievement(id: 'steps_100k', emoji: '💯', title: '100 000', description: '100 000 шагов всего', unlocked: totalSteps >= 100000),
-      Achievement(id: 'cal_5k', emoji: '🔥', title: '5 000 ккал', description: '5 000 ккал сожжено', unlocked: totalCalories >= 5000),
-      Achievement(id: 'cal_10k', emoji: '💥', title: '10 000 ккал', description: '10 000 ккал сожжено', unlocked: totalCalories >= 10000),
+      Achievement(
+        id: 'first',
+        emoji: '👟',
+        title: 'Первый шаг',
+        description: '1 шаг',
+        unlocked: totalSteps > 0,
+      ),
+      Achievement(
+        id: '5k',
+        emoji: '🚶',
+        title: '5 000',
+        description: '5 000 за день',
+        unlocked: maxHistory >= 5000,
+      ),
+      Achievement(
+        id: '10k',
+        emoji: '🔥',
+        title: '10 000',
+        description: '10 000 за день',
+        unlocked: maxHistory >= 10000,
+      ),
+      Achievement(
+        id: '15k',
+        emoji: '⚡',
+        title: '15 000',
+        description: '15 000 за день',
+        unlocked: maxHistory >= 15000,
+      ),
+      Achievement(
+        id: '20k',
+        emoji: '🏃',
+        title: '20 000',
+        description: '20 000 за день',
+        unlocked: maxHistory >= 20000,
+      ),
+      Achievement(
+        id: 'streak_3',
+        emoji: '✨',
+        title: 'Серия 3',
+        description: '3 дня подряд',
+        unlocked: currentStreak >= 3,
+      ),
+      Achievement(
+        id: 'streak_7',
+        emoji: '🌟',
+        title: 'Серия 7',
+        description: '7 дней подряд',
+        unlocked: currentStreak >= 7,
+      ),
+      Achievement(
+        id: 'streak_30',
+        emoji: '👑',
+        title: 'Серия 30',
+        description: '30 дней подряд',
+        unlocked: currentStreak >= 30,
+      ),
+      Achievement(
+        id: 'dist_10',
+        emoji: '🚩',
+        title: '10 км',
+        description: '10 км суммарно',
+        unlocked: totalDistanceKmAllTime >= 10,
+      ),
+      Achievement(
+        id: 'dist_100',
+        emoji: '🌍',
+        title: '100 км',
+        description: '100 км суммарно',
+        unlocked: totalDistanceKmAllTime >= 100,
+      ),
+      Achievement(
+        id: 'marathon',
+        emoji: '🏅',
+        title: 'Марафон',
+        description: '42 км суммарно',
+        unlocked: totalDistanceKmAllTime >= 42.2,
+      ),
+      Achievement(
+        id: 'steps_100k',
+        emoji: '💯',
+        title: '100 000',
+        description: '100 000 шагов всего',
+        unlocked: totalSteps >= 100000,
+      ),
+      Achievement(
+        id: 'cal_5k',
+        emoji: '🔥',
+        title: '5 000 ккал',
+        description: '5 000 ккал сожжено',
+        unlocked: totalCalories >= 5000,
+      ),
+      Achievement(
+        id: 'cal_10k',
+        emoji: '💥',
+        title: '10 000 ккал',
+        description: '10 000 ккал сожжено',
+        unlocked: totalCalories >= 10000,
+      ),
     ];
   }
 
@@ -565,7 +960,10 @@ class PedometerProvider extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _walkTimer?.cancel();
     _cadenceTimer?.cancel();
-    _todayStepsSub?.cancel();
+    _keepAliveTimer?.cancel();
+    _watchdogTimer?.cancel();
+    _androidStepsSub?.cancel();
+    _iosStepsSub?.cancel();
     super.dispose();
   }
 }

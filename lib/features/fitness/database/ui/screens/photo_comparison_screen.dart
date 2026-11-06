@@ -1,14 +1,158 @@
+// features/fitness/ui/screens/photo_comparison_screen.dart
+// 🎨 design refinement: tokens, pressable, layered elevation, unified sheets
 import 'dart:io';
+import 'dart:ui' show FontFeature;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+
 import '../../../models/fitness_models.dart';
 import '../../../providers/fitness_provider.dart';
 
+// ==================== DESIGN TOKENS ====================
+
+class _P {
+  static const orange       = Color(0xFFFF6B35);
+  static const orangeBright = Color(0xFFFF8B5C);
+  static const orangeDeep   = Color(0xFFFF3D00);
+  static const orangeSoft   = Color(0xFFFFF0EB);
+
+  static const green     = Color(0xFF4CAF50);
+  static const greenSoft = Color(0xFFE8F5E9);
+  static const blue      = Color(0xFF4A9BFF);
+  static const blueSoft  = Color(0xFFE8F1FF);
+  static const red       = Color(0xFFF44336);
+  static const redSoft   = Color(0xFFFFEBEA);
+  static const grey      = Color(0xFF6C7A8A);
+  static const greySoft  = Color(0xFFEEF1F4);
+
+  static const darkBg    = Color(0xFF0A0D14);
+  static const darkCard  = Color(0xFF1A1D24);
+  static const darkCard2 = Color(0xFF252830);
+  static const lightBg   = Color(0xFFF2F5F9);
+  static const lightCard = Color(0xFFFFFFFF);
+  static const lightCard2 = Color(0xFFF8F9FA);
+
+  static Color bg(bool d) => d ? darkBg : lightBg;
+  static Color card(bool d) => d ? darkCard : lightCard;
+  static Color card2(bool d) => d ? darkCard2 : lightCard2;
+  static Color textPrimary(bool d) =>
+      d ? Colors.white : const Color(0xFF1A1D24);
+  static Color textSecondary(bool d) => d
+      ? Colors.white.withOpacity(0.62)
+      : const Color(0xFF3C3C43).withOpacity(0.62);
+  static Color textTertiary(bool d) => d
+      ? Colors.white.withOpacity(0.32)
+      : const Color(0xFF3C3C43).withOpacity(0.32);
+  static Color separator(bool d) =>
+      d ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
+
+  static List<BoxShadow> softGlow(Color c, {double strength = 0.18}) =>
+      [BoxShadow(color: c.withOpacity(strength), blurRadius: 16)];
+
+  static List<BoxShadow> cardShadow(bool isDark, Color tint) => isDark
+      ? [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.45),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: Colors.black.withOpacity(0.25),
+      blurRadius: 14,
+      offset: const Offset(0, 6),
+    ),
+  ]
+      : [
+    BoxShadow(
+      color: tint.withOpacity(0.04),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: tint.withOpacity(0.06),
+      blurRadius: 16,
+      offset: const Offset(0, 6),
+    ),
+  ];
+}
+
+class _R {
+  static const xs = 8.0;
+  static const sm = 12.0;
+  static const md = 14.0;
+  static const lg = 18.0;
+  static const xl = 22.0;
+  static const xxl = 28.0;
+}
+
+class _Sp {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 20.0;
+  static const xxl = 24.0;
+}
+
+class _Num {
+  static const _feat = <FontFeature>[FontFeature.tabularFigures()];
+  static TextStyle t(TextStyle base) => base.copyWith(fontFeatures: _feat);
+}
+
+// ==================== PRESSABLE ====================
+
+class _Pressable extends StatefulWidget {
+  const _Pressable({
+    required this.child,
+    required this.onTap,
+    this.onLongPress,
+    this.scale = 0.97,
+    this.haptic = true,
+  });
+  final Widget child;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final double scale;
+  final bool haptic;
+  @override
+  State<_Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<_Pressable> {
+  bool _pressed = false;
+  void _set(bool v) {
+    if (_pressed != v) setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _set(true),
+      onTapUp: (_) => _set(false),
+      onTapCancel: () => _set(false),
+      onTap: () {
+        if (widget.haptic) HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      onLongPress: widget.onLongPress,
+      child: AnimatedScale(
+        scale: _pressed ? widget.scale : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ==================== SCREEN ====================
+
 class PhotoComparisonScreen extends StatefulWidget {
   final bool isDark;
-
   const PhotoComparisonScreen({super.key, this.isDark = false});
 
   @override
@@ -31,30 +175,30 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
 
   String _selectedFilter = 'all';
 
-  final List<FilterOption> _filterOptions = [
-    const FilterOption(
+  final List<FilterOption> _filterOptions = const [
+    FilterOption(
       id: 'all',
       label: 'Все фото',
       icon: Icons.grid_view_rounded,
-      color: Color(0xFF6C7A8A),
+      color: _P.grey,
     ),
-    const FilterOption(
+    FilterOption(
       id: 'progress',
       label: 'Прогресс',
       icon: Icons.trending_up_rounded,
-      color: Color(0xFF4CAF50),
+      color: _P.green,
     ),
-    const FilterOption(
+    FilterOption(
       id: 'workout',
       label: 'Тренировки',
       icon: Icons.fitness_center_rounded,
-      color: Color(0xFFFF6B35),
+      color: _P.orange,
     ),
-    const FilterOption(
+    FilterOption(
       id: 'measurements',
       label: 'Замеры',
       icon: Icons.straighten_rounded,
-      color: Color(0xFF4A9BFF),
+      color: _P.blue,
     ),
   ];
 
@@ -69,7 +213,6 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
       parent: _fadeController,
       curve: Curves.easeOutCubic,
     );
-
     _scaleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -93,7 +236,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     final photos = provider.photos;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0A0D14) : const Color(0xFFF2F5F9),
+      backgroundColor: _P.bg(isDark),
       appBar: _buildAppBar(isDark, provider),
       body: _isCompareMode
           ? _buildCompareView(isDark, photos)
@@ -102,12 +245,18 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
+  // =====================================================================
+  // APP BAR
+  // =====================================================================
+
   PreferredSizeWidget _buildAppBar(bool isDark, FitnessProvider provider) {
     final photos = provider.photos;
 
     return AppBar(
-      backgroundColor: isDark ? const Color(0xFF1A1D24) : Colors.white,
+      backgroundColor: _P.bg(isDark).withOpacity(0.92),
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 0,
       centerTitle: true,
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -117,9 +266,10 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFF6B35), Color(0xFFFF3D00)],
+                  colors: [_P.orange, _P.orangeDeep],
                 ),
                 borderRadius: BorderRadius.circular(10),
+                boxShadow: _P.softGlow(_P.orange, strength: 0.45),
               ),
               child: const Icon(Icons.photo_camera_rounded,
                   color: Colors.white, size: 18),
@@ -128,78 +278,98 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
           Text(
             _isCompareMode ? 'Сравнение' : 'Фотоотчёты',
             style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.w800,
+              color: _P.textPrimary(isDark),
+              fontWeight: FontWeight.w900,
               fontSize: 17,
+              letterSpacing: -0.4,
             ),
           ),
           if (!_isCompareMode && photos.isNotEmpty)
             Container(
-              margin: const EdgeInsets.only(left: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              margin: const EdgeInsets.only(left: _Sp.sm),
+              padding:
+              const EdgeInsets.symmetric(horizontal: _Sp.sm, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF6B35).withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
+                color: _P.orange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(_R.sm),
               ),
               child: Text(
                 '${photos.length}',
-                style: const TextStyle(
+                style: _Num.t(const TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFFF6B35),
-                ),
+                  fontWeight: FontWeight.w900,
+                  color: _P.orange,
+                )),
               ),
             ),
         ],
       ),
       actions: [
         if (_isCompareMode) ...[
-          IconButton(
-            icon: AnimatedSwitcher(
+          _Pressable(
+            onTap: () => setState(() => _isSliderMode = !_isSliderMode),
+            scale: 0.9,
+            child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, anim) =>
+                  RotationTransition(turns: anim, child: child),
               child: Icon(
                 _isSliderMode
                     ? Icons.compare_arrows_rounded
                     : Icons.swipe_rounded,
                 key: ValueKey(_isSliderMode),
-                color: const Color(0xFFFF6B35),
+                color: _P.orange,
               ),
             ),
-            tooltip: _isSliderMode ? 'Рядом' : 'Слайдер',
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              setState(() => _isSliderMode = !_isSliderMode);
-            },
           ),
-          IconButton(
-            icon: const Icon(Icons.close_rounded, color: Colors.grey),
-            onPressed: () {
-              HapticFeedback.mediumImpact();
+          const SizedBox(width: 4),
+          _Pressable(
+            onTap: () {
               setState(() {
                 _isCompareMode = false;
                 _selectedPhotoIndex1 = null;
                 _selectedPhotoIndex2 = null;
               });
             },
+            scale: 0.9,
+            child: Icon(Icons.close_rounded,
+                color: _P.textTertiary(isDark)),
           ),
+          const SizedBox(width: _Sp.sm),
         ] else if (photos.length >= 2) ...[
-          TextButton.icon(
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              setState(() => _isCompareMode = true);
-            },
-            icon: const Icon(Icons.compare_rounded, size: 16),
-            label: const Text('Сравнить', style: TextStyle(fontSize: 12)),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFFF6B35),
-              backgroundColor: const Color(0xFFFF6B35).withOpacity(0.08),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          _Pressable(
+            onTap: () => setState(() => _isCompareMode = true),
+            scale: 0.94,
+            child: Container(
+              padding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _P.orangeSoft,
+                borderRadius: BorderRadius.circular(_R.sm),
+                border: Border.all(
+                    color: _P.orange.withOpacity(0.22), width: 0.8),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.compare_rounded, size: 14, color: _P.orange),
+                  SizedBox(width: 5),
+                  Text(
+                    'Сравнить',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: _P.orange,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+          const SizedBox(width: _Sp.sm),
         ],
-        const SizedBox(width: 8),
+        const SizedBox(width: _Sp.sm),
       ],
     );
   }
@@ -208,47 +378,61 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     return AnimatedScale(
       scale: _scaleAnimation.value,
       duration: const Duration(milliseconds: 400),
-      child: FloatingActionButton.extended(
-        onPressed: () {
-          HapticFeedback.mediumImpact();
-          _showAddPhotoDialog(context, isDark, provider);
-        },
-        backgroundColor: const Color(0xFFFF6B35),
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow:
+          _P.softGlow(_P.orange, strength: 0.45),
         ),
-        icon: const Icon(Icons.add_a_photo_rounded, color: Colors.white),
-        label: const Text(
-          'Добавить фото',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            _showAddPhotoDialog(context, isDark, provider);
+          },
+          backgroundColor: _P.orange,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(_R.md),
+          ),
+          icon: const Icon(Icons.add_a_photo_rounded, color: Colors.white),
+          label: const Text(
+            'Добавить фото',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+              letterSpacing: -0.1,
+            ),
           ),
         ),
       ),
     );
   }
 
+  // =====================================================================
+  // GALLERY
+  // =====================================================================
+
   Widget _buildGalleryView(
-      bool isDark, List<FitnessPhoto> photos, FitnessProvider provider) {
+      bool isDark,
+      List<FitnessPhoto> photos,
+      FitnessProvider provider,
+      ) {
     final filteredPhotos = _applyFilter(photos);
 
-    if (photos.isEmpty) {
-      return _buildEmptyState(isDark, provider);
-    }
+    if (photos.isEmpty) return _buildEmptyState(isDark, provider);
 
     return Column(
       children: [
-        if (!_isCompareMode) _buildBeautifulFilterBar(isDark, provider.photos),
+        if (!_isCompareMode) _buildBeautifulFilterBar(isDark, photos),
         if (_isCompareMode) _buildCompareInfoBanner(isDark),
         Expanded(
           child: filteredPhotos.isEmpty
               ? _buildEmptyFilterState(isDark)
               : GridView.builder(
-            padding: const EdgeInsets.all(14),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            padding: const EdgeInsets.all(_R.md),
+            gridDelegate:
+            const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
@@ -260,7 +444,8 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
               final realIndex = photos.indexOf(photo);
               final isSelected = _selectedPhotoIndex1 == realIndex ||
                   _selectedPhotoIndex2 == realIndex;
-              final selectionNumber = _selectedPhotoIndex1 == realIndex
+              final selectionNumber =
+              _selectedPhotoIndex1 == realIndex
                   ? 1
                   : _selectedPhotoIndex2 == realIndex
                   ? 2
@@ -270,21 +455,15 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                 opacity: _fadeAnimation,
                 child: ScaleTransition(
                   scale: _scaleAnimation,
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      _handlePhotoTap(realIndex, provider);
-                    },
+                  child: _Pressable(
+                    onTap: () => _handlePhotoTap(realIndex, provider),
                     onLongPress: () {
                       HapticFeedback.mediumImpact();
-                      _showPhotoOptions(context, isDark, photo, provider);
+                      _showPhotoOptions(
+                          context, isDark, photo, provider);
                     },
                     child: _buildPhotoCard(
-                      isDark,
-                      photo,
-                      isSelected,
-                      selectionNumber,
-                    ),
+                        isDark, photo, isSelected, selectionNumber),
                   ),
                 ),
               );
@@ -295,18 +474,23 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
-  Widget _buildBeautifulFilterBar(bool isDark, List<FitnessPhoto> photos) {
+  // =====================================================================
+  // FILTER BAR
+  // =====================================================================
+
+  Widget _buildBeautifulFilterBar(
+      bool isDark, List<FitnessPhoto> photos) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.sm, _Sp.lg, _Sp.sm),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         child: Row(
           children: _filterOptions.map((filter) {
             final count = _getFilteredCount(photos, filter.id);
             final isActive = _selectedFilter == filter.id;
-
             return Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: _Sp.sm),
               child: _buildFilterChip(isDark, filter, count, isActive),
             );
           }).toList(),
@@ -317,33 +501,25 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
 
   Widget _buildFilterChip(
       bool isDark, FilterOption filter, int count, bool isActive) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        setState(() => _selectedFilter = filter.id);
-      },
+    return _Pressable(
+      onTap: () => setState(() => _selectedFilter = filter.id),
+      scale: 0.94,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.symmetric(horizontal: _R.md, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
               ? filter.color
-              : (isDark ? Colors.white.withOpacity(0.06) : Colors.white),
-          borderRadius: BorderRadius.circular(20),
+              : _P.card2(isDark),
+          borderRadius: BorderRadius.circular(_R.xl),
           border: Border.all(
             color: isActive
                 ? filter.color
-                : (isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200),
-            width: 1.5,
+                : _P.separator(isDark),
+            width: 1,
           ),
           boxShadow: isActive
-              ? [
-            BoxShadow(
-              color: filter.color.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ]
+              ? _P.softGlow(filter.color, strength: 0.32)
               : null,
         ),
         child: Row(
@@ -359,29 +535,31 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
               filter.label,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
                 color: isActive
                     ? Colors.white
-                    : (isDark ? Colors.white70 : Colors.grey.shade700),
+                    : _P.textSecondary(isDark),
+                letterSpacing: -0.1,
               ),
             ),
             if (filter.id != 'all') ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: _Sp.xs),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Colors.white.withOpacity(0.2)
+                      ? Colors.white.withOpacity(0.22)
                       : filter.color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(_R.xs),
                 ),
                 child: Text(
                   '$count',
-                  style: TextStyle(
+                  style: _Num.t(TextStyle(
                     fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: isActive ? Colors.white70 : filter.color,
-                  ),
+                    fontWeight: FontWeight.w900,
+                    color: isActive ? Colors.white : filter.color,
+                  )),
                 ),
               ),
             ],
@@ -391,13 +569,11 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
-  int _getFilteredCount(List<FitnessPhoto> photos, String filterId) {
-    return _applyFilterWithId(photos, filterId).length;
-  }
+  int _getFilteredCount(List<FitnessPhoto> photos, String filterId) =>
+      _applyFilterWithId(photos, filterId).length;
 
-  List<FitnessPhoto> _applyFilter(List<FitnessPhoto> photos) {
-    return _applyFilterWithId(photos, _selectedFilter);
-  }
+  List<FitnessPhoto> _applyFilter(List<FitnessPhoto> photos) =>
+      _applyFilterWithId(photos, _selectedFilter);
 
   List<FitnessPhoto> _applyFilterWithId(
       List<FitnessPhoto> photos, String filterId) {
@@ -428,22 +604,39 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.filter_alt_rounded,
-              size: 48, color: isDark ? Colors.white12 : Colors.grey.shade300),
-          const SizedBox(height: 12),
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [
+                  _P.grey.withOpacity(0.14),
+                  _P.grey.withOpacity(0.02),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.filter_alt_rounded,
+              size: 40,
+              color: _P.textTertiary(isDark),
+            ),
+          ),
+          const SizedBox(height: _Sp.lg),
           Text(
             'Нет фото в этой категории',
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.white38 : Colors.grey.shade500,
+              fontWeight: FontWeight.w700,
+              color: _P.textSecondary(isDark),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: _Sp.xs),
           Text(
             'Попробуйте выбрать другой фильтр',
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.white24 : Colors.grey.shade400,
+              color: _P.textTertiary(isDark),
             ),
           ),
         ],
@@ -453,23 +646,22 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
 
   Widget _buildCompareInfoBanner(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.all(_R.md),
+      margin: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.sm, _Sp.lg, 0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFFFF6B35).withOpacity(0.12),
-            const Color(0xFFFF6B35).withOpacity(0.05),
+            _P.orange.withOpacity(0.12),
+            _P.orange.withOpacity(0.04),
           ],
         ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFFF6B35).withOpacity(0.2),
-        ),
+        borderRadius: BorderRadius.circular(_R.md),
+        border: Border.all(color: _P.orange.withOpacity(0.22), width: 0.8),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_rounded, color: const Color(0xFFFF6B35), size: 18),
+          Icon(Icons.info_rounded,
+              color: _P.orange, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -480,29 +672,38 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                   : '✅ Готово! Нажмите на фото для просмотра',
               style: const TextStyle(
                 fontSize: 12,
-                color: Color(0xFFFF6B35),
-                fontWeight: FontWeight.w600,
+                color: _P.orange,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.1,
               ),
             ),
           ),
-          if (_selectedPhotoIndex1 != null && _selectedPhotoIndex2 != null)
+          if (_selectedPhotoIndex1 != null &&
+              _selectedPhotoIndex2 != null)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding:
+              const EdgeInsets.symmetric(horizontal: _Sp.sm, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                color: _P.green.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(_R.xs),
               ),
-              child: const Text('2/2',
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  )),
+              child: Text(
+                '2/2',
+                style: _Num.t(const TextStyle(
+                  color: _P.green,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                )),
+              ),
             ),
         ],
       ),
     );
   }
+
+  // =====================================================================
+  // PHOTO CARD
+  // =====================================================================
 
   Widget _buildPhotoCard(
       bool isDark,
@@ -512,39 +713,35 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
       ) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(_R.lg - 2),
         border: isSelected
-            ? Border.all(color: const Color(0xFFFF6B35), width: 3.5)
+            ? Border.all(color: _P.orange, width: 3)
             : Border.all(
             color: isDark
                 ? Colors.white.withOpacity(0.06)
-                : Colors.black.withOpacity(0.04)),
+                : Colors.black.withOpacity(0.04),
+            width: 1),
         boxShadow: isSelected
             ? [
           BoxShadow(
-            color: const Color(0xFFFF6B35).withOpacity(0.35),
+            color: _P.orange.withOpacity(0.35),
             blurRadius: 16,
             spreadRadius: 2,
           ),
         ]
-            : [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+            : _P.cardShadow(isDark, _P.orange),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(isSelected ? 15 : 18),
+            borderRadius: BorderRadius.circular(isSelected ? 12 : 16),
             child: _buildPhotoImage(photo, isDark),
           ),
+          // Bottom gradient for label overlay
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(_R.lg - 2),
               gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
@@ -559,48 +756,47 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
           ),
           if (selectionNumber != null)
             Positioned(
-              top: 8,
-              left: 8,
+              top: _Sp.sm,
+              left: _Sp.sm,
               child: Container(
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFF6B35), Color(0xFFFF3D00)],
+                    colors: [_P.orange, _P.orangeDeep],
                   ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
-                      blurRadius: 8,
+                      color: _P.orange.withOpacity(0.5),
+                      blurRadius: 10,
                     ),
                   ],
                 ),
                 child: Center(
                   child: Text(
                     '$selectionNumber',
-                    style: const TextStyle(
+                    style: _Num.t(const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
-                    ),
+                    )),
                   ),
                 ),
               ),
             ),
           if (photo.label != null && photo.label!.isNotEmpty)
             Positioned(
-              top: 8,
-              right: 8,
+              top: _Sp.sm,
+              right: _Sp.sm,
               child: Container(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                const EdgeInsets.symmetric(horizontal: _Sp.sm, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.65),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(_R.xs),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
-                  ),
+                      color: Colors.white.withOpacity(0.12), width: 0.6),
                 ),
                 child: Text(
                   photo.label!,
@@ -629,38 +825,38 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                       children: [
                         Text(
                           _formatDate(photo.date),
-                          style: const TextStyle(
+                          style: _Num.t(const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
+                            fontWeight: FontWeight.w800,
+                          )),
                         ),
                         if (photo.weight != null)
                           Text(
                             '⚖️ ${photo.weight!.toStringAsFixed(1)} кг',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                            style: _Num.t(TextStyle(
+                              color: Colors.white.withOpacity(0.85),
                               fontSize: 9,
-                            ),
+                            )),
                           ),
                       ],
                     ),
                   ),
                   if (photo.measurementsCount > 0)
                     Container(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF6B35).withOpacity(0.8),
+                        color: _P.orange.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         '📏 ${photo.measurementsCount}',
-                        style: const TextStyle(
+                        style: _Num.t(const TextStyle(
                           color: Colors.white,
                           fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                        ),
+                          fontWeight: FontWeight.w800,
+                        )),
                       ),
                     ),
                 ],
@@ -674,16 +870,14 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
 
   Widget _buildPhotoImage(FitnessPhoto photo, bool isDark) {
     final file = File(photo.imageUrl);
-    if (file.existsSync()) {
-      return Image.file(file, fit: BoxFit.cover);
-    }
+    if (file.existsSync()) return Image.file(file, fit: BoxFit.cover);
     return Container(
-      color: isDark ? const Color(0xFF1A1D24) : Colors.grey.shade200,
+      color: isDark ? _P.darkCard : _P.greySoft,
       child: Center(
         child: Icon(
           Icons.image_rounded,
           size: 48,
-          color: isDark ? Colors.white12 : Colors.grey.shade400,
+          color: _P.textTertiary(isDark),
         ),
       ),
     );
@@ -707,76 +901,86 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
         }
       });
     } else {
-      final photo = provider.photos[index];
-      _showPhotoDetail(context, widget.isDark, photo, provider);
+      _showPhotoDetail(context, widget.isDark, provider.photos[index], provider);
     }
   }
+
+  // =====================================================================
+  // EMPTY STATE
+  // =====================================================================
 
   Widget _buildEmptyState(bool isDark, FitnessProvider provider) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOut,
+          Container(
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: RadialGradient(
                 colors: [
-                  const Color(0xFFFF6B35).withOpacity(0.1),
-                  const Color(0xFFFF3D00).withOpacity(0.05),
+                  _P.orange.withOpacity(0.16),
+                  _P.orange.withOpacity(0.02),
                 ],
               ),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFFF6B35).withOpacity(0.2),
-                width: 2,
-              ),
+              boxShadow: _P.softGlow(_P.orange, strength: 0.14),
             ),
             child: Icon(
               Icons.photo_camera_rounded,
-              size: 60,
-              color: isDark ? Colors.white12 : Colors.grey.shade300,
+              size: 56,
+              color: _P.orange.withOpacity(0.7),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: _Sp.xxl),
           Text(
             'Нет фотографий',
             style: TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white38 : Colors.grey.shade500,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              color: _P.textPrimary(isDark),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: _Sp.sm),
           Text(
             'Добавьте фото, чтобы отслеживать\nвизуальный прогресс',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.white24 : Colors.grey.shade400,
+              color: _P.textSecondary(isDark),
               height: 1.4,
             ),
           ),
           const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              _showAddPhotoDialog(context, isDark, provider);
-            },
-            icon: const Icon(Icons.add_a_photo_rounded),
-            label: const Text('Добавить первое фото'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6B35),
-              foregroundColor: Colors.white,
+          _Pressable(
+            onTap: () => _showAddPhotoDialog(context, isDark, provider),
+            scale: 0.96,
+            child: Container(
               padding:
-              const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+              const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+              decoration: BoxDecoration(
+                color: _P.orange,
+                borderRadius: BorderRadius.circular(_R.md),
+                boxShadow: _P.softGlow(_P.orange, strength: 0.4),
               ),
-              elevation: 8,
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add_a_photo_rounded,
+                      color: Colors.white, size: 20),
+                  SizedBox(width: _Sp.sm),
+                  Text(
+                    'Добавить первое фото',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -784,7 +988,9 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
-  // ==================== РЕЖИМ СРАВНЕНИЯ ====================
+  // =====================================================================
+  // COMPARE VIEW
+  // =====================================================================
 
   Widget _buildCompareView(bool isDark, List<FitnessPhoto> photos) {
     if (_selectedPhotoIndex1 == null || _selectedPhotoIndex2 == null) {
@@ -794,7 +1000,6 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
 
     final photo1 = photos[_selectedPhotoIndex1!];
     final photo2 = photos[_selectedPhotoIndex2!];
-
     final sorted = [photo1, photo2]..sort((a, b) => a.date.compareTo(b.date));
     final beforePhoto = sorted[0];
     final afterPhoto = sorted[1];
@@ -804,57 +1009,45 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(_Sp.lg),
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(_Sp.lg),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1A1D24) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                color: _P.card(isDark),
+                borderRadius: BorderRadius.circular(_R.xl - 2),
+                boxShadow: _P.cardShadow(isDark, _P.orange),
               ),
               child: Row(
                 children: [
-                  _buildCompareInfoChip('ДО', beforePhoto, true),
+                  _buildCompareInfoChip(isDark, 'ДО', beforePhoto, true),
                   const Spacer(),
                   Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: _R.md, vertical: 6),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF6B35), Color(0xFFFF3D00)],
+                        colors: [_P.orange, _P.orangeDeep],
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF6B35).withOpacity(0.3),
-                          blurRadius: 10,
-                        ),
-                      ],
+                      borderRadius: BorderRadius.circular(_R.xl),
+                      boxShadow: _P.softGlow(_P.orange, strength: 0.4),
                     ),
                     child: Text(
                       '⏳ ${_getDaysBetween(beforePhoto.date, afterPhoto.date)}',
-                      style: const TextStyle(
+                      style: _Num.t(const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         fontSize: 12,
-                      ),
+                      )),
                     ),
                   ),
                   const Spacer(),
-                  _buildCompareInfoChip('ПОСЛЕ', afterPhoto, false),
+                  _buildCompareInfoChip(isDark, 'ПОСЛЕ', afterPhoto, false),
                 ],
               ),
             ),
           ),
-          // ==================== 🔧 ИСПРАВЛЕНО: Фото больше не увеличены ====================
           _buildCompareImages(isDark, beforePhoto, afterPhoto),
-          const SizedBox(height: 16),
+          const SizedBox(height: _Sp.lg),
           _buildMeasurementsComparison(isDark, beforePhoto, afterPhoto),
           const SizedBox(height: 40),
         ],
@@ -862,169 +1055,163 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
-  // ==================== 🔧 ИСПРАВЛЕНО: Сравнение фото ====================
+  Widget _buildCompareInfoChip(
+      bool isDark,
+      String label,
+      FitnessPhoto photo,
+      bool isBefore,
+      ) {
+    final color = isBefore ? _P.orange : _P.green;
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: _Sp.sm, vertical: 3),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(_R.xs),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ),
+        const SizedBox(height: _Sp.xs),
+        Text(
+          _formatDate(photo.date),
+          style: _Num.t(TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _P.textSecondary(isDark),
+          )),
+        ),
+        if (photo.weight != null)
+          Text(
+            '${photo.weight!.toStringAsFixed(1)} кг',
+            style: _Num.t(TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: _P.textPrimary(isDark),
+            )),
+          ),
+      ],
+    );
+  }
 
   Widget _buildCompareImages(
       bool isDark, FitnessPhoto before, FitnessPhoto after) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: _Sp.lg),
       child: _isSliderMode
           ? _buildSliderCompare(isDark, before, after)
           : _buildSideBySideCompare(isDark, before, after),
     );
   }
 
-  Widget _buildCompareInfoChip(
-      String label, FitnessPhoto photo, bool isBefore) {
-    final isDark = widget.isDark;
-    final color = isBefore ? const Color(0xFFFF6B35) : const Color(0xFF4CAF50);
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          _formatDate(photo.date),
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white70 : Colors.black54,
-          ),
-        ),
-        if (photo.weight != null)
-          Text(
-            '${photo.weight!.toStringAsFixed(1)} кг',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-      ],
-    );
-  }
-
-  // ==================== 🔧 SIDE BY SIDE (ИСПРАВЛЕНО) ====================
-
   Widget _buildSideBySideCompare(
       bool isDark, FitnessPhoto before, FitnessPhoto after) {
     return AspectRatio(
-      aspectRatio: 1.0, // 🔒 Квадратное соотношение — фото не растягивается
+      aspectRatio: 1.0,
       child: Row(
         children: [
           Expanded(
             child: _buildCompareImageContainer(
-                isDark, before, 'ДО', const Color(0xFFFF6B35)),
+                isDark, before, 'ДО', _P.orange),
           ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 6),
             width: 2,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFFFF6B35),
-                  const Color(0xFF4CAF50),
-                ],
+              borderRadius: BorderRadius.circular(1),
+              gradient: const LinearGradient(
+                colors: [_P.orange, _P.green],
               ),
             ),
           ),
           Expanded(
             child: _buildCompareImageContainer(
-                isDark, after, 'ПОСЛЕ', const Color(0xFF4CAF50)),
+                isDark, after, 'ПОСЛЕ', _P.green),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCompareImageContainer(bool isDark, FitnessPhoto photo,
-      String label, Color borderColor) {
+  Widget _buildCompareImageContainer(
+      bool isDark,
+      FitnessPhoto photo,
+      String label,
+      Color borderColor,
+      ) {
     final file = File(photo.imageUrl);
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(_R.lg - 2),
         border: Border.all(color: borderColor.withOpacity(0.4), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withOpacity(0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: _P.cardShadow(isDark, borderColor),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // 🔧 ИСПРАВЛЕНО: Фон для BoxFit.contain
             Container(
-              color: isDark ? const Color(0xFF0A0D14) : Colors.grey.shade100,
+              color: isDark ? _P.darkBg : _P.greySoft,
             ),
-            // 🔧 ИСПРАВЛЕНО: BoxFit.contain — фото целиком видно, не обрезается
             file.existsSync()
                 ? Image.file(file, fit: BoxFit.contain)
                 : Center(
-              child: Icon(Icons.image_rounded,
-                  size: 48,
-                  color:
-                  isDark ? Colors.white12 : Colors.grey.shade400),
+              child: Icon(
+                Icons.image_rounded,
+                size: 48,
+                color: _P.textTertiary(isDark),
+              ),
             ),
             Positioned(
-              top: 8,
-              left: 8,
+              top: _Sp.sm,
+              left: _Sp.sm,
               child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(_R.xs),
                   border: Border.all(
-                    color: borderColor.withOpacity(0.5),
-                    width: 1,
-                  ),
+                      color: borderColor.withOpacity(0.5), width: 1),
                 ),
                 child: Text(
                   label,
                   style: TextStyle(
                     color: borderColor,
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ),
             ),
             if (photo.measurementsCount > 0)
               Positioned(
-                bottom: 8,
-                right: 8,
+                bottom: _Sp.sm,
+                right: _Sp.sm,
                 child: Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: _Sp.sm, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     '📏 ${photo.measurementsCount}',
-                    style: const TextStyle(
+                    style: _Num.t(const TextStyle(
                       color: Colors.white70,
                       fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                    ),
+                      fontWeight: FontWeight.w700,
+                    )),
                   ),
                 ),
               ),
@@ -1034,144 +1221,51 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
-  // ==================== 🔧 СЛАЙДЕР СРАВНЕНИЕ (ИСПРАВЛЕНО) ====================
+  // =====================================================================
+  // SLIDER COMPARE
+  // =====================================================================
 
   Widget _buildSliderCompare(
       bool isDark, FitnessPhoto before, FitnessPhoto after) {
     return AspectRatio(
-      aspectRatio: 0.85, // 🔒 Фиксированное соотношение — не растягивается
+      aspectRatio: 0.85,
       child: LayoutBuilder(
         builder: (context, constraints) {
           return GestureDetector(
-            onPanUpdate: (details) {
-              final newX = details.localPosition.dx;
-              final width = constraints.maxWidth;
+            onPanUpdate: (d) {
               setState(() {
-                _sliderPosition = (newX / width).clamp(0.0, 1.0);
+                _sliderPosition =
+                    (d.localPosition.dx / constraints.maxWidth).clamp(0.0, 1.0);
               });
             },
-            onTapDown: (details) {
-              final newX = details.localPosition.dx;
-              final width = constraints.maxWidth;
+            onTapDown: (d) {
               setState(() {
-                _sliderPosition = (newX / width).clamp(0.0, 1.0);
+                _sliderPosition =
+                    (d.localPosition.dx / constraints.maxWidth).clamp(0.0, 1.0);
               });
             },
             child: Stack(
               children: [
-                // Фото "После" (фон)
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: const Color(0xFF4CAF50).withOpacity(0.4),
-                        width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4CAF50).withOpacity(0.15),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Container(
-                          color: isDark
-                              ? const Color(0xFF0A0D14)
-                              : Colors.grey.shade100,
-                        ),
-                        _buildCompareImageForSlider(isDark, after, false),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFF4CAF50).withOpacity(0.5),
-                                width: 1,
-                              ),
-                            ),
-                            child: const Text(
-                              'ПОСЛЕ',
-                              style: TextStyle(
-                                color: Color(0xFF4CAF50),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                // AFTER — background
+                _buildSliderLayer(
+                  isDark: isDark,
+                  photo: after,
+                  label: 'ПОСЛЕ',
+                  color: _P.green,
+                  alignment: Alignment.topRight,
                 ),
-                // Фото "До" (обрезанное)
+                // BEFORE — clipped
                 ClipRect(
                   clipper: _HalfClipper(_sliderPosition),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: const Color(0xFFFF6B35).withOpacity(0.4),
-                          width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF6B35).withOpacity(0.15),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Container(
-                            color: isDark
-                                ? const Color(0xFF0A0D14)
-                                : Colors.grey.shade100,
-                          ),
-                          _buildCompareImageForSlider(isDark, before, true),
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color:
-                                  const Color(0xFFFF6B35).withOpacity(0.5),
-                                  width: 1,
-                                ),
-                              ),
-                              child: const Text(
-                                'ДО',
-                                style: TextStyle(
-                                  color: Color(0xFFFF6B35),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: _buildSliderLayer(
+                    isDark: isDark,
+                    photo: before,
+                    label: 'ДО',
+                    color: _P.orange,
+                    alignment: Alignment.topLeft,
                   ),
                 ),
-                // Вертикальная линия
+                // Divider line
                 Positioned(
                   left: constraints.maxWidth * _sliderPosition - 2,
                   top: 0,
@@ -1180,38 +1274,32 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                     width: 4,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF6B35), Color(0xFF4CAF50)],
+                        colors: [_P.orange, _P.green],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF6B35).withOpacity(0.4),
+                          color: _P.orange.withOpacity(0.4),
                           blurRadius: 8,
                         ),
                       ],
                     ),
                   ),
                 ),
-                // Ручка слайдера
+                // Handle
                 Positioned(
                   left: constraints.maxWidth * _sliderPosition - 22,
                   top: constraints.maxHeight / 2 - 22,
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
+                    duration: const Duration(milliseconds: 140),
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF6B35), Color(0xFFFF3D00)],
+                        colors: [_P.orange, _P.orangeDeep],
                       ),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF6B35).withOpacity(0.4),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
+                      boxShadow: _P.softGlow(_P.orange, strength: 0.45),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1224,7 +1312,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                     ),
                   ),
                 ),
-                // Индикатор процента
+                // Percent indicator
                 Positioned(
                   bottom: 10,
                   left: 0,
@@ -1232,21 +1320,18 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 4,
-                      ),
+                          horizontal: _R.md, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(_R.md),
                       ),
                       child: Text(
                         '${(_sliderPosition * 100).toInt()}%',
-                        style: const TextStyle(
+                        style: _Num.t(const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'monospace',
-                        ),
+                          fontWeight: FontWeight.w800,
+                        )),
                       ),
                     ),
                   ),
@@ -1259,28 +1344,76 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
-  Widget _buildCompareImageForSlider(
-      bool isDark, FitnessPhoto photo, bool isBefore) {
-    final file = File(photo.imageUrl);
-    if (file.existsSync()) {
-      // 🔧 ИСПРАВЛЕНО: BoxFit.contain — фото целиком видно
-      return Image.file(file, fit: BoxFit.contain);
-    }
-    return Center(
-      child: Icon(
-        Icons.image_rounded,
-        size: 48,
-        color: isDark ? Colors.white12 : Colors.grey.shade400,
+  Widget _buildSliderLayer({
+    required bool isDark,
+    required FitnessPhoto photo,
+    required String label,
+    required Color color,
+    required Alignment alignment,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(_R.lg - 2),
+        border: Border.all(color: color.withOpacity(0.4), width: 2),
+        boxShadow: _P.cardShadow(isDark, color),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(color: isDark ? _P.darkBg : _P.greySoft),
+            _buildCompareImageForSlider(isDark, photo),
+            Positioned(
+              top: _Sp.sm,
+              left: alignment == Alignment.topLeft ? _Sp.sm : null,
+              right: alignment == Alignment.topRight ? _Sp.sm : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(_R.xs),
+                  border: Border.all(color: color.withOpacity(0.5), width: 1),
+                ),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // ==================== СРАВНЕНИЕ ИЗМЕРЕНИЙ ====================
+  Widget _buildCompareImageForSlider(bool isDark, FitnessPhoto photo) {
+    final file = File(photo.imageUrl);
+    if (file.existsSync()) return Image.file(file, fit: BoxFit.contain);
+    return Center(
+      child: Icon(
+        Icons.image_rounded,
+        size: 48,
+        color: _P.textTertiary(isDark),
+      ),
+    );
+  }
+
+  // =====================================================================
+  // MEASUREMENTS COMPARISON
+  // =====================================================================
 
   Widget _buildMeasurementsComparison(
       bool isDark, FitnessPhoto before, FitnessPhoto after) {
     final measurements = <_MeasurementItem>[
-      _MeasurementItem('Вес', 'кг', before.weight, after.weight, isWeight: true),
+      _MeasurementItem('Вес', 'кг', before.weight, after.weight,
+          isWeight: true),
       _MeasurementItem('Грудь', 'см', before.chest, after.chest),
       _MeasurementItem('Талия', 'см', before.waist, after.waist,
           smallerIsBetter: true),
@@ -1292,8 +1425,9 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
       _MeasurementItem('Предплечье', 'см', before.forearm, after.forearm),
     ];
 
-    final comparableItems =
-    measurements.where((m) => m.before != null && m.after != null).toList();
+    final comparableItems = measurements
+        .where((m) => m.before != null && m.after != null)
+        .toList();
     final partialItems = measurements
         .where((m) =>
     (m.before != null || m.after != null) &&
@@ -1305,25 +1439,12 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     }
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.all(_Sp.lg),
+      padding: const EdgeInsets.all(_R.lg),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [
-            const Color(0xFF1A1D24),
-            const Color(0xFF252830),
-          ]
-              : [Colors.white, const Color(0xFFF8F9FA)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: _P.card(isDark),
+        borderRadius: BorderRadius.circular(_R.xl - 2),
+        boxShadow: _P.cardShadow(isDark, _P.orange),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1331,183 +1452,200 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF6B35), Color(0xFFFF3D00)],
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      _P.orange.withOpacity(0.20),
+                      _P.orange.withOpacity(0.06),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(_R.sm),
+                  boxShadow: _P.softGlow(_P.orange, strength: 0.22),
                 ),
                 child: const Icon(Icons.straighten_rounded,
-                    color: Colors.white, size: 18),
+                    color: _P.orange, size: 20),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: _Sp.md),
               Text(
                 'Измерения тела',
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.4,
+                  color: _P.textPrimary(isDark),
                 ),
               ),
               const Spacer(),
               if (comparableItems.isNotEmpty)
                 Container(
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  const EdgeInsets.symmetric(horizontal: _Sp.sm, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    color: _P.green.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(_R.xs),
                   ),
                   child: Text(
                     '${comparableItems.length} совпад.',
-                    style: const TextStyle(
+                    style: _Num.t(const TextStyle(
                       fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF4CAF50),
-                    ),
+                      fontWeight: FontWeight.w900,
+                      color: _P.green,
+                    )),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: _R.md),
+          // Table header
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+            padding:
+            const EdgeInsets.symmetric(vertical: _Sp.sm, horizontal: 10),
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10),
+              color: _P.card2(isDark),
+              borderRadius: BorderRadius.circular(_R.xs),
             ),
             child: Row(
               children: [
-                Expanded(
-                  flex: 2,
-                  child: Text('Параметр',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? Colors.white54
-                              : Colors.grey.shade600)),
-                ),
-                Expanded(
-                  child: Text('До',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? Colors.white54
-                              : Colors.grey.shade600)),
-                ),
-                Expanded(
-                  child: Text('После',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? Colors.white54
-                              : Colors.grey.shade600)),
-                ),
-                Expanded(
-                  child: Text('Δ',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? Colors.white54
-                              : Colors.grey.shade600)),
-                ),
+                _headerCell('Параметр', isDark, flex: 2, align: TextAlign.left),
+                _headerCell('До', isDark),
+                _headerCell('После', isDark),
+                _headerCell('Δ', isDark),
               ],
             ),
           ),
-          const SizedBox(height: 4),
-          ...comparableItems.map(
-                  (item) => _buildMeasurementRow(isDark, item, showDiff: true)),
+          const SizedBox(height: _Sp.xs),
+          ...comparableItems.map((item) =>
+              _buildMeasurementRow(isDark, item, showDiff: true)),
           if (partialItems.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: _Sp.md),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: _Sp.xs),
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withOpacity(0.04)
-                    : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                color: _P.card2(isDark),
+                borderRadius: BorderRadius.circular(_R.xs),
               ),
               child: Row(
                 children: [
                   Icon(Icons.info_outline_rounded,
-                      size: 14,
-                      color: isDark ? Colors.white38 : Colors.grey.shade500),
+                      size: 14, color: _P.textTertiary(isDark)),
                   const SizedBox(width: 6),
-                  Text('Частичные данные',
-                      style: TextStyle(
-                          fontSize: 10,
-                          color: isDark ? Colors.white38 : Colors.grey.shade500,
-                          fontStyle: FontStyle.italic)),
+                  Text(
+                    'Частичные данные',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: _P.textTertiary(isDark),
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 4),
-            ...partialItems.map(
-                    (item) => _buildMeasurementRow(isDark, item, showDiff: false)),
+            const SizedBox(height: _Sp.xs),
+            ...partialItems.map((item) =>
+                _buildMeasurementRow(isDark, item, showDiff: false)),
           ],
         ],
       ),
     );
   }
 
+  Widget _headerCell(
+      String label,
+      bool isDark, {
+        int flex = 1,
+        TextAlign align = TextAlign.center,
+      }) {
+    return Expanded(
+      flex: flex,
+      child: Text(
+        label,
+        textAlign: align,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.4,
+          color: _P.textTertiary(isDark),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyMeasurementsCard(bool isDark) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.all(_Sp.lg),
+      padding: const EdgeInsets.all(_R.xxl),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1D24) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: _P.card(isDark),
+        borderRadius: BorderRadius.circular(_R.xl - 2),
+        boxShadow: _P.cardShadow(isDark, _P.orange),
       ),
       child: Column(
         children: [
-          Icon(Icons.straighten_rounded,
-              size: 40, color: isDark ? Colors.white12 : Colors.grey.shade300),
-          const SizedBox(height: 12),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [
+                  _P.orange.withOpacity(0.15),
+                  _P.orange.withOpacity(0.03),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.straighten_rounded,
+                size: 32, color: _P.textTertiary(isDark)),
+          ),
+          const SizedBox(height: _Sp.lg),
           Text(
             'Нет данных для сравнения',
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white38 : Colors.grey.shade500,
+              fontWeight: FontWeight.w800,
+              color: _P.textPrimary(isDark),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: _Sp.xs),
           Text(
             'Добавьте измерения к фото',
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.white24 : Colors.grey.shade400,
+              color: _P.textSecondary(isDark),
             ),
           ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              setState(() => _isCompareMode = false);
-            },
-            icon: const Icon(Icons.arrow_back_rounded, size: 16),
-            label: const Text('Вернуться к галерее'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFFF6B35),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: _R.md),
+          _Pressable(
+            onTap: () => setState(() => _isCompareMode = false),
+            scale: 0.96,
+            child: Container(
+              padding:
+              const EdgeInsets.symmetric(horizontal: _Sp.lg, vertical: _Sp.sm),
+              decoration: BoxDecoration(
+                color: _P.orangeSoft,
+                borderRadius: BorderRadius.circular(_R.sm),
+                border: Border.all(
+                    color: _P.orange.withOpacity(0.22), width: 0.8),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.arrow_back_rounded, size: 16, color: _P.orange),
+                  SizedBox(width: 6),
+                  Text(
+                    'Вернуться к галерее',
+                    style: TextStyle(
+                      color: _P.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1517,34 +1655,30 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
   }
 
   Widget _buildMeasurementRow(
-      bool isDark, _MeasurementItem item,
-      {bool showDiff = true}) {
+      bool isDark,
+      _MeasurementItem item, {
+        bool showDiff = true,
+      }) {
     final hasBoth = item.before != null && item.after != null;
     final diff = hasBoth ? item.after! - item.before! : 0.0;
 
     Color diffColor;
     IconData? diffIcon;
-    if (!hasBoth) {
-      diffColor = Colors.grey;
-    } else if (diff.abs() < 0.05) {
-      diffColor = Colors.grey;
+    if (!hasBoth || diff.abs() < 0.05) {
+      diffColor = _P.textTertiary(isDark);
     } else {
       final isPositive = item.smallerIsBetter ? diff < 0 : diff > 0;
-      diffColor =
-      isPositive ? const Color(0xFF4CAF50) : const Color(0xFFF44336);
-      diffIcon =
-      diff > 0 ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded;
+      diffColor = isPositive ? _P.green : _P.red;
+      diffIcon = diff > 0
+          ? Icons.arrow_upward_rounded
+          : Icons.arrow_downward_rounded;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey.shade100,
-          ),
+          bottom: BorderSide(color: _P.separator(isDark), width: 0.5),
         ),
       ),
       child: Row(
@@ -1561,7 +1695,8 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : Colors.black87,
+                      letterSpacing: -0.1,
+                      color: _P.textPrimary(isDark),
                     ),
                   ),
                 ),
@@ -1570,26 +1705,24 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
           ),
           Expanded(
             child: Text(
-              item.before != null
-                  ? '${item.before!.toStringAsFixed(1)}'
-                  : '—',
+              item.before != null ? item.before!.toStringAsFixed(1) : '—',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: _Num.t(TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white70 : Colors.grey.shade700,
-              ),
+                fontWeight: FontWeight.w700,
+                color: _P.textSecondary(isDark),
+              )),
             ),
           ),
           Expanded(
             child: Text(
-              item.after != null ? '${item.after!.toStringAsFixed(1)}' : '—',
+              item.after != null ? item.after!.toStringAsFixed(1) : '—',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: _Num.t(TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white70 : Colors.grey.shade700,
-              ),
+                fontWeight: FontWeight.w700,
+                color: _P.textSecondary(isDark),
+              )),
             ),
           ),
           if (showDiff)
@@ -1608,12 +1741,11 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                     hasBoth
                         ? '${diff > 0 ? '+' : ''}${diff.toStringAsFixed(1)}'
                         : '—',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: _Num.t(TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w900,
                       color: diffColor,
-                    ),
+                    )),
                   ),
                 ],
               ),
@@ -1623,7 +1755,9 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
-  // ==================== ДИАЛОГИ ====================
+  // =====================================================================
+  // PHOTO DETAIL SHEET
+  // =====================================================================
 
   void _showPhotoDetail(BuildContext context, bool isDark, FitnessPhoto photo,
       FitnessProvider provider) {
@@ -1633,10 +1767,11 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         height: MediaQuery.of(context).size.height * 0.9,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(_Sp.xl),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1D24) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          color: _P.card(isDark),
+          borderRadius:
+          const BorderRadius.vertical(top: Radius.circular(_R.xxl)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1647,60 +1782,58 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: _P.textTertiary(isDark),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: _Sp.lg),
             Expanded(
               flex: 3,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(_R.lg),
                 child: File(photo.imageUrl).existsSync()
                     ? Image.file(File(photo.imageUrl), fit: BoxFit.contain)
                     : Container(
-                  color:
-                  isDark ? const Color(0xFF0F1115) : Colors.grey.shade200,
-                  child: const Icon(Icons.image_rounded, size: 80),
+                  color: _P.card2(isDark),
+                  child: Icon(Icons.image_rounded,
+                      size: 80,
+                      color: _P.textTertiary(isDark)),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: _Sp.lg),
             Row(
               children: [
                 Container(
                   padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF6B35).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    color: _P.orangeSoft,
+                    borderRadius: BorderRadius.circular(_R.xs),
                   ),
                   child: Text(
                     _formatDate(photo.date),
-                    style: const TextStyle(
-                      color: Color(0xFFFF6B35),
-                      fontWeight: FontWeight.w700,
+                    style: _Num.t(const TextStyle(
+                      color: _P.orange,
+                      fontWeight: FontWeight.w800,
                       fontSize: 12,
-                    ),
+                    )),
                   ),
                 ),
                 const SizedBox(width: 10),
                 if (photo.label != null)
                   Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.08)
-                          : Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
+                      color: _P.card2(isDark),
+                      borderRadius: BorderRadius.circular(_R.xs),
                     ),
                     child: Text(
                       photo.label!,
                       style: TextStyle(
-                        color:
-                        isDark ? Colors.white70 : Colors.grey.shade700,
+                        color: _P.textSecondary(isDark),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1708,30 +1841,29 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                   ),
               ],
             ),
-            const SizedBox(height: 8),
-            if (photo.notes != null && photo.notes!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  photo.notes!,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.white54 : Colors.grey.shade600,
-                  ),
+            if (photo.notes != null && photo.notes!.isNotEmpty) ...[
+              const SizedBox(height: _Sp.sm),
+              Text(
+                photo.notes!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _P.textSecondary(isDark),
+                  height: 1.4,
                 ),
               ),
+            ],
             if (photo.measurementsCount > 0) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: _Sp.sm),
               _buildMeasurementsPreview(isDark, photo),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: _R.md),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildActionButton(
                   icon: Icons.edit_rounded,
                   label: 'Изменить',
-                  color: const Color(0xFFFF6B35),
+                  color: _P.orange,
                   onTap: () {
                     Navigator.pop(ctx);
                     _showEditPhotoDialog(context, isDark, photo, provider);
@@ -1740,12 +1872,13 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                 _buildActionButton(
                   icon: Icons.compare_rounded,
                   label: 'Сравнить',
-                  color: const Color(0xFF4A9BFF),
+                  color: _P.blue,
                   onTap: () {
                     Navigator.pop(ctx);
                     setState(() {
                       _isCompareMode = true;
-                      _selectedPhotoIndex1 = provider.photos.indexOf(photo);
+                      _selectedPhotoIndex1 =
+                          provider.photos.indexOf(photo);
                       _selectedPhotoIndex2 = null;
                     });
                   },
@@ -1753,7 +1886,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                 _buildActionButton(
                   icon: Icons.delete_rounded,
                   label: 'Удалить',
-                  color: Colors.red.shade400,
+                  color: _P.red,
                   onTap: () {
                     Navigator.pop(ctx);
                     _confirmDeletePhoto(context, isDark, photo, provider);
@@ -1761,7 +1894,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: _Sp.sm),
           ],
         ),
       ),
@@ -1774,25 +1907,27 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return _Pressable(
       onTap: onTap,
+      scale: 0.92,
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(_R.md),
             decoration: BoxDecoration(
               color: color.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: _Sp.xs),
           Text(
             label,
             style: TextStyle(
               color: color,
               fontSize: 11,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.1,
             ),
           ),
         ],
@@ -1803,62 +1938,58 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
   Widget _buildMeasurementsPreview(bool isDark, FitnessPhoto photo) {
     final measurements = <MapEntry<String, String>>[];
     if (photo.weight != null)
-      measurements.add(
-          MapEntry('⚖️ Вес', '${photo.weight!.toStringAsFixed(1)} кг'));
+      measurements.add(MapEntry(
+          '⚖️ Вес', '${photo.weight!.toStringAsFixed(1)} кг'));
     if (photo.chest != null)
-      measurements.add(
-          MapEntry('📏 Грудь', '${photo.chest!.toStringAsFixed(1)} см'));
+      measurements.add(MapEntry(
+          '📏 Грудь', '${photo.chest!.toStringAsFixed(1)} см'));
     if (photo.waist != null)
-      measurements.add(
-          MapEntry('📏 Талия', '${photo.waist!.toStringAsFixed(1)} см'));
+      measurements.add(MapEntry(
+          '📏 Талия', '${photo.waist!.toStringAsFixed(1)} см'));
     if (photo.hips != null)
-      measurements.add(
-          MapEntry('📏 Бёдра', '${photo.hips!.toStringAsFixed(1)} см'));
+      measurements.add(MapEntry(
+          '📏 Бёдра', '${photo.hips!.toStringAsFixed(1)} см'));
     if (photo.biceps != null)
-      measurements.add(
-          MapEntry('💪 Бицепс', '${photo.biceps!.toStringAsFixed(1)} см'));
+      measurements.add(MapEntry(
+          '💪 Бицепс', '${photo.biceps!.toStringAsFixed(1)} см'));
     if (photo.thigh != null)
-      measurements.add(
-          MapEntry('🦵 Бедро', '${photo.thigh!.toStringAsFixed(1)} см'));
+      measurements.add(MapEntry(
+          '🦵 Бедро', '${photo.thigh!.toStringAsFixed(1)} см'));
     if (photo.calf != null)
-      measurements.add(
-          MapEntry('🦵 Икра', '${photo.calf!.toStringAsFixed(1)} см'));
+      measurements.add(MapEntry(
+          '🦵 Икра', '${photo.calf!.toStringAsFixed(1)} см'));
     if (photo.neck != null)
-      measurements.add(
-          MapEntry('📏 Шея', '${photo.neck!.toStringAsFixed(1)} см'));
+      measurements.add(MapEntry(
+          '📏 Шея', '${photo.neck!.toStringAsFixed(1)} см'));
     if (photo.forearm != null)
       measurements.add(MapEntry(
           '💪 Предплечье', '${photo.forearm!.toStringAsFixed(1)} см'));
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(_R.md),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(14),
+        color: _P.card2(isDark),
+        borderRadius: BorderRadius.circular(_R.md),
       ),
       child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: _Sp.sm,
+        runSpacing: _Sp.sm,
         children: measurements.map((m) {
           return Container(
             padding:
             const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.grey.shade200,
-              ),
+              color: _P.card(isDark),
+              borderRadius: BorderRadius.circular(_R.xs),
+              border: Border.all(color: _P.separator(isDark), width: 0.6),
             ),
             child: Text(
-              m.key + ': ' + m.value,
-              style: TextStyle(
+              '${m.key}: ${m.value}',
+              style: _Num.t(TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
+                fontWeight: FontWeight.w700,
+                color: _P.textPrimary(isDark),
+              )),
             ),
           );
         }).toList(),
@@ -1866,92 +1997,133 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
+  // =====================================================================
+  // PHOTO OPTIONS (long-press)
+  // =====================================================================
+
   void _showPhotoOptions(BuildContext context, bool isDark, FitnessPhoto photo,
       FitnessProvider provider) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(_Sp.xl),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1D24) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          color: _P.card(isDark),
+          borderRadius:
+          const BorderRadius.vertical(top: Radius.circular(_R.xxl)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: _P.textTertiary(isDark),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: _Sp.xl),
+              _menuTile(
+                isDark,
+                icon: Icons.edit_rounded,
+                color: _P.orange,
+                label: 'Редактировать',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showEditPhotoDialog(context, isDark, photo, provider);
+                },
+              ),
+              _menuTile(
+                isDark,
+                icon: Icons.compare_rounded,
+                color: _P.blue,
+                label: 'Сравнить с другим',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    _isCompareMode = true;
+                    _selectedPhotoIndex1 = provider.photos.indexOf(photo);
+                    _selectedPhotoIndex2 = null;
+                  });
+                },
+              ),
+              _menuTile(
+                isDark,
+                icon: Icons.delete_rounded,
+                color: _P.red,
+                label: 'Удалить',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmDeletePhoto(context, isDark, photo, provider);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menuTile(
+      bool isDark, {
+        required IconData icon,
+        required Color color,
+        required String label,
+        required VoidCallback onTap,
+      }) {
+    return _Pressable(
+      onTap: onTap,
+      scale: 0.98,
+      haptic: false,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: _Sp.sm),
+        padding: const EdgeInsets.all(_R.md),
+        decoration: BoxDecoration(
+          color: _P.card2(isDark),
+          borderRadius: BorderRadius.circular(_R.md),
+        ),
+        child: Row(
           children: [
             Container(
               width: 40,
-              height: 4,
+              height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF6B35).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [color.withOpacity(0.20), color.withOpacity(0.06)],
                 ),
-                child: const Icon(Icons.edit_rounded,
-                    color: Color(0xFFFF6B35), size: 20),
+                borderRadius: BorderRadius.circular(_R.sm - 1),
               ),
-              title: const Text('Редактировать',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              onTap: () {
-                Navigator.pop(ctx);
-                _showEditPhotoDialog(context, isDark, photo, provider);
-              },
+              child: Icon(icon, color: color, size: 20),
             ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4A9BFF).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+            const SizedBox(width: _Sp.md),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                  color: color,
                 ),
-                child: const Icon(Icons.compare_rounded,
-                    color: Color(0xFF4A9BFF), size: 20),
               ),
-              title: const Text('Сравнить с другим',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              onTap: () {
-                Navigator.pop(ctx);
-                setState(() {
-                  _isCompareMode = true;
-                  _selectedPhotoIndex1 = provider.photos.indexOf(photo);
-                  _selectedPhotoIndex2 = null;
-                });
-              },
             ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.delete_rounded,
-                    color: Colors.red.shade400, size: 20),
-              ),
-              title: Text('Удалить',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600, color: Colors.red.shade400)),
-              onTap: () {
-                Navigator.pop(ctx);
-                _confirmDeletePhoto(context, isDark, photo, provider);
-              },
-            ),
+            Icon(Icons.chevron_right_rounded,
+                color: _P.textTertiary(isDark), size: 20),
           ],
         ),
       ),
     );
   }
 
-  // ==================== 🔧 ИСПРАВЛЕННЫЙ ДИАЛОГ ДОБАВЛЕНИЯ ====================
+  // =====================================================================
+  // ADD PHOTO DIALOG
+  // =====================================================================
 
   void _showAddPhotoDialog(
       BuildContext context, bool isDark, FitnessProvider provider) {
@@ -1967,7 +2139,6 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     final neckController = TextEditingController();
     final forearmController = TextEditingController();
     File? selectedImage;
-    // 🔧 ИСПРАВЛЕНО: Открыто по умолчанию — измерения видны сразу
     bool showMeasurements = true;
     bool isLoading = false;
     String? selectedCategory;
@@ -1979,535 +2150,202 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(_R.xxl),
           ),
-          backgroundColor: isDark ? const Color(0xFF1A1D24) : Colors.white,
-          insetPadding: const EdgeInsets.all(20),
+          backgroundColor: _P.card(isDark),
+          insetPadding: const EdgeInsets.all(_Sp.xl),
           child: Container(
             width: double.infinity,
             constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(_Sp.xxl),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF6B35), Color(0xFFFF3D00)],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.add_a_photo_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Новое фото',
-                              style: TextStyle(
-                                color:
-                                isDark ? Colors.white : Colors.black87,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            Text(
-                              'Добавьте фото для отслеживания прогресса',
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.white54
-                                    : Colors.grey.shade600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  _buildDialogHeader(
+                    isDark,
+                    icon: Icons.add_a_photo_rounded,
+                    title: 'Новое фото',
+                    subtitle: 'Добавьте фото для отслеживания прогресса',
                   ),
-                  const SizedBox(height: 20),
-                  GestureDetector(
+                  const SizedBox(height: _Sp.xl),
+                  _buildImagePicker(
+                    isDark,
+                    selectedImage: selectedImage,
                     onTap: () => _showImageSourcePicker(
                       context,
                       isDark,
                           (source) async {
                         try {
                           final XFile? image = await picker.pickImage(
-                            source: source,
-                            imageQuality: 85,
-                          );
+                              source: source, imageQuality: 85);
                           if (image != null) {
                             setDialogState(
                                     () => selectedImage = File(image.path));
                           }
                         } catch (e) {
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Ошибка: ${e.toString()}'),
-                              backgroundColor: Colors.red.shade400,
+                              content: Text('Ошибка: $e'),
+                              backgroundColor: _P.red,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(_R.md),
+                              ),
                             ),
                           );
                         }
                       },
                     ),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      height: selectedImage == null ? 180 : 220,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF0F1115)
-                            : const Color(0xFFF5F7FA),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: selectedImage != null
-                              ? const Color(0xFFFF6B35)
-                              : isDark
-                              ? Colors.white.withOpacity(0.1)
-                              : Colors.grey.shade300,
-                          width: selectedImage != null ? 2 : 1.5,
-                        ),
-                        boxShadow: selectedImage != null
-                            ? [
-                          BoxShadow(
-                            color:
-                            const Color(0xFFFF6B35).withOpacity(0.25),
-                            blurRadius: 16,
-                            spreadRadius: 2,
-                          ),
-                        ]
-                            : null,
-                      ),
-                      child: selectedImage != null
-                          ? ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.file(selectedImage!,
-                                fit: BoxFit.cover),
-                            Positioned(
-                              top: 10,
-                              right: 10,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFF6B35),
-                                  borderRadius:
-                                  BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFFF6B35)
-                                          .withOpacity(0.4),
-                                      blurRadius: 10,
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.check_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 12),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                      Colors.black.withOpacity(0.7),
-                                      Colors.transparent,
-                                    ],
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Нажмите, чтобы изменить фото',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                          : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35)
-                                  .withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.add_a_photo_rounded,
-                              color: const Color(0xFFFF6B35),
-                              size: 44,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Нажмите, чтобы выбрать фото',
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.white54
-                                  : Colors.grey.shade600,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            'Камера или галерея',
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.white24
-                                  : Colors.grey.shade500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildCategorySelector(isDark, selectedCategory, (category) {
-                    setDialogState(() => selectedCategory = category);
-                  }),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.03)
-                          : Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.grey.shade200,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        _buildStyledTextField(
-                          'Подпись',
-                          labelController,
-                          Icons.label_rounded,
-                          isDark,
-                        ),
-                        const SizedBox(height: 10),
-                        _buildStyledTextField(
-                          'Вес (кг)',
-                          weightController,
-                          Icons.monitor_weight_outlined,
-                          isDark,
-                          isNumber: true,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMeasurementToggle(
+                  const SizedBox(height: _Sp.lg),
+                  _buildCategorySelector(
                     isDark,
-                    showMeasurements,
-                    setDialogState,
+                    selectedCategory,
+                        (category) =>
+                        setDialogState(() => selectedCategory = category),
                   ),
+                  const SizedBox(height: _R.md),
+                  _buildFieldGroup(isDark, [
+                    _styledTextField('Подпись', labelController,
+                        Icons.label_rounded, isDark),
+                    _styledTextField('Вес (кг)', weightController,
+                        Icons.monitor_weight_outlined, isDark,
+                        isNumber: true),
+                  ]),
+                  const SizedBox(height: _R.md),
+                  _buildMeasurementToggle(
+                      isDark, showMeasurements, setDialogState),
                   AnimatedSize(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                     child: showMeasurements
                         ? Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.03)
-                              : Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.grey.shade200,
-                          ),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
+                      padding: const EdgeInsets.only(top: _R.md),
+                      child: _buildFieldGroup(isDark, [
+                        _measurementField('Грудь (см)', chestController,
+                            isDark, Icons.favorite_outline),
+                        _measurementField('Талия (см)', waistController,
+                            isDark, Icons.hourglass_empty),
+                        _measurementField('Бёдра (см)', hipsController,
+                            isDark, Icons.water_drop_outlined),
+                        Row(
                           children: [
-                            _buildMeasurementField(
-                              'Грудь (см)',
-                              chestController,
-                              isDark,
-                              Icons.favorite_outline,
+                            Expanded(
+                              child: _measurementField(
+                                  'Бицепс',
+                                  bicepsController,
+                                  isDark,
+                                  Icons.fitness_center),
                             ),
-                            const SizedBox(height: 8),
-                            _buildMeasurementField(
-                              'Талия (см)',
-                              waistController,
-                              isDark,
-                              Icons.hourglass_empty,
-                            ),
-                            const SizedBox(height: 8),
-                            _buildMeasurementField(
-                              'Бёдра (см)',
-                              hipsController,
-                              isDark,
-                              Icons.water_drop_outlined,
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildMeasurementField(
-                                    'Бицепс',
-                                    bicepsController,
-                                    isDark,
-                                    Icons.fitness_center,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _buildMeasurementField(
-                                    'Предплечье',
-                                    forearmController,
-                                    isDark,
-                                    Icons.fitness_center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildMeasurementField(
-                                    'Бедро',
-                                    thighController,
-                                    isDark,
-                                    Icons
-                                        .airline_seat_legroom_extra,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _buildMeasurementField(
-                                    'Икра',
-                                    calfController,
-                                    isDark,
-                                    Icons
-                                        .airline_seat_legroom_extra,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildMeasurementField(
-                              'Шея (см)',
-                              neckController,
-                              isDark,
-                              Icons.panorama_fish_eye,
+                            const SizedBox(width: _Sp.sm),
+                            Expanded(
+                              child: _measurementField(
+                                  'Предплечье',
+                                  forearmController,
+                                  isDark,
+                                  Icons.fitness_center),
                             ),
                           ],
                         ),
-                      ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _measurementField(
+                                  'Бедро',
+                                  thighController,
+                                  isDark,
+                                  Icons.airline_seat_legroom_extra),
+                            ),
+                            const SizedBox(width: _Sp.sm),
+                            Expanded(
+                              child: _measurementField(
+                                  'Икра',
+                                  calfController,
+                                  isDark,
+                                  Icons.airline_seat_legroom_extra),
+                            ),
+                          ],
+                        ),
+                        _measurementField('Шея (см)', neckController,
+                            isDark, Icons.panorama_fish_eye),
+                      ]),
                     )
                         : const SizedBox.shrink(),
                   ),
-                  const SizedBox(height: 12),
-                  _buildStyledTextField(
-                    'Заметки',
-                    notesController,
-                    Icons.note_rounded,
+                  const SizedBox(height: _R.md),
+                  _styledTextField('Заметки', notesController,
+                      Icons.note_rounded, isDark,
+                      maxLines: 2),
+                  const SizedBox(height: _Sp.xl),
+                  _buildDialogActions(
                     isDark,
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed:
-                          isLoading ? null : () => Navigator.pop(ctx),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Отмена',
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.white54
-                                  : Colors.grey.shade600,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: isLoading
-                              ? null
-                              : () async {
-                            if (selectedImage == null) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
-                                const SnackBar(
-                                  content: Row(
-                                    children: [
-                                      Icon(Icons.warning_rounded,
-                                          color: Colors.white),
-                                      SizedBox(width: 8),
-                                      Text('Выберите фото'),
-                                    ],
-                                  ),
-                                  backgroundColor: Color(0xFFFF6B35),
-                                  duration: Duration(seconds: 2),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                              return;
-                            }
-
-                            setDialogState(() => isLoading = true);
-
-                            try {
-                              String finalLabel =
-                              labelController.text.trim();
-                              if (selectedCategory != null &&
-                                  selectedCategory!.isNotEmpty) {
-                                final categoryMap = {
-                                  'progress': '📈 Прогресс',
-                                  'workout': '💪 Тренировка',
-                                  'measurement': '📏 Замер',
-                                };
-                                final prefix =
-                                    categoryMap[selectedCategory] ?? '';
-                                if (prefix.isNotEmpty) {
-                                  finalLabel = finalLabel.isNotEmpty
-                                      ? '$prefix: $finalLabel'
-                                      : prefix;
-                                }
-                              }
-
-                              await provider.addPhoto(
-                                imageUrl: selectedImage!.path,
-                                label: finalLabel.isNotEmpty
-                                    ? finalLabel
-                                    : null,
-                                weight: double.tryParse(
-                                    weightController.text),
-                                notes: notesController
-                                    .text.isNotEmpty
-                                    ? notesController.text
-                                    : null,
-                                chest: double.tryParse(
-                                    chestController.text),
-                                waist: double.tryParse(
-                                    waistController.text),
-                                hips: double.tryParse(
-                                    hipsController.text),
-                                biceps: double.tryParse(
-                                    bicepsController.text),
-                                thigh: double.tryParse(
-                                    thighController.text),
-                                calf: double.tryParse(
-                                    calfController.text),
-                                neck: double.tryParse(
-                                    neckController.text),
-                                forearm: double.tryParse(
-                                    forearmController.text),
-                              );
-
-                              _scaleController.forward(from: 0.0);
-                              if (mounted) {
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(
-                                  const SnackBar(
-                                    content: Row(
-                                      children: [
-                                        Icon(
-                                            Icons.check_circle_rounded,
-                                            color: Colors.white),
-                                        SizedBox(width: 8),
-                                        Text('Фото добавлено! 📸'),
-                                      ],
-                                    ),
-                                    backgroundColor: Color(0xFFFF6B35),
-                                    duration: Duration(seconds: 2),
-                                    behavior:
-                                    SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              setDialogState(() => isLoading = false);
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
-                                SnackBar(
-                                  content:
-                                  Text('Ошибка: ${e.toString()}'),
-                                  backgroundColor: Colors.red.shade400,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF6B35),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: isLoading ? 0 : 4,
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                              : const Text(
-                            'Добавить',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    isLoading: isLoading,
+                    onCancel: () => Navigator.pop(ctx),
+                    onConfirm: () async {
+                      if (selectedImage == null) {
+                        HapticFeedback.mediumImpact();
+                        _showSnack(
+                          context,
+                          'Выберите фото',
+                          _P.orange,
+                          icon: Icons.warning_rounded,
+                        );
+                        return;
+                      }
+                      setDialogState(() => isLoading = true);
+                      try {
+                        String finalLabel = labelController.text.trim();
+                        if (selectedCategory != null &&
+                            selectedCategory!.isNotEmpty) {
+                          const categoryMap = {
+                            'progress': '📈 Прогресс',
+                            'workout': '💪 Тренировка',
+                            'measurement': '📏 Замер',
+                          };
+                          final prefix = categoryMap[selectedCategory] ?? '';
+                          if (prefix.isNotEmpty) {
+                            finalLabel = finalLabel.isNotEmpty
+                                ? '$prefix: $finalLabel'
+                                : prefix;
+                          }
+                        }
+                        await provider.addPhoto(
+                          imageUrl: selectedImage!.path,
+                          label:
+                          finalLabel.isNotEmpty ? finalLabel : null,
+                          weight: double.tryParse(weightController.text),
+                          notes: notesController.text.isNotEmpty
+                              ? notesController.text
+                              : null,
+                          chest: double.tryParse(chestController.text),
+                          waist: double.tryParse(waistController.text),
+                          hips: double.tryParse(hipsController.text),
+                          biceps: double.tryParse(bicepsController.text),
+                          thigh: double.tryParse(thighController.text),
+                          calf: double.tryParse(calfController.text),
+                          neck: double.tryParse(neckController.text),
+                          forearm: double.tryParse(forearmController.text),
+                        );
+                        _scaleController.forward(from: 0.0);
+                        if (context.mounted) {
+                          Navigator.pop(ctx);
+                          _showSnack(
+                            context,
+                            'Фото добавлено! 📸',
+                            _P.orange,
+                            icon: Icons.check_circle_rounded,
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() => isLoading = false);
+                        if (!context.mounted) return;
+                        _showSnack(context, 'Ошибка: $e', _P.red);
+                      }
+                    },
+                    confirmLabel: 'Добавить',
                   ),
                 ],
               ),
@@ -2518,377 +2356,9 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
-  Widget _buildCategorySelector(
-      bool isDark, String? selected, Function(String) onSelect) {
-    final categories = [
-      {
-        'id': 'progress',
-        'label': 'Прогресс',
-        'icon': Icons.trending_up_rounded,
-        'color': const Color(0xFF4CAF50),
-        'emoji': '📈'
-      },
-      {
-        'id': 'workout',
-        'label': 'Тренировка',
-        'icon': Icons.fitness_center_rounded,
-        'color': const Color(0xFFFF6B35),
-        'emoji': '💪'
-      },
-      {
-        'id': 'measurement',
-        'label': 'Замер',
-        'icon': Icons.straighten_rounded,
-        'color': const Color(0xFF4A9BFF),
-        'emoji': '📏'
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.category_rounded,
-              color: isDark ? Colors.white54 : Colors.grey.shade600,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Категория',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white70 : Colors.grey.shade700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: categories.map((cat) {
-            final isSelected = selected == cat['id'];
-            final color = cat['color'] as Color;
-            return GestureDetector(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                onSelect(isSelected ? '' : cat['id'] as String);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color:
-                  isSelected ? color.withOpacity(0.15) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected
-                        ? color
-                        : isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.grey.shade300,
-                    width: isSelected ? 2 : 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      cat['emoji'] as String,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      cat['label'] as String,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight:
-                        isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected
-                            ? color
-                            : isDark
-                            ? Colors.white54
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-                    if (isSelected)
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4),
-                        child: Icon(
-                          Icons.check_rounded,
-                          size: 16,
-                          color: Color(0xFFFF6B35),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        if (selected == null || selected.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              'Выберите категорию для автоматической сортировки',
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? Colors.white24 : Colors.grey.shade400,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  void _showImageSourcePicker(
-      BuildContext context, bool isDark, Function(ImageSource) onPick) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1D24) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Выберите источник',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF6B35).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.camera_alt_rounded,
-                    color: Color(0xFFFF6B35), size: 28),
-              ),
-              title: const Text(
-                'Камера',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-              ),
-              subtitle: const Text(
-                'Сделать новое фото',
-                style: TextStyle(fontSize: 13),
-              ),
-              onTap: () {
-                Navigator.pop(ctx);
-                onPick(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4A9BFF).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.photo_library_rounded,
-                    color: Color(0xFF4A9BFF), size: 28),
-              ),
-              title: const Text(
-                'Галерея',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-              ),
-              subtitle: const Text(
-                'Выбрать из сохранённых',
-                style: TextStyle(fontSize: 13),
-              ),
-              onTap: () {
-                Navigator.pop(ctx);
-                onPick(ImageSource.gallery);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStyledTextField(
-      String label,
-      TextEditingController controller,
-      IconData icon,
-      bool isDark, {
-        bool isNumber = false,
-        int maxLines = 1,
-      }) {
-    return TextField(
-      controller: controller,
-      keyboardType: isNumber
-          ? const TextInputType.numberWithOptions(decimal: true)
-          : TextInputType.text,
-      maxLines: maxLines,
-      style: TextStyle(
-        color: isDark ? Colors.white : Colors.black87,
-        fontSize: 14,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFFFF6B35), size: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor:
-        isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        labelStyle: TextStyle(
-          fontSize: 13,
-          color: isDark ? Colors.white60 : Colors.grey.shade600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMeasurementToggle(
-      bool isDark,
-      bool showMeasurements,
-      StateSetter setDialogState,
-      ) {
-    return InkWell(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        setDialogState(() => showMeasurements = !showMeasurements);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: showMeasurements
-              ? const Color(0xFFFF6B35).withOpacity(0.08)
-              : isDark
-              ? Colors.white.withOpacity(0.03)
-              : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: showMeasurements
-                ? const Color(0xFFFF6B35).withOpacity(0.3)
-                : isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey.shade200,
-          ),
-        ),
-        child: Row(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: showMeasurements
-                    ? const Color(0xFFFF6B35)
-                    : isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.straighten_rounded,
-                color: showMeasurements
-                    ? Colors.white
-                    : isDark
-                    ? Colors.white38
-                    : Colors.grey.shade500,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Обхваты тела',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    showMeasurements ? 'Скрыть измерения' : 'Добавить измерения',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white38 : Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            AnimatedRotation(
-              duration: const Duration(milliseconds: 300),
-              turns: showMeasurements ? 0.5 : 0,
-              child: Icon(
-                Icons.expand_more_rounded,
-                color: isDark ? Colors.white54 : Colors.grey,
-                size: 24,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMeasurementField(
-      String label,
-      TextEditingController controller,
-      bool isDark,
-      IconData icon,
-      ) {
-    return TextField(
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      style: TextStyle(
-        color: isDark ? Colors.white : Colors.black87,
-        fontSize: 13,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFFFF6B35), size: 18),
-        labelStyle: TextStyle(
-          fontSize: 12,
-          color: isDark ? Colors.white60 : Colors.grey.shade600,
-        ),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor:
-        isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
-        isDense: true,
-      ),
-    );
-  }
+  // =====================================================================
+  // EDIT PHOTO DIALOG
+  // =====================================================================
 
   void _showEditPhotoDialog(BuildContext context, bool isDark,
       FitnessPhoto photo, FitnessProvider provider) {
@@ -2921,383 +2391,169 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(_R.xxl),
           ),
-          backgroundColor: isDark ? const Color(0xFF1A1D24) : Colors.white,
-          insetPadding: const EdgeInsets.all(20),
+          backgroundColor: _P.card(isDark),
+          insetPadding: const EdgeInsets.all(_Sp.xl),
           child: Container(
             width: double.infinity,
             constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(_Sp.xxl),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF6B35), Color(0xFFFF3D00)],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.edit_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Редактировать фото',
-                              style: TextStyle(
-                                color:
-                                isDark ? Colors.white : Colors.black87,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            Text(
-                              'Измените данные фото',
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.white54
-                                    : Colors.grey.shade600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  _buildDialogHeader(
+                    isDark,
+                    icon: Icons.edit_rounded,
+                    title: 'Редактировать фото',
+                    subtitle: 'Измените данные фото',
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: _Sp.lg),
                   Container(
                     height: 120,
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF0F1115)
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(16),
+                      color: _P.card2(isDark),
+                      borderRadius: BorderRadius.circular(_R.md),
                       border: Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.grey.shade300,
-                      ),
+                          color: _P.separator(isDark), width: 0.5),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(_R.md),
                       child: File(photo.imageUrl).existsSync()
                           ? Image.file(File(photo.imageUrl),
                           fit: BoxFit.contain)
                           : Center(
-                        child: Icon(
-                          Icons.image_rounded,
-                          size: 48,
-                          color: isDark
-                              ? Colors.white12
-                              : Colors.grey.shade400,
-                        ),
+                        child: Icon(Icons.image_rounded,
+                            size: 48,
+                            color: _P.textTertiary(isDark)),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.03)
-                          : Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.grey.shade200,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        _buildStyledTextField(
-                          'Подпись',
-                          labelController,
-                          Icons.label_rounded,
-                          isDark,
-                        ),
-                        const SizedBox(height: 10),
-                        _buildStyledTextField(
-                          'Вес (кг)',
-                          weightController,
-                          Icons.monitor_weight_outlined,
-                          isDark,
-                          isNumber: true,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: _Sp.lg),
+                  _buildFieldGroup(isDark, [
+                    _styledTextField('Подпись', labelController,
+                        Icons.label_rounded, isDark),
+                    _styledTextField('Вес (кг)', weightController,
+                        Icons.monitor_weight_outlined, isDark,
+                        isNumber: true),
+                  ]),
+                  const SizedBox(height: _R.md),
                   _buildMeasurementToggle(
-                    isDark,
-                    showMeasurements,
-                    setDialogState,
-                  ),
+                      isDark, showMeasurements, setDialogState),
                   AnimatedSize(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                     child: showMeasurements
                         ? Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.03)
-                              : Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.grey.shade200,
-                          ),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
+                      padding: const EdgeInsets.only(top: _R.md),
+                      child: _buildFieldGroup(isDark, [
+                        _measurementField('Грудь (см)', chestController,
+                            isDark, Icons.favorite_outline),
+                        _measurementField('Талия (см)', waistController,
+                            isDark, Icons.hourglass_empty),
+                        _measurementField('Бёдра (см)', hipsController,
+                            isDark, Icons.water_drop_outlined),
+                        Row(
                           children: [
-                            _buildMeasurementField(
-                              'Грудь (см)',
-                              chestController,
-                              isDark,
-                              Icons.favorite_outline,
+                            Expanded(
+                              child: _measurementField(
+                                  'Бицепс',
+                                  bicepsController,
+                                  isDark,
+                                  Icons.fitness_center),
                             ),
-                            const SizedBox(height: 8),
-                            _buildMeasurementField(
-                              'Талия (см)',
-                              waistController,
-                              isDark,
-                              Icons.hourglass_empty,
-                            ),
-                            const SizedBox(height: 8),
-                            _buildMeasurementField(
-                              'Бёдра (см)',
-                              hipsController,
-                              isDark,
-                              Icons.water_drop_outlined,
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildMeasurementField(
-                                    'Бицепс',
-                                    bicepsController,
-                                    isDark,
-                                    Icons.fitness_center,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _buildMeasurementField(
-                                    'Предплечье',
-                                    forearmController,
-                                    isDark,
-                                    Icons.fitness_center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildMeasurementField(
-                                    'Бедро',
-                                    thighController,
-                                    isDark,
-                                    Icons
-                                        .airline_seat_legroom_extra,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _buildMeasurementField(
-                                    'Икра',
-                                    calfController,
-                                    isDark,
-                                    Icons
-                                        .airline_seat_legroom_extra,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildMeasurementField(
-                              'Шея (см)',
-                              neckController,
-                              isDark,
-                              Icons.panorama_fish_eye,
+                            const SizedBox(width: _Sp.sm),
+                            Expanded(
+                              child: _measurementField(
+                                  'Предплечье',
+                                  forearmController,
+                                  isDark,
+                                  Icons.fitness_center),
                             ),
                           ],
                         ),
-                      ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _measurementField(
+                                  'Бедро',
+                                  thighController,
+                                  isDark,
+                                  Icons.airline_seat_legroom_extra),
+                            ),
+                            const SizedBox(width: _Sp.sm),
+                            Expanded(
+                              child: _measurementField(
+                                  'Икра',
+                                  calfController,
+                                  isDark,
+                                  Icons.airline_seat_legroom_extra),
+                            ),
+                          ],
+                        ),
+                        _measurementField('Шея (см)', neckController,
+                            isDark, Icons.panorama_fish_eye),
+                      ]),
                     )
                         : const SizedBox.shrink(),
                   ),
-                  const SizedBox(height: 12),
-                  _buildStyledTextField(
-                    'Заметки',
-                    notesController,
-                    Icons.note_rounded,
+                  const SizedBox(height: _R.md),
+                  _styledTextField('Заметки', notesController,
+                      Icons.note_rounded, isDark,
+                      maxLines: 2),
+                  const SizedBox(height: _Sp.xl),
+                  _buildDialogActions(
                     isDark,
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed:
-                          isLoading ? null : () => Navigator.pop(ctx),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Отмена',
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.white54
-                                  : Colors.grey.shade600,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: isLoading
-                              ? null
-                              : () async {
-                            setDialogState(() => isLoading = true);
-
-                            try {
-                              final updated = photo.copyWith(
-                                label: labelController
-                                    .text.isNotEmpty
-                                    ? labelController.text
-                                    : null,
-                                weight: double.tryParse(
-                                    weightController.text),
-                                notes: notesController
-                                    .text.isNotEmpty
-                                    ? notesController.text
-                                    : null,
-                                chest: double.tryParse(
-                                    chestController.text),
-                                waist: double.tryParse(
-                                    waistController.text),
-                                hips: double.tryParse(
-                                    hipsController.text),
-                                biceps: double.tryParse(
-                                    bicepsController.text),
-                                thigh: double.tryParse(
-                                    thighController.text),
-                                calf: double.tryParse(
-                                    calfController.text),
-                                neck: double.tryParse(
-                                    neckController.text),
-                                forearm: double.tryParse(
-                                    forearmController.text),
-                                clearChest:
-                                chestController.text.isEmpty,
-                                clearWaist:
-                                waistController.text.isEmpty,
-                                clearHips:
-                                hipsController.text.isEmpty,
-                                clearBiceps:
-                                bicepsController.text.isEmpty,
-                                clearThigh:
-                                thighController.text.isEmpty,
-                                clearCalf:
-                                calfController.text.isEmpty,
-                                clearNeck:
-                                neckController.text.isEmpty,
-                                clearForearm:
-                                forearmController.text.isEmpty,
-                              );
-                              await provider.updatePhoto(updated);
-                              _scaleController.forward(from: 0.0);
-                              if (mounted) {
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(
-                                  const SnackBar(
-                                    content: Row(
-                                      children: [
-                                        Icon(
-                                            Icons.check_circle_rounded,
-                                            color: Colors.white),
-                                        SizedBox(width: 8),
-                                        Text('Фото обновлено! ✨'),
-                                      ],
-                                    ),
-                                    backgroundColor: Color(0xFFFF6B35),
-                                    duration: Duration(seconds: 2),
-                                    behavior:
-                                    SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              setDialogState(() => isLoading = false);
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
-                                SnackBar(
-                                  content:
-                                  Text('Ошибка: ${e.toString()}'),
-                                  backgroundColor: Colors.red.shade400,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF6B35),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: isLoading ? 0 : 4,
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                              : const Text(
-                            'Сохранить',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    isLoading: isLoading,
+                    onCancel: () => Navigator.pop(ctx),
+                    onConfirm: () async {
+                      setDialogState(() => isLoading = true);
+                      try {
+                        final updated = photo.copyWith(
+                          label: labelController.text.isNotEmpty
+                              ? labelController.text
+                              : null,
+                          weight: double.tryParse(weightController.text),
+                          notes: notesController.text.isNotEmpty
+                              ? notesController.text
+                              : null,
+                          chest: double.tryParse(chestController.text),
+                          waist: double.tryParse(waistController.text),
+                          hips: double.tryParse(hipsController.text),
+                          biceps: double.tryParse(bicepsController.text),
+                          thigh: double.tryParse(thighController.text),
+                          calf: double.tryParse(calfController.text),
+                          neck: double.tryParse(neckController.text),
+                          forearm: double.tryParse(forearmController.text),
+                          clearChest: chestController.text.isEmpty,
+                          clearWaist: waistController.text.isEmpty,
+                          clearHips: hipsController.text.isEmpty,
+                          clearBiceps: bicepsController.text.isEmpty,
+                          clearThigh: thighController.text.isEmpty,
+                          clearCalf: calfController.text.isEmpty,
+                          clearNeck: neckController.text.isEmpty,
+                          clearForearm: forearmController.text.isEmpty,
+                        );
+                        await provider.updatePhoto(updated);
+                        _scaleController.forward(from: 0.0);
+                        if (context.mounted) {
+                          Navigator.pop(ctx);
+                          _showSnack(
+                            context,
+                            'Фото обновлено! ✨',
+                            _P.orange,
+                            icon: Icons.check_circle_rounded,
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() => isLoading = false);
+                        if (!context.mounted) return;
+                        _showSnack(context, 'Ошибка: $e', _P.red);
+                      }
+                    },
+                    confirmLabel: 'Сохранить',
                   ),
                 ],
               ),
@@ -3308,48 +2564,810 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
     );
   }
 
+  // =====================================================================
+  // SHARED DIALOG PIECES
+  // =====================================================================
+
+  Widget _buildDialogHeader(
+      bool isDark, {
+        required IconData icon,
+        required String title,
+        required String subtitle,
+      }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [_P.orange, _P.orangeDeep],
+            ),
+            borderRadius: BorderRadius.circular(_R.md),
+            boxShadow: _P.softGlow(_P.orange, strength: 0.4),
+          ),
+          child: Icon(icon, color: Colors.white, size: 22),
+        ),
+        const SizedBox(width: _R.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: _P.textPrimary(isDark),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: _P.textSecondary(isDark),
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImagePicker(
+      bool isDark, {
+        required File? selectedImage,
+        required VoidCallback onTap,
+      }) {
+    return _Pressable(
+      onTap: onTap,
+      scale: 0.98,
+      haptic: false,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        height: selectedImage == null ? 180 : 220,
+        decoration: BoxDecoration(
+          color: _P.card2(isDark),
+          borderRadius: BorderRadius.circular(_R.lg - 2),
+          border: Border.all(
+            color: selectedImage != null
+                ? _P.orange
+                : _P.separator(isDark),
+            width: selectedImage != null ? 2 : 1,
+          ),
+          boxShadow: selectedImage != null
+              ? _P.softGlow(_P.orange, strength: 0.25)
+              : null,
+        ),
+        child: selectedImage != null
+            ? ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.file(selectedImage, fit: BoxFit.cover),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.all(_Sp.sm),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [_P.orange, _P.orangeDeep],
+                    ),
+                    borderRadius: BorderRadius.circular(_R.xs),
+                    boxShadow:
+                    _P.softGlow(_P.orange, strength: 0.4),
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      color: Colors.white, size: 18),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding:
+                  const EdgeInsets.symmetric(vertical: _R.md),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Нажмите, чтобы изменить фото',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(_R.xl),
+              decoration: BoxDecoration(
+                color: _P.orangeSoft,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add_a_photo_rounded,
+                  color: _P.orange, size: 44),
+            ),
+            const SizedBox(height: _R.md),
+            Text(
+              'Нажмите, чтобы выбрать фото',
+              style: TextStyle(
+                color: _P.textSecondary(isDark),
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              'Камера или галерея',
+              style: TextStyle(
+                color: _P.textTertiary(isDark),
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFieldGroup(bool isDark, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _P.card2(isDark),
+        borderRadius: BorderRadius.circular(_R.md),
+        border: Border.all(color: _P.separator(isDark), width: 0.5),
+      ),
+      padding: const EdgeInsets.all(_R.md),
+      child: Column(
+        children: [
+          for (int i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMeasurementToggle(
+      bool isDark,
+      bool showMeasurements,
+      StateSetter setDialogState,
+      ) {
+    return _Pressable(
+      onTap: () => setDialogState(
+              () => showMeasurements = !showMeasurements),
+      scale: 0.98,
+      haptic: false,
+      child: Container(
+        padding: const EdgeInsets.all(_R.md),
+        decoration: BoxDecoration(
+          color: showMeasurements
+              ? _P.orangeSoft
+              : _P.card2(isDark),
+          borderRadius: BorderRadius.circular(_R.md),
+          border: Border.all(
+            color: showMeasurements
+                ? _P.orange.withOpacity(0.28)
+                : _P.separator(isDark),
+            width: 0.6,
+          ),
+        ),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(_Sp.sm),
+              decoration: BoxDecoration(
+                color: showMeasurements
+                    ? _P.orange
+                    : _P.card(isDark),
+                borderRadius: BorderRadius.circular(_R.xs + 2),
+                boxShadow: showMeasurements
+                    ? _P.softGlow(_P.orange, strength: 0.3)
+                    : null,
+              ),
+              child: Icon(
+                Icons.straighten_rounded,
+                color: showMeasurements
+                    ? Colors.white
+                    : _P.textTertiary(isDark),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: _R.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Обхваты тела',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                      color: _P.textPrimary(isDark),
+                    ),
+                  ),
+                  Text(
+                    showMeasurements
+                        ? 'Скрыть измерения'
+                        : 'Добавить измерения',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _P.textTertiary(isDark),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            AnimatedRotation(
+              duration: const Duration(milliseconds: 300),
+              turns: showMeasurements ? 0.5 : 0,
+              child: Icon(Icons.expand_more_rounded,
+                  color: _P.textTertiary(isDark), size: 24),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _styledTextField(
+      String label,
+      TextEditingController controller,
+      IconData icon,
+      bool isDark, {
+        bool isNumber = false,
+        int maxLines = 1,
+      }) {
+    return TextField(
+      controller: controller,
+      keyboardType: isNumber
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : TextInputType.text,
+      maxLines: maxLines,
+      style: TextStyle(
+        color: _P.textPrimary(isDark),
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: _P.orange, size: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(_R.sm),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: _P.card(isDark),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: _R.md, vertical: _R.md),
+        labelStyle: TextStyle(
+          fontSize: 13,
+          color: _P.textTertiary(isDark),
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: _P.orange,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _measurementField(
+      String label,
+      TextEditingController controller,
+      bool isDark,
+      IconData icon,
+      ) {
+    return TextField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      style: _Num.t(TextStyle(
+        color: _P.textPrimary(isDark),
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+      )),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: _P.orange, size: 18),
+        labelStyle: TextStyle(
+          fontSize: 12,
+          color: _P.textTertiary(isDark),
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: _P.orange,
+          fontWeight: FontWeight.w700,
+        ),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: _R.md, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(_R.xs + 2),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: _P.card(isDark),
+        isDense: true,
+      ),
+    );
+  }
+
+  Widget _buildDialogActions(
+      bool isDark, {
+        required bool isLoading,
+        required VoidCallback onCancel,
+        required VoidCallback onConfirm,
+        required String confirmLabel,
+      }) {
+    return Row(
+      children: [
+        Expanded(
+          child: _Pressable(
+            onTap: isLoading ? () {} : onCancel,
+            scale: 0.96,
+            haptic: false,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: _R.md),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _P.card2(isDark),
+                borderRadius: BorderRadius.circular(_R.sm),
+              ),
+              child: Text(
+                'Отмена',
+                style: TextStyle(
+                  color: _P.textSecondary(isDark),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          flex: 2,
+          child: _Pressable(
+            onTap: isLoading ? () {} : onConfirm,
+            scale: 0.96,
+            haptic: false,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: _R.md),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _P.orange,
+                borderRadius: BorderRadius.circular(_R.sm),
+                boxShadow:
+                isLoading ? null : _P.softGlow(_P.orange, strength: 0.4),
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              )
+                  : Text(
+                confirmLabel,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategorySelector(
+      bool isDark,
+      String? selected,
+      ValueChanged<String> onSelect,
+      ) {
+    const categories = [
+      {
+        'id': 'progress',
+        'label': 'Прогресс',
+        'color': _P.green,
+        'emoji': '📈',
+      },
+      {
+        'id': 'workout',
+        'label': 'Тренировка',
+        'color': _P.orange,
+        'emoji': '💪',
+      },
+      {
+        'id': 'measurement',
+        'label': 'Замер',
+        'color': _P.blue,
+        'emoji': '📏',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.category_rounded,
+                color: _P.textTertiary(isDark), size: 16),
+            const SizedBox(width: 6),
+            Text(
+              'Категория',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+                color: _P.textTertiary(isDark),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: _Sp.sm),
+        Wrap(
+          spacing: _Sp.sm,
+          runSpacing: _Sp.sm,
+          children: categories.map((cat) {
+            final isSelected = selected == cat['id'];
+            final color = cat['color'] as Color;
+            final emoji = cat['emoji'] as String;
+            final label = cat['label'] as String;
+            final id = cat['id'] as String;
+            return _Pressable(
+              onTap: () => onSelect(isSelected ? '' : id),
+              scale: 0.96,
+              haptic: false,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding:
+                const EdgeInsets.symmetric(horizontal: _R.md, vertical: _Sp.sm),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? color.withOpacity(0.15)
+                      : _P.card2(isDark),
+                  borderRadius: BorderRadius.circular(_R.sm),
+                  border: Border.all(
+                    color: isSelected
+                        ? color
+                        : _P.separator(isDark),
+                    width: isSelected ? 1.6 : 0.6,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(emoji, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 6),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color:
+                        isSelected ? color : _P.textSecondary(isDark),
+                      ),
+                    ),
+                    if (isSelected)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: Icon(Icons.check_rounded,
+                            size: 16, color: color),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // =====================================================================
+  // IMAGE SOURCE PICKER
+  // =====================================================================
+
+  void _showImageSourcePicker(
+      BuildContext context, bool isDark, ValueChanged<ImageSource> onPick) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(_Sp.xl),
+        decoration: BoxDecoration(
+          color: _P.card(isDark),
+          borderRadius:
+          const BorderRadius.vertical(top: Radius.circular(_R.xxl)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: _P.textTertiary(isDark),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: _Sp.lg),
+              Text(
+                'Выберите источник',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.4,
+                  color: _P.textPrimary(isDark),
+                ),
+              ),
+              const SizedBox(height: _Sp.lg),
+              _sourceTile(
+                isDark,
+                icon: Icons.camera_alt_rounded,
+                color: _P.orange,
+                title: 'Камера',
+                subtitle: 'Сделать новое фото',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onPick(ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: _Sp.sm),
+              _sourceTile(
+                isDark,
+                icon: Icons.photo_library_rounded,
+                color: _P.blue,
+                title: 'Галерея',
+                subtitle: 'Выбрать из сохранённых',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onPick(ImageSource.gallery);
+                },
+              ),
+              const SizedBox(height: _Sp.sm),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sourceTile(
+      bool isDark, {
+        required IconData icon,
+        required Color color,
+        required String title,
+        required String subtitle,
+        required VoidCallback onTap,
+      }) {
+    return _Pressable(
+      onTap: onTap,
+      scale: 0.98,
+      haptic: false,
+      child: Container(
+        padding: const EdgeInsets.all(_R.md),
+        decoration: BoxDecoration(
+          color: _P.card2(isDark),
+          borderRadius: BorderRadius.circular(_R.md),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color.withOpacity(0.20),
+                    color.withOpacity(0.06),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(_R.sm),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: _R.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      letterSpacing: -0.2,
+                      color: _P.textPrimary(isDark),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _P.textSecondary(isDark),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: _P.textTertiary(isDark), size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =====================================================================
+  // DELETE CONFIRM (iOS style)
+  // =====================================================================
+
   void _confirmDeletePhoto(BuildContext context, bool isDark,
       FitnessPhoto photo, FitnessProvider provider) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: isDark ? const Color(0xFF1A1D24) : Colors.white,
-        title: Row(
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 60),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? _P.darkCard2 : Colors.white,
+            borderRadius: BorderRadius.circular(_R.md),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    _Sp.xl, _Sp.xl, _Sp.xl, _Sp.lg),
+                child: Column(
+                  children: [
+                    Text(
+                      'Удалить фото?',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: _P.textPrimary(isDark),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Фото будет удалено безвозвратно',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _P.textSecondary(isDark),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(height: 0.5, color: _P.separator(isDark)),
+              Row(
+                children: [
+                  Expanded(
+                    child: _Pressable(
+                      onTap: () => Navigator.pop(ctx),
+                      scale: 0.96,
+                      haptic: false,
+                      child: Container(
+                        padding:
+                        const EdgeInsets.symmetric(vertical: _Sp.md),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'Отмена',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w400,
+                            color: _P.orange,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                      width: 0.5,
+                      height: 50,
+                      color: _P.separator(isDark)),
+                  Expanded(
+                    child: _Pressable(
+                      onTap: () async {
+                        HapticFeedback.mediumImpact();
+                        await provider.deletePhoto(photo.id);
+                        try {
+                          final file = File(photo.imageUrl);
+                          if (file.existsSync()) await file.delete();
+                        } catch (_) {}
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                      scale: 0.96,
+                      haptic: false,
+                      child: Container(
+                        padding:
+                        const EdgeInsets.symmetric(vertical: _Sp.md),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'Удалить',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: _P.red,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =====================================================================
+  // HELPERS
+  // =====================================================================
+
+  void _showSnack(
+      BuildContext context,
+      String text,
+      Color color, {
+        IconData? icon,
+      }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red.shade400),
-            const SizedBox(width: 8),
-            const Text('Удалить фото?',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+            if (icon != null) ...[
+              Icon(icon, color: Colors.white, size: 18),
+              const SizedBox(width: _Sp.sm),
+            ],
+            Expanded(child: Text(text)),
           ],
         ),
-        content: const Text('Фото будет удалено безвозвратно'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена',
-                style: TextStyle(fontWeight: FontWeight.w600)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await provider.deletePhoto(photo.id);
-              try {
-                final file = File(photo.imageUrl);
-                if (file.existsSync()) await file.delete();
-              } catch (_) {}
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('Удалить',
-                style: TextStyle(fontWeight: FontWeight.w700)),
-          ),
-        ],
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_R.md),
+        ),
       ),
     );
   }
@@ -3357,7 +3375,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
   String _formatDate(DateTime date) {
     const months = [
       'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
-      'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'
+      'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -3370,14 +3388,13 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen>
   }
 }
 
-// ==================== ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ ====================
+// ==================== HELPER CLASSES ====================
 
 class FilterOption {
   final String id;
   final String label;
   final IconData icon;
   final Color color;
-
   const FilterOption({
     required this.id,
     required this.label,
@@ -3426,5 +3443,6 @@ class _HalfClipper extends CustomClipper<Rect> {
       Rect.fromLTRB(0, 0, size.width * position, size.height);
 
   @override
-  bool shouldReclip(_HalfClipper oldClipper) => oldClipper.position != position;
+  bool shouldReclip(_HalfClipper oldClipper) =>
+      oldClipper.position != position;
 }

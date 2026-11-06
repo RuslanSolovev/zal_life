@@ -1,60 +1,89 @@
 // features/fitness/ui/screens/exercise_library_screen.dart
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:zal_life/features/fitness/data/exercise_image_presets.dart';
+
 import '../../../models/enums.dart';
 import '../../../models/fitness_models.dart';
 import '../../../providers/fitness_provider.dart';
+import '../widgets/image_picker_field.dart';
 import 'exercise_detail_screen.dart';
 
-// ==================== POWER MODE TOKENS ====================
+// ═══════════════════════════════════════════════════════════════════
+//  Soft Pastel Light — Design System
+// ═══════════════════════════════════════════════════════════════════
+class _P {
+  static const peach     = Color(0xFFFFB5A7);
+  static const pink      = Color(0xFFFFAFC8);
+  static const mint      = Color(0xFFA8DADC);
+  static const lavender  = Color(0xFFCDB4DB);
+  static const yellow    = Color(0xFFFFD6A5);
+  static const sky       = Color(0xFFA8D8EA);
+  static const sage      = Color(0xFFB5CBB7);
 
-class _Power {
-  static const Color heroBase = Color(0xFF050505);
-  static const Color heroDeep = Color(0xFF120700);
+  static const peachSoft    = Color(0xFFFFE9E1);
+  static const pinkSoft     = Color(0xFFFFE5EF);
+  static const mintSoft     = Color(0xFFE3F3F4);
+  static const lavenderSoft = Color(0xFFF1E8F5);
+  static const yellowSoft   = Color(0xFFFFF2E2);
+  static const skySoft      = Color(0xFFE3F1F7);
+  static const sageSoft     = Color(0xFFE8F1E6);
 
-  static const Color volt = Color(0xFFFF5500);
-  static const Color voltBright = Color(0xFFFF7A1A);
-  static const Color magma = Color(0xFFFF2D55);
-  static const Color plasma = Color(0xFFFFCC00);
-  static const Color ice = Color(0xFF00E5FF);
-  static const Color lime = Color(0xFFB4FF39);
-  static const Color green = Color(0xFF00C853);
-  static const Color red = Color(0xFFFF3B30);
+  static const peachDeep    = Color(0xFFE57154);
+  static const pinkDeep     = Color(0xFFD95C84);
+  static const mintDeep     = Color(0xFF398B95);
+  static const lavenderDeep = Color(0xFF8A5DA5);
+  static const yellowDeep   = Color(0xFFD39838);
+  static const skyDeep      = Color(0xFF3E7A9C);
+  static const sageDeep     = Color(0xFF5C7E5E);
 
-  static const Color darkBg = Color(0xFF0A0A0A);
-  static const Color darkCard = Color(0xFF1C1C1E);
-  static const Color darkCard2 = Color(0xFF2C2C2E);
-  static const Color lightBg = Color(0xFFF2F2F7);
-  static const Color lightCard = Color(0xFFFFFFFF);
+  static const bg       = Color(0xFFFAF7F2);
+  static const surface  = Color(0xFFFFFFFF);
+  static const elevated = Color(0xFFF3EEE6);
 
-  static Color bg(bool isDark) => isDark ? darkBg : lightBg;
-  static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : const Color(0xFFF9FAFB);
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
-  static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
-  static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
-  static Color separator(bool isDark) =>
-      isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
+  static const text      = Color(0xFF2B2823);
+  static const textMuted = Color(0xFF8A8278);
+  static const textSoft  = Color(0xFFBFB7AB);
 
-  static List<BoxShadow> softGlow(Color color, {double strength = 0.18}) => [
-    BoxShadow(color: color.withOpacity(strength), blurRadius: 16),
-  ];
-
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
-      [
-        BoxShadow(
-          color: color.withOpacity(strength),
-          blurRadius: blur,
-          offset: const Offset(0, 6),
-        ),
-      ];
+  static const divider = Color(0xFFEAE4DA);
 }
+
+class _T {
+  static const title1 = TextStyle(
+    fontSize: 26, fontWeight: FontWeight.w800,
+    letterSpacing: -0.6, height: 1.15,
+  );
+  static const title2 = TextStyle(
+    fontSize: 22, fontWeight: FontWeight.w800,
+    letterSpacing: -0.5, height: 1.2,
+  );
+  static const title3 = TextStyle(
+    fontSize: 18, fontWeight: FontWeight.w700,
+    letterSpacing: -0.4, height: 1.2,
+  );
+  static const headline = TextStyle(
+    fontSize: 15, fontWeight: FontWeight.w700,
+    letterSpacing: -0.2, height: 1.3,
+  );
+  static const caption = TextStyle(
+    fontSize: 12, fontWeight: FontWeight.w600,
+    letterSpacing: 0.05, height: 1.3,
+  );
+  static const caption2 = TextStyle(
+    fontSize: 11, fontWeight: FontWeight.w700,
+    letterSpacing: 0.1, height: 1.3,
+  );
+  static const overline = TextStyle(
+    fontSize: 10, fontWeight: FontWeight.w800,
+    letterSpacing: 1.4, height: 1.1,
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
 
 class ExerciseLibraryScreen extends StatefulWidget {
   final bool isDark;
@@ -111,21 +140,23 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
     super.dispose();
   }
 
+  // ═════════════════════════════════════════════════════════
+  //  BUILD
+  // ═════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
     final provider = context.watch<FitnessProvider>();
     final exercises = _getFilteredExercises(provider);
 
     return Scaffold(
-      backgroundColor: _Power.bg(isDark),
+      backgroundColor: _P.bg,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           // App bar
           SliverAppBar(
             pinned: true,
-            backgroundColor: _Power.bg(isDark).withOpacity(0.85),
+            backgroundColor: _P.bg.withOpacity(0.94),
             surfaceTintColor: Colors.transparent,
             elevation: 0,
             scrolledUnderElevation: 0,
@@ -141,14 +172,21 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.black.withOpacity(0.05),
+                    color: Colors.white,
                     shape: BoxShape.circle,
+                    border: Border.all(color: _P.divider, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _P.peachDeep.withOpacity(0.06),
+                        blurRadius: 10,
+                        spreadRadius: -2,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.chevron_left_rounded,
-                    color: _Power.textPrimary(isDark),
+                    color: _P.text,
                     size: 22,
                   ),
                 ),
@@ -156,49 +194,45 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
             ),
             title: Text(
               'Упражнения',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-                color: _Power.textPrimary(isDark),
+              style: _T.headline.copyWith(
+                fontSize: 15,
+                color: _P.text,
+                letterSpacing: -0.2,
               ),
             ),
             centerTitle: true,
           ),
 
-          // Large title
+          // Header
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'БАЗА ЗНАНИЙ',
-                    style: TextStyle(
-                      color: _Power.volt,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.2,
+                    style: _T.overline.copyWith(
+                      color: _P.peachDeep,
+                      fontSize: 9,
+                      letterSpacing: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     'Упражнения',
-                    style: TextStyle(
-                      color: _Power.textPrimary(isDark),
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.2,
-                      height: 1.05,
+                    style: _T.title1.copyWith(
+                      color: _P.text,
+                      fontSize: 28,
+                      letterSpacing: -0.7,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${provider.exercises.length} упражнений в библиотеке',
-                    style: TextStyle(
-                      color: _Power.textSecondary(isDark),
-                      fontSize: 14,
+                    style: _T.caption.copyWith(
+                      color: _P.textMuted,
+                      fontSize: 13,
                     ),
                   ),
                 ],
@@ -207,19 +241,13 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
           ),
 
           // Search
-          SliverToBoxAdapter(
-            child: _buildSearchBar(isDark),
-          ),
+          SliverToBoxAdapter(child: _buildSearchBar()),
 
           // Type tabs
-          SliverToBoxAdapter(
-            child: _buildTypeTabs(isDark),
-          ),
+          SliverToBoxAdapter(child: _buildTypeTabs()),
 
           // Muscle filter
-          SliverToBoxAdapter(
-            child: _buildMuscleFilter(isDark),
-          ),
+          SliverToBoxAdapter(child: _buildMuscleFilter()),
 
           const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
@@ -227,23 +255,22 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
           if (exercises.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: _buildEmptyState(isDark, provider),
+              child: _buildEmptyState(provider),
             )
           else
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
               sliver: SliverGrid(
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.78,
+                  childAspectRatio: 0.8,
                 ),
                 delegate: SliverChildBuilderDelegate(
                       (context, index) {
                     final exercise = exercises[index];
-                    return _buildExerciseCard(exercise, isDark, provider);
+                    return _buildExerciseCard(exercise, provider);
                   },
                   childCount: exercises.length,
                 ),
@@ -255,20 +282,26 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
         padding: const EdgeInsets.only(bottom: 8),
         child: Container(
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: _Power.glow(_Power.volt, strength: 0.4, blur: 20),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: _P.peachDeep.withOpacity(0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: FloatingActionButton.extended(
             onPressed: () {
               HapticFeedback.mediumImpact();
-              _showAddExerciseDialog(context, isDark, provider);
+              _showAddExerciseDialog(context, provider);
             },
-            backgroundColor: _Power.volt,
+            backgroundColor: _P.peachDeep,
             elevation: 0,
             icon: const Icon(Icons.add_rounded, color: Colors.white),
-            label: const Text(
+            label: Text(
               'СОЗДАТЬ',
-              style: TextStyle(
+              style: _T.caption2.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.8,
@@ -281,120 +314,140 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
     );
   }
 
-  // =====================================================================
-  // SEARCH
-  // =====================================================================
-
-  Widget _buildSearchBar(bool isDark) {
+  // ═════════════════════════════════════════════════════════
+  //  SEARCH
+  // ═════════════════════════════════════════════════════════
+  Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: Container(
+        height: 50,
         decoration: BoxDecoration(
-          color: _Power.card(isDark),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: _Power.separator(isDark),
-            width: 0.5,
-          ),
+          border: Border.all(color: _P.divider, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: _P.peachDeep.withOpacity(0.05),
+              blurRadius: 12,
+              spreadRadius: -2,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: (value) => setState(() => _searchQuery = value),
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: _Power.textPrimary(isDark),
-          ),
-          decoration: InputDecoration(
-            hintText: 'Поиск…',
-            hintStyle: TextStyle(
-              color: _Power.textTertiary(isDark),
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: _P.peachSoft,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.search_rounded,
+                color: _P.peachDeep,
+                size: 16,
+              ),
             ),
-            prefixIcon: Icon(
-              Icons.search_rounded,
-              color: _Power.textTertiary(isDark),
-              size: 20,
-            ),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                _searchController.clear();
-                setState(() => _searchQuery = '');
-              },
-              child: Container(
-                margin: const EdgeInsets.all(10),
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: _Power.textTertiary(isDark).withOpacity(0.5),
-                  shape: BoxShape.circle,
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
+                style: _T.headline.copyWith(
+                  color: _P.text,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
-                child: Icon(
-                  Icons.close_rounded,
-                  color: _Power.textSecondary(isDark),
-                  size: 14,
+                decoration: InputDecoration(
+                  hintText: 'Найти упражнение…',
+                  hintStyle: _T.headline.copyWith(
+                    color: _P.textMuted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
-            )
-                : null,
-            filled: false,
-            border: InputBorder.none,
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
+            ),
+            if (_searchQuery.isNotEmpty)
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: _P.textMuted,
+                    size: 16,
+                  ),
+                ),
+              ),
+            const SizedBox(width: 4),
+          ],
         ),
       ),
     );
   }
 
-  // =====================================================================
-  // TYPE TABS
-  // =====================================================================
-
-  Widget _buildTypeTabs(bool isDark) {
+  // ═════════════════════════════════════════════════════════
+  //  TYPE TABS
+  // ═════════════════════════════════════════════════════════
+  Widget _buildTypeTabs() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: _Power.card2(isDark),
+        color: _P.elevated,
         borderRadius: BorderRadius.circular(14),
       ),
       child: TabBar(
         controller: _tabController,
         isScrollable: true,
         labelColor: Colors.white,
-        unselectedLabelColor: _Power.textSecondary(isDark),
+        unselectedLabelColor: _P.textMuted,
         indicator: BoxDecoration(
-          color: _Power.volt,
+          color: _P.peachDeep,
           borderRadius: BorderRadius.circular(11),
-          boxShadow: _Power.softGlow(_Power.volt, strength: 0.35),
+          boxShadow: [
+            BoxShadow(
+              color: _P.peachDeep.withOpacity(0.20),
+              blurRadius: 8,
+              spreadRadius: -2,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelStyle: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w900,
-          letterSpacing: 0.8,
+          letterSpacing: 0.6,
         ),
         unselectedLabelStyle: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
+          letterSpacing: 0.3,
         ),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 14),
         tabAlignment: TabAlignment.start,
         tabs: _tabs,
       ),
     );
   }
 
-  // =====================================================================
-  // MUSCLE FILTER
-  // =====================================================================
-
-  Widget _buildMuscleFilter(bool isDark) {
+  // ═════════════════════════════════════════════════════════
+  //  MUSCLE FILTER
+  // ═════════════════════════════════════════════════════════
+  Widget _buildMuscleFilter() {
     final muscles = MuscleGroup.values
         .where((m) =>
     m != MuscleGroup.cardio_vascular &&
@@ -421,30 +474,25 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 13),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? muscle.color
-                    : _Power.card(isDark),
-                borderRadius: BorderRadius.circular(18),
+                    ? muscle.color.withOpacity(0.14)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(11),
                 border: Border.all(
-                  color: isSelected
-                      ? muscle.color
-                      : muscle.color.withOpacity(0.28),
-                  width: 0.8,
+                  color: isSelected ? muscle.color : _P.divider,
+                  width: isSelected ? 1 : 0.8,
                 ),
-                boxShadow: isSelected
-                    ? _Power.softGlow(muscle.color, strength: 0.35)
-                    : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isSelected) ...[
-                    const Icon(
+                    Icon(
                       Icons.check_rounded,
-                      color: Colors.white,
+                      color: muscle.color,
                       size: 13,
                     ),
                     const SizedBox(width: 4),
@@ -453,11 +501,9 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                     muscle.displayName,
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.2,
-                      color: isSelected
-                          ? Colors.white
-                          : _Power.textPrimary(isDark),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.1,
+                      color: isSelected ? muscle.color : _P.textMuted,
                     ),
                   ),
                 ],
@@ -469,19 +515,17 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
     );
   }
 
-  // =====================================================================
-  // EXERCISE CARD
-  // =====================================================================
-
-  Widget _buildExerciseCard(
-      Exercise exercise,
-      bool isDark,
-      FitnessProvider provider,
-      ) {
+  // ═════════════════════════════════════════════════════════
+  //  EXERCISE CARD
+  // ═════════════════════════════════════════════════════════
+  Widget _buildExerciseCard(Exercise exercise, FitnessProvider provider) {
     final lastProgress = provider.getLastProgress(exercise.id);
     final accent = exercise.muscleGroups.isNotEmpty
         ? exercise.muscleGroups.first.color
-        : _Power.volt;
+        : _P.peachDeep;
+
+    final hasImage =
+        exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty;
 
     return GestureDetector(
       onTap: () {
@@ -494,7 +538,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
               value: provider,
               child: ExerciseDetailScreen(
                 exercise: exercise,
-                isDark: isDark,
+                isDark: false,
               ),
             ),
           ),
@@ -502,18 +546,23 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
       },
       child: Container(
         decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _Power.separator(isDark),
-            width: 0.5,
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _P.divider, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withOpacity(0.06),
+              blurRadius: 12,
+              spreadRadius: -3,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon area
+            // Icon / Image area
             Expanded(
               flex: 5,
               child: Container(
@@ -522,33 +571,31 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      accent.withOpacity(0.18),
-                      accent.withOpacity(0.04),
+                      accent.withOpacity(0.10),
+                      accent.withOpacity(0.02),
                     ],
                   ),
                 ),
                 child: Stack(
                   children: [
-                    // Icon
-                    Center(
-                      child: Container(
-                        width: 68,
-                        height: 68,
-                        decoration: BoxDecoration(
-                          color: accent.withOpacity(0.16),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow:
-                          _Power.softGlow(accent, strength: 0.25),
+                    // 🆕 Превью изображения или иконка
+                    if (hasImage)
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(17),
+                          ),
+                          child: _buildExerciseImage(
+                            exercise.imageUrl!,
+                            accent,
+                            exercise.exerciseType,
+                          ),
                         ),
-                        child: Icon(
-                          _getExerciseIcon(exercise.exerciseType),
-                          size: 34,
-                          color: accent,
-                        ),
-                      ),
-                    ),
+                      )
+                    else
+                      _buildIconPlaceholder(accent, exercise.exerciseType),
 
-                    // Custom badge
+                    // Бейдж "МОЁ"
                     if (exercise.isCustom)
                       Positioned(
                         top: 8,
@@ -559,39 +606,45 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: _Power.volt,
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(7),
-                            boxShadow: _Power.softGlow(_Power.volt,
-                                strength: 0.4),
+                            border: Border.all(
+                              color: _P.lavenderDeep.withOpacity(0.30),
+                              width: 0.7,
+                            ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'МОЁ',
-                            style: TextStyle(
-                              color: Colors.white,
+                            style: _T.caption2.copyWith(
+                              color: _P.lavenderDeep,
                               fontSize: 8,
                               fontWeight: FontWeight.w900,
-                              letterSpacing: 0.8,
+                              letterSpacing: 0.6,
                             ),
                           ),
                         ),
                       ),
 
-                    // Type badge
+                    // Бейдж эмодзи
                     Positioned(
                       bottom: 8,
                       left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
+                          horizontal: 7,
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.white.withOpacity(0.95),
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _P.divider,
+                            width: 0.6,
+                          ),
                         ),
                         child: Text(
                           exercise.exerciseType.emoji,
-                          style: const TextStyle(fontSize: 12),
+                          style: const TextStyle(fontSize: 11),
                         ),
                       ),
                     ),
@@ -604,7 +657,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
             Expanded(
               flex: 4,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -612,73 +665,80 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                       exercise.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
+                      style: _T.caption.copyWith(
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                        height: 1.15,
-                        color: _Power.textPrimary(isDark),
+                        letterSpacing: -0.2,
+                        height: 1.2,
+                        color: _P.text,
                       ),
                     ),
                     const SizedBox(height: 5),
-
                     if (lastProgress != null)
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.trending_up_rounded,
-                            size: 11,
-                            color: _Power.volt,
-                          ),
-                          const SizedBox(width: 3),
-                          Expanded(
-                            child: Text(
-                              '${lastProgress.bestWeight.toStringAsFixed(0)}×${lastProgress.bestReps}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.2,
-                                color: _Power.volt,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _P.peachSoft,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.trending_up_rounded,
+                              size: 10,
+                              color: _P.peachDeep,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 3),
+                            Flexible(
+                              child: Text(
+                                '${lastProgress.bestWeight.toStringAsFixed(0)}×${lastProgress.bestReps}',
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.1,
+                                  color: _P.peachDeep,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     else
                       Text(
                         'НЕТ ДАННЫХ',
-                        style: TextStyle(
+                        style: _T.caption2.copyWith(
                           fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
-                          color: _Power.textTertiary(isDark),
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                          color: _P.textSoft,
                         ),
                       ),
-
                     const Spacer(),
-
-                    // Muscle tags
                     Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
+                      spacing: 3,
+                      runSpacing: 3,
                       children: exercise.muscleGroups.take(2).map((m) {
                         return Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
+                            horizontal: 5,
+                            vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: m.color.withOpacity(0.14),
-                            borderRadius: BorderRadius.circular(6),
+                            color: m.color.withOpacity(0.10),
+                            borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             m.displayName,
                             style: TextStyle(
-                              fontSize: 8,
+                              fontSize: 7.5,
                               fontWeight: FontWeight.w800,
-                              letterSpacing: 0.2,
+                              letterSpacing: 0.1,
                               color: m.color,
                             ),
                           ),
@@ -695,11 +755,73 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
     );
   }
 
-  // =====================================================================
-  // EMPTY STATE
-  // =====================================================================
+  // ═════════════════════════════════════════════════════════
+  //  IMAGE HELPERS
+  // ═════════════════════════════════════════════════════════
+  Widget _buildExerciseImage(
+      String url,
+      Color accent,
+      ExerciseType type,
+      ) {
+    // 🆕 Локальные assets
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildIconPlaceholder(accent, type),
+      );
+    }
+    // Сеть
+    if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => _buildIconPlaceholder(accent, type),
+        errorWidget: (_, __, ___) => _buildIconPlaceholder(accent, type),
+      );
+    }
+    // Локальный файл (галерея)
+    return Image.file(
+      File(url),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildIconPlaceholder(accent, type),
+    );
+  }
 
-  Widget _buildEmptyState(bool isDark, FitnessProvider provider) {
+  Widget _buildIconPlaceholder(Color accent, ExerciseType type) {
+    return Center(
+      child: Container(
+        width: 62,
+        height: 62,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: accent.withOpacity(0.20),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withOpacity(0.15),
+              blurRadius: 12,
+              spreadRadius: -2,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(
+          _getExerciseIcon(type),
+          size: 30,
+          color: accent,
+        ),
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  EMPTY STATE
+  // ═════════════════════════════════════════════════════════
+  Widget _buildEmptyState(FitnessProvider provider) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(40, 40, 40, 40),
       child: Column(
@@ -708,45 +830,33 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
           Container(
             width: 84,
             height: 84,
-            decoration: BoxDecoration(
-              color: _Power.volt.withOpacity(0.10),
+            decoration: const BoxDecoration(
+              color: _P.peachSoft,
               shape: BoxShape.circle,
-              boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
             ),
             child: const Icon(
               Icons.fitness_center_rounded,
-              size: 38,
-              color: _Power.volt,
+              size: 36,
+              color: _P.peachDeep,
             ),
           ),
-          const SizedBox(height: 22),
-          const Text(
-            'НИЧЕГО НЕ НАЙДЕНО',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 2.2,
-              color: _Power.volt,
-            ),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 20),
           Text(
-            'Пусто',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.7,
-              color: _Power.textPrimary(isDark),
+            'Ничего не найдено',
+            style: _T.title3.copyWith(
+              fontSize: 17,
+              letterSpacing: -0.4,
+              color: _P.text,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
-            'Попробуйте изменить фильтры или создайте своё упражнение',
+            'Попробуй изменить фильтры\nили создай своё упражнение',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
+            style: _T.caption.copyWith(
+              fontSize: 12,
               height: 1.4,
-              color: _Power.textSecondary(isDark),
+              color: _P.textMuted,
             ),
           ),
         ],
@@ -754,10 +864,9 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
     );
   }
 
-  // =====================================================================
-  // FILTER LOGIC
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  FILTER LOGIC
+  // ═════════════════════════════════════════════════════════
   List<Exercise> _getFilteredExercises(FitnessProvider provider) {
     List<Exercise> result = List.from(provider.exercises);
 
@@ -779,21 +888,20 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
     return result;
   }
 
-  // =====================================================================
-  // ADD EXERCISE DIALOG — iOS Sheet
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  ADD EXERCISE DIALOG
+  // ═════════════════════════════════════════════════════════
   void _showAddExerciseDialog(
       BuildContext context,
-      bool isDark,
       FitnessProvider provider,
       ) {
     final nameController = TextEditingController();
     final descController = TextEditingController();
     final tipsController = TextEditingController();
-    final mistakesController = TextEditingController();
     var selectedType = ExerciseType.strength;
     var selectedMuscles = <MuscleGroup>[];
+    // 🆕 изображение
+    String? imageUrl;
 
     showModalBottomSheet(
       context: context,
@@ -807,9 +915,9 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
             top: 12,
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
           ),
-          decoration: BoxDecoration(
-            color: _Power.card(isDark),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -821,45 +929,82 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                     width: 36,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: _Power.textTertiary(isDark),
+                      color: _P.textSoft,
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'НОВОЕ УПРАЖНЕНИЕ',
-                  style: TextStyle(
-                    color: _Power.volt,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.2,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: _P.peachSoft,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.fitness_center_rounded,
+                        color: _P.peachDeep,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'НОВОЕ УПРАЖНЕНИЕ',
+                            style: _T.overline.copyWith(
+                              color: _P.peachDeep,
+                              fontSize: 9,
+                              letterSpacing: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Создать',
+                            style: _T.title2.copyWith(
+                              color: _P.text,
+                              fontSize: 20,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Создать',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.8,
-                    color: _Power.textPrimary(isDark),
-                  ),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
                 _buildField(
                   controller: nameController,
                   label: 'НАЗВАНИЕ',
-                  isDark: isDark,
                 ),
                 const SizedBox(height: 12),
                 _buildField(
                   controller: descController,
                   label: 'ОПИСАНИЕ',
-                  isDark: isDark,
                   maxLines: 3,
                 ),
+
+                // 🆕 Изображение
+                const SizedBox(height: 14),
+                ImagePickerField(
+                  label: 'ИЗОБРАЖЕНИЕ',
+                  value: imageUrl,
+                  hint: selectedType == ExerciseType.cardio
+                      ? ExerciseTypeHint.cardio
+                      : selectedType == ExerciseType.boxing
+                      ? ExerciseTypeHint.boxing
+                      : selectedType == ExerciseType.yoga
+                      ? ExerciseTypeHint.yoga
+                      : ExerciseTypeHint.strength,
+                  onChanged: (v) => setSheetState(() => imageUrl = v),
+                ),
+
                 const SizedBox(height: 12),
 
                 // Type dropdown
@@ -867,50 +1012,50 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 4, bottom: 6),
+                      padding: const EdgeInsets.only(left: 2, bottom: 5),
                       child: Text(
                         'ТИП',
-                        style: TextStyle(
+                        style: _T.overline.copyWith(
                           fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.6,
-                          color: _Power.textTertiary(isDark),
+                          letterSpacing: 1.2,
+                          color: _P.textMuted,
                         ),
                       ),
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: _Power.card2(isDark),
-                        borderRadius: BorderRadius.circular(12),
+                        color: _P.bg,
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: _P.divider, width: 1),
                       ),
                       child: DropdownButtonFormField<ExerciseType>(
                         value: selectedType,
-                        dropdownColor: _Power.card(isDark),
-                        style: TextStyle(
-                          fontSize: 15,
+                        dropdownColor: Colors.white,
+                        style: _T.headline.copyWith(
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: _Power.textPrimary(isDark),
+                          color: _P.text,
                         ),
                         decoration: const InputDecoration(
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: 14,
-                            vertical: 14,
+                            vertical: 13,
                           ),
                         ),
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.keyboard_arrow_down_rounded,
-                          color: _Power.textSecondary(isDark),
+                          color: _P.textMuted,
                         ),
                         items: ExerciseType.values.map((type) {
                           return DropdownMenuItem(
                             value: type,
                             child: Text(
                               '${type.emoji}  ${type.displayName}',
-                              style: TextStyle(
-                                fontSize: 15,
+                              style: _T.headline.copyWith(
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: _Power.textPrimary(isDark),
+                                color: _P.text,
                               ),
                             ),
                           );
@@ -924,18 +1069,17 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                   ],
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
                 // Muscle groups
                 Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 8),
+                  padding: const EdgeInsets.only(left: 2, bottom: 6),
                   child: Text(
                     'ГРУППЫ МЫШЦ',
-                    style: TextStyle(
+                    style: _T.overline.copyWith(
                       fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.6,
-                      color: _Power.textTertiary(isDark),
+                      letterSpacing: 1.2,
+                      color: _P.textMuted,
                     ),
                   ),
                 ),
@@ -963,32 +1107,28 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
+                          horizontal: 11,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? muscle.color
-                              : muscle.color.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(11),
+                              ? muscle.color.withOpacity(0.14)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected
                                 ? muscle.color
-                                : muscle.color.withOpacity(0.28),
-                            width: 0.8,
+                                : _P.divider,
+                            width: isSelected ? 1 : 0.8,
                           ),
-                          boxShadow: isSelected
-                              ? _Power.softGlow(muscle.color,
-                              strength: 0.35)
-                              : null,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (isSelected) ...[
-                              const Icon(
+                              Icon(
                                 Icons.check_rounded,
-                                color: Colors.white,
+                                color: muscle.color,
                                 size: 12,
                               ),
                               const SizedBox(width: 4),
@@ -996,12 +1136,12 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                             Text(
                               muscle.displayName,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.1,
                                 color: isSelected
-                                    ? Colors.white
-                                    : muscle.color,
+                                    ? muscle.color
+                                    : _P.textMuted,
                               ),
                             ),
                           ],
@@ -1011,49 +1151,42 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                   }).toList(),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
                 _buildField(
                   controller: tipsController,
                   label: 'СОВЕТЫ ПО ТЕХНИКЕ',
-                  isDark: isDark,
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                _buildField(
-                  controller: mistakesController,
-                  label: 'ЧАСТЫЕ ОШИБКИ',
-                  isDark: isDark,
                   maxLines: 2,
                 ),
 
-                const SizedBox(height: 22),
+                const SizedBox(height: 20),
 
                 Row(
                   children: [
                     Expanded(
                       child: SizedBox(
-                        height: 52,
+                        height: 50,
                         child: OutlinedButton(
                           onPressed: () {
                             HapticFeedback.selectionClick();
                             Navigator.pop(ctx);
                           },
                           style: OutlinedButton.styleFrom(
-                            foregroundColor:
-                            _Power.textSecondary(isDark),
-                            side: BorderSide(
-                              color: _Power.separator(isDark),
+                            foregroundColor: _P.text,
+                            side: const BorderSide(
+                              color: _P.divider,
+                              width: 1,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(13),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Отмена',
-                            style: TextStyle(
+                            style: _T.headline.copyWith(
+                              fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              fontSize: 15,
+                              color: _P.text,
                             ),
                           ),
                         ),
@@ -1063,22 +1196,18 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                     Expanded(
                       flex: 2,
                       child: SizedBox(
-                        height: 52,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: () async {
                             if (nameController.text.trim().isEmpty) {
                               HapticFeedback.mediumImpact();
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Text(
-                                      'Введите название'),
-                                  backgroundColor: _Power.red,
-                                  behavior:
-                                  SnackBarBehavior.floating,
+                                  content: const Text('Введите название'),
+                                  backgroundColor: _P.pinkDeep,
+                                  behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                    BorderRadius.circular(14),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                               );
@@ -1092,6 +1221,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                               description: descController.text.trim(),
                               muscleGroups: selectedMuscles,
                               exerciseType: selectedType,
+                              imageUrl: imageUrl, // 🆕
                               techniqueTips:
                               tipsController.text.trim().isNotEmpty
                                   ? tipsController.text.trim()
@@ -1104,31 +1234,29 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                               SnackBar(
                                 content: Text(
                                     '«${nameController.text.trim()}» создано'),
-                                backgroundColor: _Power.green,
+                                backgroundColor: _P.sageDeep,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                  BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _Power.volt,
+                            backgroundColor: _P.peachDeep,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(13),
                             ),
-                            shadowColor:
-                            _Power.volt.withOpacity(0.5),
                           ),
-                          child: const Text(
+                          child: Text(
                             'СОЗДАТЬ',
-                            style: TextStyle(
-                              fontSize: 14,
+                            style: _T.caption2.copyWith(
+                              color: Colors.white,
+                              fontSize: 13,
                               fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
+                              letterSpacing: 0.8,
                             ),
                           ),
                         ),
@@ -1147,51 +1275,62 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
   Widget _buildField({
     required TextEditingController controller,
     required String label,
-    required bool isDark,
     int maxLines = 1,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          padding: const EdgeInsets.only(left: 2, bottom: 5),
           child: Text(
             label,
-            style: TextStyle(
+            style: _T.overline.copyWith(
               fontSize: 9,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.6,
-              color: _Power.textTertiary(isDark),
+              letterSpacing: 1.2,
+              color: _P.textMuted,
             ),
           ),
         ),
         TextField(
           controller: controller,
           maxLines: maxLines,
-          style: TextStyle(
-            fontSize: 15,
+          style: _T.headline.copyWith(
+            fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: _Power.textPrimary(isDark),
+            color: _P.text,
           ),
           decoration: InputDecoration(
             filled: true,
-            fillColor: _Power.card2(isDark),
+            fillColor: _P.bg,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(13),
               borderSide: BorderSide.none,
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: const BorderSide(
+                color: _P.divider,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: const BorderSide(
+                color: _P.peachDeep,
+                width: 1.4,
+              ),
+            ),
             contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
           ),
         ),
       ],
     );
   }
 
-  // =====================================================================
-  // HELPERS
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  HELPERS
+  // ═════════════════════════════════════════════════════════
   IconData _getExerciseIcon(ExerciseType type) {
     switch (type) {
       case ExerciseType.strength:

@@ -1,69 +1,84 @@
 // features/fitness/ui/screens/completed_programs_screen.dart
-// 🆕 v16: format-aware итоги и сессии (сила / кардио / бокс / статика)
+import 'dart:io';
+import 'dart:ui' show FontFeature;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../../../models/fitness_models.dart';
 import '../../../models/enums.dart';
 import '../../../providers/fitness_provider.dart';
 import 'program_summary_screen.dart';
 
-// ==================== POWER MODE TOKENS ====================
+// ═══════════════════════════════════════════════════════════════════
+//  Design tokens — Premium Editorial
+// ═══════════════════════════════════════════════════════════════════
+class _P {
+  static const bg           = Color(0xFFF7F4EF);
+  static const surface      = Color(0xFFFFFFFF);
+  static const surfaceMuted = Color(0xFFFAF7F2);
 
-class _Power {
-  static const Color heroBase = Color(0xFF050505);
-  static const Color heroDeep = Color(0xFF120700);
+  static const text          = Color(0xFF1B1815);
+  static const textSecondary = Color(0xFF6B655F);
+  static const textTertiary  = Color(0xFFA39D96);
 
-  static const Color volt = Color(0xFFFF5500);
-  static const Color voltBright = Color(0xFFFF7A1A);
-  static const Color magma = Color(0xFFFF2D55);
-  static const Color plasma = Color(0xFFFFCC00);
-  static const Color ice = Color(0xFF00E5FF);
-  static const Color lime = Color(0xFFB4FF39);
-  static const Color green = Color(0xFF00C853);
-  static const Color red = Color(0xFFFF3B30);
+  static const border      = Color(0xFFE8E4DD);
+  static const borderLight = Color(0xFFF0ECE6);
 
-  static const Color darkBg = Color(0xFF0A0A0A);
-  static const Color darkCard = Color(0xFF1C1C1E);
-  static const Color darkCard2 = Color(0xFF2C2C2E);
-  static const Color lightBg = Color(0xFFF2F2F7);
-  static const Color lightCard = Color(0xFFFFFFFF);
+  static const accent     = Color(0xFFB0553B);
+  static const accentSoft = Color(0xFFF5EAE3);
 
-  static Color bg(bool isDark) => isDark ? darkBg : lightBg;
-  static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : const Color(0xFFF9FAFB);
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
-  static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
-  static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
-  static Color separator(bool isDark) =>
-      isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
-
-  static List<BoxShadow> softGlow(Color color, {double strength = 0.18}) => [
-    BoxShadow(color: color.withOpacity(strength), blurRadius: 16),
-  ];
-
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
-      [
-        BoxShadow(
-          color: color.withOpacity(strength),
-          blurRadius: blur,
-          offset: const Offset(0, 6),
-        ),
-      ];
+  static const sage       = Color(0xFF4E7059);
+  static const sageSoft   = Color(0xFFEAF0EB);
+  static const brick      = Color(0xFFA1555A);
+  static const brickSoft  = Color(0xFFF3E7E8);
+  static const amber      = Color(0xFFB08332);
+  static const amberSoft  = Color(0xFFF5EEDE);
+  static const slate      = Color(0xFF5B6A7B);
+  static const slateSoft  = Color(0xFFEBEFF3);
+  static const plum       = Color(0xFF6F5F7E);
+  static const plumSoft   = Color(0xFFF0ECF2);
 }
+
+class _T {
+  static const _feat = <FontFeature>[FontFeature.tabularFigures()];
+
+  static const title = TextStyle(
+    fontSize: 22, fontWeight: FontWeight.w700,
+    letterSpacing: -0.5, height: 1.2, color: _P.text,
+  );
+  static const subhead = TextStyle(
+    fontSize: 15, fontWeight: FontWeight.w600,
+    letterSpacing: -0.2, height: 1.3, color: _P.text,
+  );
+  static const body = TextStyle(
+    fontSize: 14, fontWeight: FontWeight.w500,
+    letterSpacing: -0.1, height: 1.4, color: _P.text,
+  );
+  static const caption = TextStyle(
+    fontSize: 12, fontWeight: FontWeight.w500,
+    letterSpacing: 0, height: 1.35, color: _P.textSecondary,
+  );
+  static const captionSm = TextStyle(
+    fontSize: 11, fontWeight: FontWeight.w500,
+    letterSpacing: 0, height: 1.3, color: _P.textSecondary,
+  );
+  static const overline = TextStyle(
+    fontSize: 10, fontWeight: FontWeight.w600,
+    letterSpacing: 1.3, height: 1.2, color: _P.textTertiary,
+  );
+
+  static TextStyle num(TextStyle base) => base.copyWith(fontFeatures: _feat);
+}
+
+// ═══════════════════════════════════════════════════════════════════
 
 class CompletedProgramsScreen extends StatefulWidget {
   final bool isDark;
 
-  const CompletedProgramsScreen({
-    super.key,
-    required this.isDark,
-  });
+  const CompletedProgramsScreen({super.key, required this.isDark});
 
   @override
   State<CompletedProgramsScreen> createState() =>
@@ -74,85 +89,140 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
   String _filter = 'all';
 
   // ══════════════════════════════════════════════════════════
-  // 🆕 ХЕЛПЕРЫ МЕТРИК
+  //  Helpers
   // ══════════════════════════════════════════════════════════
-
-  /// Сумма метрик по всем сессиям: {kg, km, rounds, sec, punches, kcal}.
-  Map<String, double> _totalMetricAcrossSessions(List<ProgramSession> sessions) {
-    final result = <String, double>{};
-    for (final s in sessions) {
-      final m = s.totalByMetricCompleted;
-      if (m.isNotEmpty) {
-        m.forEach((k, v) {
-          result[k] = (result[k] ?? 0) + v;
-        });
-      } else if (s.totalVolumeCompleted > 0) {
-        result['kg'] = (result['kg'] ?? 0) + s.totalVolumeCompleted;
-      }
-    }
-    return result;
-  }
-
-  /// Доминирующая метрика по всем сессиям: km → rounds → kg → sec.
-  ({String emoji, String value, String label, Color color}) _dominantOfTotals(
-      Map<String, double> m) {
-    final km = m['km'] ?? 0;
-    final rounds = m['rounds'] ?? 0;
-    final kg = m['kg'] ?? 0;
-    final sec = m['sec'] ?? 0;
-
-    if (km > 0) {
-      return (
-      emoji: '📏',
-      value: km.toStringAsFixed(km >= 10 ? 1 : 2),
-      label: 'КМ',
-      color: _Power.ice,
-      );
-    }
-    if (rounds > 0) {
-      return (
-      emoji: '🥊',
-      value: rounds.toStringAsFixed(0),
-      label: 'РАУНД',
-      color: _Power.plasma,
-      );
-    }
-    if (kg > 0) {
-      return (
-      emoji: '🏋️',
-      value: kg >= 1000
-          ? '${(kg / 1000).toStringAsFixed(1)}k'
-          : kg.toStringAsFixed(0),
-      label: 'КГ',
-      color: _Power.lime,
-      );
-    }
-    if (sec > 0) {
-      if (sec >= 3600) {
+  ({IconData icon, String label, Color color, Color soft}) _statusInfo(
+      ProgramSessionStatus status) {
+    switch (status) {
+      case ProgramSessionStatus.completed:
         return (
-        emoji: '⏱️',
-        value: (sec / 3600).toStringAsFixed(1),
-        label: 'ЧАС',
-        color: _Power.ice,
+        icon: Icons.check_circle_rounded,
+        label: 'ЗАВЕРШЕНА',
+        color: _P.sage,
+        soft: _P.sageSoft,
         );
-      }
-      return (
-      emoji: '⏱️',
-      value: (sec / 60).toStringAsFixed(0),
-      label: 'МИН',
-      color: _Power.ice,
-      );
+      case ProgramSessionStatus.abandoned:
+        return (
+        icon: Icons.flag_rounded,
+        label: 'БРОШЕНА',
+        color: _P.brick,
+        soft: _P.brickSoft,
+        );
+      case ProgramSessionStatus.paused:
+        return (
+        icon: Icons.pause_circle_rounded,
+        label: 'ПАУЗА',
+        color: _P.amber,
+        soft: _P.amberSoft,
+        );
+      case ProgramSessionStatus.active:
+        return (
+        icon: Icons.play_circle_rounded,
+        label: 'АКТИВНА',
+        color: _P.accent,
+        soft: _P.accentSoft,
+        );
     }
-    return (
-    emoji: '📊',
-    value: '0',
-    label: '—',
-    color: _Power.textTertiary(true),
-    );
   }
 
-  /// Доминирующая метрика конкретной сессии.
-  ({String emoji, String value, String label, Color color}) _dominantOfSession(
+  IconData _iconForMetric(String key) {
+    switch (key) {
+      case 'kg':
+        return Icons.scale_rounded;
+      case 'km':
+        return Icons.route_rounded;
+      case 'rounds':
+        return Icons.sports_mma_rounded;
+      case 'sec':
+        return Icons.schedule_rounded;
+      case 'punches':
+        return Icons.front_hand_rounded;
+      case 'kcal':
+        return Icons.local_fire_department_rounded;
+      default:
+        return Icons.insights_rounded;
+    }
+  }
+
+  Color _colorForMetric(String key) {
+    switch (key) {
+      case 'kg':
+        return _P.sage;
+      case 'km':
+        return _P.slate;
+      case 'rounds':
+        return _P.amber;
+      case 'sec':
+        return _P.plum;
+      case 'punches':
+        return _P.brick;
+      case 'kcal':
+        return _P.accent;
+      default:
+        return _P.textSecondary;
+    }
+  }
+
+  String _formatMetricValue(String key, double v) {
+    switch (key) {
+      case 'kg':
+        return v >= 1000
+            ? '${(v / 1000).toStringAsFixed(1)} т'
+            : '${v.toStringAsFixed(0)} кг';
+      case 'km':
+        return '${v.toStringAsFixed(v >= 10 ? 1 : 2)} км';
+      case 'rounds':
+        return '${v.toStringAsFixed(0)} р.';
+      case 'sec':
+        if (v >= 3600) {
+          final h = (v / 3600).floor();
+          final m = ((v % 3600) / 60).round();
+          return '${h}ч ${m}м';
+        }
+        return '${(v / 60).toStringAsFixed(0)} мин';
+      case 'punches':
+        return v.toStringAsFixed(0);
+      case 'kcal':
+        return '${v.toStringAsFixed(0)} ккал';
+      default:
+        return v.toStringAsFixed(0);
+    }
+  }
+
+  ({String value, String label, String key}) _dominantOfTotals(
+      Map<String, double> m) {
+    if ((m['km'] ?? 0) > 0) {
+      return (value: m['km']!.toStringAsFixed(m['km']! >= 10 ? 1 : 2),
+      label: 'КМ', key: 'km');
+    }
+    if ((m['rounds'] ?? 0) > 0) {
+      return (value: m['rounds']!.toStringAsFixed(0),
+      label: 'РАУНД', key: 'rounds');
+    }
+    if ((m['kg'] ?? 0) > 0) {
+      final kg = m['kg']!;
+      return (
+      value: kg >= 1000
+          ? '${(kg / 1000).toStringAsFixed(1)} т'
+          : kg.toStringAsFixed(0),
+      label: kg >= 1000 ? 'ТОННАЖ' : 'КГ',
+      key: 'kg',
+      );
+    }
+    if ((m['sec'] ?? 0) > 0) {
+      final sec = m['sec']!;
+      return (
+      value: sec >= 3600
+          ? (sec / 3600).toStringAsFixed(1)
+          : (sec / 60).toStringAsFixed(0),
+      label: sec >= 3600 ? 'ЧАС' : 'МИН',
+      key: 'sec',
+      );
+    }
+    return (value: '—', label: '—', key: 'other');
+  }
+
+  ({String value, String label, String key}) _dominantOfSession(
       ProgramSession session) {
     var m = session.totalByMetricCompleted;
     if (m.isEmpty && session.totalVolumeCompleted > 0) {
@@ -161,102 +231,25 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     return _dominantOfTotals(m);
   }
 
-  /// Чипы всех ненулевых метрик сессии.
-  Widget _sessionMetricBadges(ProgramSession session, bool isDark) {
-    var m = session.totalByMetricCompleted;
-    if (m.isEmpty && session.totalVolumeCompleted > 0) {
-      m = {'kg': session.totalVolumeCompleted};
+  Map<String, double> _totalMetricAcrossSessions(
+      List<ProgramSession> sessions) {
+    final result = <String, double>{};
+    for (final s in sessions) {
+      final m = s.totalByMetricCompleted;
+      if (m.isNotEmpty) {
+        m.forEach((k, v) => result[k] = (result[k] ?? 0) + v);
+      } else if (s.totalVolumeCompleted > 0) {
+        result['kg'] = (result['kg'] ?? 0) + s.totalVolumeCompleted;
+      }
     }
-    if (m.isEmpty) return const SizedBox.shrink();
-
-    final chips = <Widget>[];
-
-    void addChip(String emoji, String value, String label, Color color) {
-      chips.add(Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(7),
-          border: Border.all(
-            color: color.withOpacity(0.25),
-            width: 0.6,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.2,
-                height: 1,
-                color: color,
-              ),
-            ),
-            const SizedBox(width: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.4,
-                height: 1,
-                color: color.withOpacity(0.85),
-              ),
-            ),
-          ],
-        ),
-      ));
-    }
-
-    if ((m['kg'] ?? 0) > 0) {
-      final kg = m['kg']!;
-      addChip(
-        '🏋️',
-        kg >= 1000
-            ? '${(kg / 1000).toStringAsFixed(1)}k'
-            : kg.toStringAsFixed(0),
-        'КГ',
-        _Power.lime,
-      );
-    }
-    if ((m['km'] ?? 0) > 0) {
-      final km = m['km']!;
-      addChip('📏', km.toStringAsFixed(km >= 10 ? 1 : 2), 'КМ', _Power.ice);
-    }
-    if ((m['rounds'] ?? 0) > 0) {
-      addChip('🥊', m['rounds']!.toStringAsFixed(0), 'РАУНД', _Power.plasma);
-    }
-    if ((m['sec'] ?? 0) > 0) {
-      final sec = m['sec']!;
-      final label = sec >= 3600
-          ? '${(sec / 3600).toStringAsFixed(1)}ч'
-          : '${(sec / 60).toStringAsFixed(0)}м';
-      addChip('⏱️', label, 'ВРЕМЯ', _Power.ice);
-    }
-    if ((m['punches'] ?? 0) > 0) {
-      addChip('👊', m['punches']!.toStringAsFixed(0), 'УДАР', _Power.magma);
-    }
-    if ((m['kcal'] ?? 0) > 0) {
-      addChip('🔥', m['kcal']!.toStringAsFixed(0), 'ККАЛ', _Power.magma);
-    }
-
-    if (chips.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      children: chips,
-    );
+    return result;
   }
 
+  // ══════════════════════════════════════════════════════════
+  //  BUILD
+  // ══════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
     final provider = context.watch<FitnessProvider>();
 
     final allSessions = provider.sessions
@@ -279,427 +272,137 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     filteredSessions.sort((a, b) => b.startDate.compareTo(a.startDate));
 
     return Scaffold(
-      backgroundColor: _Power.bg(isDark),
+      backgroundColor: _P.bg,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // App bar
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: _Power.bg(isDark).withOpacity(0.85),
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leadingWidth: 60,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 16, top: 10, bottom: 10),
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.black.withOpacity(0.05),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.chevron_left_rounded,
-                    color: _Power.textPrimary(isDark),
-                    size: 22,
-                  ),
-                ),
-              ),
-            ),
-            title: Text(
-              'История',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-                color: _Power.textPrimary(isDark),
-              ),
-            ),
-            centerTitle: true,
-          ),
-
-          // Large title
+          _buildAppBar(),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'ПРОГРАММЫ',
-                    style: TextStyle(
-                      color: _Power.volt,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.2,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'История',
-                    style: TextStyle(
-                      color: _Power.textPrimary(isDark),
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.2,
-                      height: 1.05,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${allSessions.length} ${_plural(allSessions.length, "программа", "программы", "программ")}',
-                    style: TextStyle(
-                      color: _Power.textSecondary(isDark),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: _buildStatsStrip(provider, allSessions),
           ),
-
-          // Total stats
           SliverToBoxAdapter(
-            child: _buildTotalStats(isDark, provider),
+            child: _buildFilters(allSessions),
           ),
-
-          // Filters
-          SliverToBoxAdapter(
-            child: _buildFilters(isDark),
-          ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-          // List
           if (filteredSessions.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: _buildEmptyState(isDark),
+              child: _buildEmptyState(),
             )
           else
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    final session = filteredSessions[index];
-                    return _buildSessionCard(isDark, session, provider);
-                  },
+                      (context, index) =>
+                      _buildSessionCard(filteredSessions[index], provider),
                   childCount: filteredSessions.length,
                 ),
               ),
             ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 40)),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );
   }
 
   // ══════════════════════════════════════════════════════════
-  // 🆕 TOTAL STATS — мультиметрика
+  //  APP BAR
   // ══════════════════════════════════════════════════════════
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      pinned: true,
+      backgroundColor: _P.bg.withOpacity(0.94),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0.5,
+      leadingWidth: 56,
+      leading: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          Navigator.pop(context);
+        },
+        child: Container(
+          width: 36,
+          height: 36,
+          margin: const EdgeInsets.fromLTRB(16, 10, 6, 10),
+          decoration: BoxDecoration(
+            color: _P.surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: _P.border, width: 1),
+          ),
+          child: const Icon(
+            Icons.chevron_left_rounded,
+            color: _P.text,
+            size: 22,
+          ),
+        ),
+      ),
+      title: Text(
+        'История',
+        style: _T.subhead.copyWith(fontSize: 16),
+      ),
+      centerTitle: true,
+    );
+  }
 
-  Widget _buildTotalStats(bool isDark, FitnessProvider provider) {
-    final completedCount = provider.sessions
+  // ══════════════════════════════════════════════════════════
+  //  STATS STRIP
+  // ══════════════════════════════════════════════════════════
+  Widget _buildStatsStrip(
+      FitnessProvider provider, List<ProgramSession> allSessions) {
+    final completedCount = allSessions
         .where((s) => s.status == ProgramSessionStatus.completed)
         .length;
 
-    final totals = _totalMetricAcrossSessions(provider.sessions);
+    final totals = _totalMetricAcrossSessions(allSessions);
     final dominant = _dominantOfTotals(totals);
 
-    final totalWorkouts = provider.sessions.fold<int>(
+    final totalWorkouts = allSessions.fold<int>(
       0,
           (sum, s) => sum + s.totalWorkoutsCompleted,
     );
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF050505),
-            Color(0xFF0F0700),
-            Color(0xFF1A0A00),
-          ],
-          stops: [0.0, 0.55, 1.0],
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: _P.border, width: 1),
+          bottom: BorderSide(color: _P.border, width: 1),
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: _Power.volt.withOpacity(0.2),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
-          ),
-        ],
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Row(
         children: [
-          // Bottom accent
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(24),
-                ),
-                gradient: LinearGradient(
-                  colors: [
-                    _Power.volt.withOpacity(0.0),
-                    _Power.volt,
-                    _Power.magma,
-                    _Power.volt,
-                    _Power.volt.withOpacity(0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: _Power.volt.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow:
-                        _Power.softGlow(_Power.volt, strength: 0.3),
-                      ),
-                      child: const Icon(
-                        Icons.history_rounded,
-                        color: _Power.volt,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'ИТОГО',
-                            style: TextStyle(
-                              color: _Power.volt,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2.0,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Ваша история',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
-                              height: 1.1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    _buildTotalStat(
-                      '🏆',
-                      '$completedCount',
-                      'ПРОГРАММ',
-                      _Power.plasma,
-                    ),
-                    _buildTotalDivider(),
-                    // 🆕 Доминирующая метрика (км / раунды / кг / сек)
-                    _buildTotalStat(
-                      dominant.emoji,
-                      dominant.value,
-                      dominant.label,
-                      dominant.color,
-                    ),
-                    _buildTotalDivider(),
-                    _buildTotalStat(
-                      '💪',
-                      '$totalWorkouts',
-                      'ТРЕНИРОВОК',
-                      _Power.volt,
-                    ),
-                  ],
-                ),
-                // 🆕 Все метрики — если их больше одной
-                if (totals.isNotEmpty && _hasMultipleMetrics(totals)) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    height: 0.5,
-                    color: Colors.white.withOpacity(0.08),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildAllTotalsRow(totals),
-                ],
-              ],
-            ),
-          ),
+          _buildStatCell('$completedCount', 'ПРОГРАММ'),
+          _vDivider(),
+          _buildStatCell('$totalWorkouts', 'ТРЕНИРОВОК'),
+          _vDivider(),
+          _buildStatCell(dominant.value, dominant.label),
         ],
       ),
     );
   }
 
-  bool _hasMultipleMetrics(Map<String, double> m) {
-    int count = 0;
-    for (final k in ['kg', 'km', 'rounds', 'sec']) {
-      if ((m[k] ?? 0) > 0) count++;
-    }
-    return count > 1;
-  }
-
-  /// 🆕 Строка всех ненулевых метрик за всю историю.
-  Widget _buildAllTotalsRow(Map<String, double> m) {
-    final chips = <Widget>[];
-
-    void addChip(String emoji, String value, String label, Color color) {
-      chips.add(Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 0.6,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 11)),
-            const SizedBox(width: 5),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.2,
-                height: 1,
-                color: color,
-              ),
-            ),
-            const SizedBox(width: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.6,
-                height: 1,
-                color: color.withOpacity(0.85),
-              ),
-            ),
-          ],
-        ),
-      ));
-    }
-
-    if ((m['kg'] ?? 0) > 0) {
-      final kg = m['kg']!;
-      addChip(
-        '🏋️',
-        kg >= 1000
-            ? '${(kg / 1000).toStringAsFixed(1)}k'
-            : kg.toStringAsFixed(0),
-        'КГ',
-        _Power.lime,
-      );
-    }
-    if ((m['km'] ?? 0) > 0) {
-      final km = m['km']!;
-      addChip('📏', km.toStringAsFixed(km >= 10 ? 1 : 2), 'КМ', _Power.ice);
-    }
-    if ((m['rounds'] ?? 0) > 0) {
-      addChip('🥊', m['rounds']!.toStringAsFixed(0), 'РАУНД', _Power.plasma);
-    }
-    if ((m['sec'] ?? 0) > 0) {
-      final sec = m['sec']!;
-      final label = sec >= 3600
-          ? '${(sec / 3600).toStringAsFixed(1)}ч'
-          : '${(sec / 60).toStringAsFixed(0)}м';
-      addChip('⏱️', label, 'ВРЕМЯ', _Power.ice);
-    }
-    if ((m['punches'] ?? 0) > 0) {
-      addChip('👊', m['punches']!.toStringAsFixed(0), 'УДАР', _Power.magma);
-    }
-    if ((m['kcal'] ?? 0) > 0) {
-      addChip('🔥', m['kcal']!.toStringAsFixed(0), 'ККАЛ', _Power.magma);
-    }
-
-    if (chips.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      alignment: WrapAlignment.center,
-      children: chips,
-    );
-  }
-
-  Widget _buildTotalDivider() {
-    return Container(
-      width: 0.5,
-      height: 40,
-      color: Colors.white.withOpacity(0.08),
-    );
-  }
-
-  Widget _buildTotalStat(
-      String emoji,
-      String value,
-      String label,
-      Color accent,
-      ) {
+  Widget _buildStatCell(String value, String label) {
     return Expanded(
       child: Column(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 22)),
-          const SizedBox(height: 6),
           Text(
             value,
-            style: TextStyle(
-              color: accent,
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1,
+            style: _T.num(const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1.0,
               height: 1,
-            ),
+              color: _P.text,
+            )),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.45),
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.4,
+            style: _T.overline.copyWith(
+              fontSize: 9,
+              letterSpacing: 1.5,
             ),
           ),
         ],
@@ -707,81 +410,93 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     );
   }
 
-  // =====================================================================
-  // FILTERS (без изменений)
-  // =====================================================================
+  Widget _vDivider() => Container(
+    width: 1,
+    height: 32,
+    color: _P.border,
+  );
 
-  Widget _buildFilters(bool isDark) {
+  // ══════════════════════════════════════════════════════════
+  //  FILTERS
+  // ══════════════════════════════════════════════════════════
+  Widget _buildFilters(List<ProgramSession> allSessions) {
+    int countOf(String id) {
+      switch (id) {
+        case 'completed':
+          return allSessions
+              .where((s) => s.status == ProgramSessionStatus.completed)
+              .length;
+        case 'abandoned':
+          return allSessions
+              .where((s) => s.status == ProgramSessionStatus.abandoned)
+              .length;
+        case 'paused':
+          return allSessions
+              .where((s) => s.status == ProgramSessionStatus.paused)
+              .length;
+        default:
+          return allSessions.length;
+      }
+    }
+
     final filters = [
-      {'id': 'all', 'label': 'ВСЕ', 'icon': Icons.list_rounded},
-      {
-        'id': 'completed',
-        'label': 'ЗАВЕРШЕНО',
-        'icon': Icons.check_circle_rounded
-      },
-      {
-        'id': 'abandoned',
-        'label': 'БРОШЕНО',
-        'icon': Icons.flag_rounded
-      },
-      {'id': 'paused', 'label': 'ПАУЗА', 'icon': Icons.pause_circle_rounded},
+      {'id': 'all', 'label': 'Все'},
+      {'id': 'completed', 'label': 'Завершено'},
+      {'id': 'abandoned', 'label': 'Брошено'},
+      {'id': 'paused', 'label': 'Пауза'},
     ];
 
-    return Container(
-      height: 42,
-      margin: const EdgeInsets.only(top: 20),
+    return SizedBox(
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: filters.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final filter = filters[index];
-          final isSelected = _filter == filter['id'];
+          final f = filters[index];
+          final id = f['id'] as String;
+          final isSelected = _filter == id;
+          final count = countOf(id);
 
           return GestureDetector(
             onTap: () {
               HapticFeedback.selectionClick();
-              setState(() => _filter = filter['id'] as String);
+              setState(() => _filter = id);
             },
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              alignment: Alignment.center,
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: isSelected ? _Power.volt : _Power.card(isDark),
-                borderRadius: BorderRadius.circular(19),
+                color: isSelected ? _P.text : _P.surface,
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isSelected
-                      ? _Power.volt
-                      : _Power.separator(isDark),
-                  width: 0.8,
+                  color: isSelected ? _P.text : _P.border,
+                  width: 1,
                 ),
-                boxShadow: isSelected
-                    ? _Power.softGlow(_Power.volt, strength: 0.35)
-                    : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    filter['icon'] as IconData,
-                    size: 14,
-                    color: isSelected
-                        ? Colors.white
-                        : _Power.textSecondary(isDark),
+                  Text(
+                    f['label'] as String,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.1,
+                      color: isSelected ? Colors.white : _P.textSecondary,
+                    ),
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    filter['label'] as String,
-                    style: TextStyle(
+                    '$count',
+                    style: _T.num(TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
+                      fontWeight: FontWeight.w500,
                       color: isSelected
-                          ? Colors.white
-                          : _Power.textPrimary(isDark),
-                    ),
+                          ? Colors.white.withOpacity(0.55)
+                          : _P.textTertiary,
+                    )),
                   ),
                 ],
               ),
@@ -793,14 +508,9 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
   }
 
   // ══════════════════════════════════════════════════════════
-  // 🆕 SESSION CARD — доминирующая метрика вместо «кг»
+  //  SESSION CARD  —  FULL-COVER EDITORIAL
   // ══════════════════════════════════════════════════════════
-
-  Widget _buildSessionCard(
-      bool isDark,
-      ProgramSession session,
-      FitnessProvider provider,
-      ) {
+  Widget _buildSessionCard(ProgramSession session, FitnessProvider provider) {
     WorkoutProgram? program;
     try {
       program = provider.programs.firstWhere((p) => p.id == session.programId);
@@ -809,8 +519,7 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     }
 
     final programName = program?.name ?? 'Удалённая программа';
-    final statusInfo = _getStatusInfo(session.status);
-    final accent = statusInfo['color'] as Color;
+    final status = _statusInfo(session.status);
     final duration = session.endDate != null
         ? session.endDate!.difference(session.startDate).inDays
         : DateTime.now().difference(session.startDate).inDays;
@@ -821,6 +530,9 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     final totalDays = session.daySessions.length;
 
     final dominant = _dominantOfSession(session);
+
+    final cover = program?.backgroundImage;
+    final hasCover = cover != null && cover.isNotEmpty;
 
     return GestureDetector(
       onTap: () {
@@ -835,246 +547,366 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
                 child: ProgramSummaryScreen(
                   session: session,
                   program: program!,
-                  isDark: isDark,
+                  isDark: false,
                 ),
               ),
             ),
           );
         } else {
-          _showSessionDetails(context, session, program);
+          _showSessionDetails(session, program);
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: accent.withOpacity(0.25),
-            width: 0.8,
-          ),
+          color: _P.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _P.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: _P.text.withOpacity(0.03),
+              blurRadius: 14,
+              spreadRadius: -2,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ───── COVER (full width) ─────
+            SizedBox(
+              height: 160,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
+                  // 1. Изображение / декоративный фон
+                  _buildCoverImage(program, hasCover),
+
+                  // 2. Градиент поверх (для читаемости текста)
+                  DecoratedBox(
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.14),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: _Power.softGlow(accent, strength: 0.2),
-                    ),
-                    child: Center(
-                      child: Text(
-                        statusInfo['emoji'] as String,
-                        style: const TextStyle(fontSize: 22),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: hasCover
+                            ? [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.15),
+                          Colors.black.withOpacity(0.72),
+                        ]
+                            : [
+                          Colors.transparent,
+                          Colors.transparent,
+                        ],
+                        stops: hasCover
+                            ? const [0.0, 0.5, 1.0]
+                            : const [0.0, 1.0],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+
+                  // 3. Бейдж статуса — верхний левый угол
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: _buildStatusBadge(session.status, onCover: hasCover),
+                  ),
+
+                  // 4. Название + даты — нижний левый угол
+                  Positioned(
+                    left: 14,
+                    right: 14,
+                    bottom: 12,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           programName,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                            color: _Power.textPrimary(isDark),
-                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: _T.subhead.copyWith(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: hasCover ? Colors.white : _P.text,
+                            height: 1.2,
+                          ),
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '${_formatDate(session.startDate)} — ${session.endDate != null ? _formatDate(session.endDate!) : 'сейчас'}',
-                          style: TextStyle(
+                          '${_formatDate(session.startDate)} — '
+                              '${session.endDate != null ? _formatDate(session.endDate!) : 'сейчас'}',
+                          style: _T.captionSm.copyWith(
                             fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: _Power.textTertiary(isDark),
+                            color: hasCover
+                                ? Colors.white.withOpacity(0.78)
+                                : _P.textTertiary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: accent.withOpacity(0.14),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      statusInfo['label'] as String,
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                        color: accent,
-                      ),
-                    ),
-                  ),
                 ],
               ),
+            ),
 
-              // Progress (для завершённых)
-              if (session.status == ProgramSessionStatus.completed) ...[
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.flag_rounded,
-                      size: 13,
-                      color: _Power.textTertiary(isDark),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'ВЫПОЛНЕНО $completedDays / $totalDays',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.6,
-                        color: _Power.textSecondary(isDark),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${(session.progressPercent * 100).toInt()}%',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.3,
-                        color: _Power.volt,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: session.progressPercent,
-                    backgroundColor: _Power.separator(isDark),
-                    valueColor: const AlwaysStoppedAnimation(
-                      _Power.volt,
-                    ),
-                    minHeight: 5,
-                  ),
-                ),
-                const SizedBox(height: 14),
-              ],
-
-              // Stats
-              Row(
+            // ───── BODY ─────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSessionStat(
-                    isDark,
-                    Icons.calendar_month_rounded,
-                    '$duration',
-                    'дн.',
-                    _Power.ice,
+                  // Прогресс — только для завершённых
+                  if (session.status == ProgramSessionStatus.completed) ...[
+                    Row(
+                      children: [
+                        Text(
+                          'ВЫПОЛНЕНО',
+                          style: _T.overline.copyWith(
+                            fontSize: 9,
+                            letterSpacing: 1.3,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$completedDays / $totalDays',
+                          style: _T.num(_T.captionSm.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: _P.text,
+                          )),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${(session.progressPercent * 100).toInt()}%',
+                          style: _T.num(TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                            color: status.color,
+                          )),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: session.progressPercent,
+                        backgroundColor: _P.borderLight,
+                        valueColor: AlwaysStoppedAnimation(status.color),
+                        minHeight: 4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+
+                  // Нижняя строка метрик
+                  Row(
+                    children: [
+                      _buildInlineStat(
+                        icon: Icons.schedule_rounded,
+                        value: '$duration',
+                        label: 'дн.',
+                      ),
+                      const SizedBox(width: 14),
+                      _buildInlineStat(
+                        icon: Icons.fitness_center_rounded,
+                        value: '${session.totalWorkoutsCompleted}',
+                        label: 'трен.',
+                      ),
+                      if (dominant.key != 'other') ...[
+                        const SizedBox(width: 14),
+                        _buildInlineStat(
+                          icon: _iconForMetric(dominant.key),
+                          value: dominant.value,
+                          label: dominant.label.toLowerCase(),
+                        ),
+                      ],
+                      const Spacer(),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: _P.textTertiary,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  _buildSessionStat(
-                    isDark,
-                    Icons.fitness_center_rounded,
-                    '${session.totalWorkoutsCompleted}',
-                    'трен.',
-                    _Power.volt,
-                  ),
-                  const SizedBox(width: 6),
-                  // 🆕 Доминирующая метрика
-                  _buildSessionStat(
-                    isDark,
-                    _iconForDominant(dominant.label),
-                    dominant.value,
-                    dominant.label.toLowerCase(),
-                    dominant.color,
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: _Power.textTertiary(isDark),
-                    size: 22,
-                  ),
+
+                  // Чипы дополнительных метрик
+                  if (session.totalByMetricCompleted.length > 1) ...[
+                    const SizedBox(height: 12),
+                    Container(height: 1, color: _P.borderLight),
+                    const SizedBox(height: 12),
+                    _buildMetricChips(session),
+                  ],
                 ],
               ),
-
-              // 🆕 Чипы всех метрик (если их больше одной)
-              if (session.totalByMetricCompleted.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Container(height: 0.5, color: _Power.separator(isDark)),
-                const SizedBox(height: 10),
-                _sessionMetricBadges(session, isDark),
-              ],
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  IconData _iconForDominant(String label) {
-    switch (label) {
-      case 'КМ':
-        return Icons.directions_run_rounded;
-      case 'РАУНД':
-        return Icons.sports_mma_rounded;
-      case 'КГ':
-        return Icons.monitor_weight_rounded;
-      case 'ЧАС':
-      case 'МИН':
-        return Icons.timer_rounded;
-      default:
-        return Icons.fitness_center_rounded;
+  // ══════════════════════════════════════════════════════════
+  //  COVER IMAGE
+  // ══════════════════════════════════════════════════════════
+  Widget _buildCoverImage(WorkoutProgram? program, bool hasCover) {
+    if (!hasCover) {
+      final emoji = program?.emoji;
+      final hasEmoji = emoji != null && emoji.isNotEmpty;
+      final initial = (program?.name.isNotEmpty ?? false)
+          ? program!.name.trim()[0].toUpperCase()
+          : '?';
+
+      // Декоративный «псевдо-cover»: мягкий фон + большой watermark-эмодзи
+      return Container(
+        color: _P.surfaceMuted,
+        child: Stack(
+          children: [
+            Positioned(
+              right: -30,
+              bottom: -50,
+              child: hasEmoji
+                  ? Text(
+                emoji!,
+                style: TextStyle(
+                  fontSize: 180,
+                  color: _P.text.withOpacity(0.035),
+                ),
+              )
+                  : Text(
+                initial,
+                style: TextStyle(
+                  fontSize: 180,
+                  fontWeight: FontWeight.w900,
+                  color: _P.text.withOpacity(0.035),
+                ),
+              ),
+            ),
+            // Маленький бейдж-эмодзи в правом верхнем углу
+            if (hasEmoji)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _P.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _P.border, width: 1),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(emoji!, style: const TextStyle(fontSize: 20)),
+                ),
+              ),
+          ],
+        ),
+      );
     }
+
+    return _AppImage(
+      path: program!.backgroundImage,
+      fit: BoxFit.cover,
+      fallback: Container(color: _P.surfaceMuted),
+    );
   }
 
-  Widget _buildSessionStat(
-      bool isDark,
-      IconData icon,
-      String value,
-      String label,
-      Color color,
-      ) {
+  // ══════════════════════════════════════════════════════════
+  //  THUMB (для bottom sheet)
+  // ══════════════════════════════════════════════════════════
+  Widget _buildProgramThumb(WorkoutProgram? program) {
+    const size = 40.0;
+    const radius = 10.0;
+
+    final bg = program?.backgroundImage;
+    final hasBg = bg != null && bg.isNotEmpty;
+    final emoji = program?.emoji;
+    final hasEmoji = emoji != null && emoji.isNotEmpty;
+    final initial = (program?.name.isNotEmpty ?? false)
+        ? program!.name.trim()[0].toUpperCase()
+        : '?';
+
+    Widget content;
+    if (hasBg) {
+      content = _AppImage(
+        path: bg,
+        fit: BoxFit.cover,
+        fallback: _thumbFallback(initial),
+      );
+    } else if (hasEmoji) {
+      content = Container(
+        color: _P.surfaceMuted,
+        alignment: Alignment.center,
+        child: Text(emoji!, style: const TextStyle(fontSize: 18)),
+      );
+    } else {
+      content = _thumbFallback(initial);
+    }
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: _P.border, width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: content,
+    );
+  }
+
+  Widget _thumbFallback(String initial) {
+    return Container(
+      color: _P.surfaceMuted,
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: _T.num(TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: _P.textSecondary,
+        )),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  BADGE / STAT / CHIPS
+  // ══════════════════════════════════════════════════════════
+  Widget _buildStatusBadge(ProgramSessionStatus status,
+      {bool onCover = false}) {
+    final s = _statusInfo(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: s.soft,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: onCover
+            ? [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: color),
+          Icon(s.icon, size: 11, color: s.color),
           const SizedBox(width: 4),
           Text(
-            value,
+            s.label,
             style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.2,
-              color: color,
-            ),
-          ),
-          const SizedBox(width: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
+              fontSize: 9,
               fontWeight: FontWeight.w700,
-              color: _Power.textTertiary(isDark),
+              letterSpacing: 0.5,
+              color: s.color,
             ),
           ),
         ],
@@ -1082,47 +914,90 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     );
   }
 
-  Map<String, dynamic> _getStatusInfo(ProgramSessionStatus status) {
-    switch (status) {
-      case ProgramSessionStatus.completed:
-        return {
-          'emoji': '🏆',
-          'label': 'ЗАВЕРШЕНА',
-          'color': _Power.green,
-        };
-      case ProgramSessionStatus.abandoned:
-        return {
-          'emoji': '🚫',
-          'label': 'БРОШЕНА',
-          'color': _Power.red,
-        };
-      case ProgramSessionStatus.paused:
-        return {
-          'emoji': '⏸️',
-          'label': 'НА ПАУЗЕ',
-          'color': _Power.plasma,
-        };
-      default:
-        return {
-          'emoji': '🔥',
-          'label': 'АКТИВНА',
-          'color': _Power.volt,
-        };
+  Widget _buildInlineStat({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: _P.textTertiary),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: _T.num(_T.captionSm.copyWith(
+            fontWeight: FontWeight.w600,
+            color: _P.text,
+          )),
+        ),
+        if (label.isNotEmpty) ...[
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: _T.captionSm.copyWith(
+              fontSize: 10,
+              color: _P.textTertiary,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMetricChips(ProgramSession session) {
+    var m = session.totalByMetricCompleted;
+    if (m.isEmpty && session.totalVolumeCompleted > 0) {
+      m = {'kg': session.totalVolumeCompleted};
     }
+    if (m.isEmpty) return const SizedBox.shrink();
+
+    final chips = <Widget>[];
+
+    void addChip(String key) {
+      final v = m[key] ?? 0;
+      if (v <= 0) return;
+      final c = _colorForMetric(key);
+      chips.add(Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: _P.surfaceMuted,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: _P.borderLight, width: 0.8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_iconForMetric(key), size: 11, color: c),
+            const SizedBox(width: 5),
+            Text(
+              _formatMetricValue(key, v),
+              style: _T.num(_T.captionSm.copyWith(
+                fontWeight: FontWeight.w600,
+                color: _P.text,
+              )),
+            ),
+          ],
+        ),
+      ));
+    }
+
+    addChip('kg');
+    addChip('km');
+    addChip('rounds');
+    addChip('sec');
+    addChip('punches');
+    addChip('kcal');
+
+    if (chips.isEmpty) return const SizedBox.shrink();
+    return Wrap(spacing: 6, runSpacing: 6, children: chips);
   }
 
   // ══════════════════════════════════════════════════════════
-  // 🆕 SESSION DETAILS — мультиметрики вместо одной «Тоннаж»
+  //  SESSION DETAILS SHEET
   // ══════════════════════════════════════════════════════════
-
-  void _showSessionDetails(
-      BuildContext context,
-      ProgramSession session,
-      WorkoutProgram? program,
-      ) {
-    final isDark = widget.isDark;
-    final statusInfo = _getStatusInfo(session.status);
-    final accent = statusInfo['color'] as Color;
+  void _showSessionDetails(ProgramSession session, WorkoutProgram? program) {
+    final s = _statusInfo(session.status);
 
     var metrics = session.totalByMetricCompleted;
     if (metrics.isEmpty && session.totalVolumeCompleted > 0) {
@@ -1138,9 +1013,9 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
           maxHeight: MediaQuery.of(context).size.height * 0.85,
         ),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        decoration: BoxDecoration(
-          color: _Power.card(isDark),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        decoration: const BoxDecoration(
+          color: _P.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: SafeArea(
           top: false,
@@ -1152,154 +1027,138 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
                 Center(
                   child: Container(
                     width: 36,
-                    height: 5,
+                    height: 4,
                     decoration: BoxDecoration(
-                      color: _Power.textTertiary(isDark),
-                      borderRadius: BorderRadius.circular(3),
+                      color: _P.border,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 20),
 
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: accent.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    statusInfo['label'] as String,
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                      color: accent,
-                    ),
-                  ),
+                Row(
+                  children: [
+                    _buildProgramThumb(program),
+                    const SizedBox(width: 12),
+                    _buildStatusBadge(session.status),
+                  ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
-                // Title
                 Text(
                   program?.name ?? 'Удалённая программа',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.8,
-                    height: 1.1,
-                    color: _Power.textPrimary(isDark),
-                  ),
+                  style: _T.title,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
-                  '${_formatDate(session.startDate)} — ${session.endDate != null ? _formatDate(session.endDate!) : 'сейчас'}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _Power.textSecondary(isDark),
-                  ),
+                  '${_formatDate(session.startDate)} — '
+                      '${session.endDate != null ? _formatDate(session.endDate!) : 'сейчас'}',
+                  style: _T.caption.copyWith(color: _P.textTertiary),
                 ),
 
                 const SizedBox(height: 22),
+                Text('ДЕТАЛИ', style: _T.overline),
+                const SizedBox(height: 10),
 
-                // Details card
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: _Power.card2(isDark),
-                    borderRadius: BorderRadius.circular(18),
+                    color: _P.surfaceMuted,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _P.borderLight, width: 1),
                   ),
                   child: Column(
                     children: [
                       _buildDetailRow(
-                        isDark,
                         Icons.calendar_today_rounded,
                         'Дата начала',
                         _formatDate(session.startDate),
-                        _Power.ice,
                       ),
-                      _buildDetailDivider(isDark),
+                      _rowDivider(),
                       _buildDetailRow(
-                        isDark,
                         Icons.flag_rounded,
                         'Дата конца',
                         session.endDate != null
                             ? _formatDate(session.endDate!)
                             : '—',
-                        _Power.ice,
                       ),
-                      _buildDetailDivider(isDark),
+                      _rowDivider(),
                       _buildDetailRow(
-                        isDark,
-                        Icons.timer_rounded,
+                        Icons.schedule_rounded,
                         'Длительность',
                         '${session.durationDays} дн.',
-                        _Power.plasma,
                       ),
-                      _buildDetailDivider(isDark),
+                      _rowDivider(),
                       _buildDetailRow(
-                        isDark,
                         Icons.fitness_center_rounded,
                         'Тренировок',
                         '${session.totalWorkoutsCompleted}',
-                        _Power.volt,
                       ),
-                      _buildDetailDivider(isDark),
+                      _rowDivider(),
                       _buildDetailRow(
-                        isDark,
-                        Icons.cancel_rounded,
+                        Icons.remove_circle_outline_rounded,
                         'Пропущено',
                         '${session.totalWorkoutsSkipped}',
-                        _Power.red,
                       ),
-                      _buildDetailDivider(isDark),
-                      // 🆕 Мультиметрики вместо одной строки «Тоннаж»
-                      if (metrics.isEmpty)
-                        _buildDetailRow(
-                          isDark,
-                          Icons.monitor_weight_rounded,
-                          'Объём',
-                          '—',
-                          _Power.lime,
-                        )
-                      else
-                        ...metrics.entries.map((e) => Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: _buildMetricRow(isDark, e.key, e.value),
-                        )),
-                      _buildDetailDivider(isDark),
+                      _rowDivider(),
                       _buildDetailRow(
-                        isDark,
                         Icons.speed_rounded,
                         'Средний RPE',
                         session.averageRpe > 0
                             ? session.averageRpe.toStringAsFixed(1)
                             : '—',
-                        _Power.ice,
                       ),
-                      _buildDetailDivider(isDark),
+                      _rowDivider(),
                       _buildDetailRow(
-                        isDark,
                         Icons.local_fire_department_rounded,
                         'Макс. серия',
                         '${session.longestStreak} дн.',
-                        _Power.volt,
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                if (metrics.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text('МЕТРИКИ', style: _T.overline),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _P.surfaceMuted,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _P.borderLight, width: 1),
+                    ),
+                    child: Column(
+                      children: [
+                        ...metrics.entries.map((e) => Column(
+                          children: [
+                            _buildDetailRow(
+                              _iconForMetric(e.key),
+                              _metricLabel(e.key),
+                              _formatMetricValue(e.key, e.value),
+                            ),
+                            if (e != metrics.entries.last)
+                              _rowDivider(),
+                          ],
+                        )),
+                      ],
+                    ),
+                  ),
+                ],
 
-                // Actions
+                const SizedBox(height: 18),
+
                 if (session.status == ProgramSessionStatus.paused)
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 50,
                     child: ElevatedButton(
                       onPressed: () async {
                         HapticFeedback.mediumImpact();
@@ -1309,26 +1168,26 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
                             .resumeProgramSession(session.id);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _Power.green,
+                        backgroundColor: _P.text,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        shadowColor: _Power.green.withOpacity(0.5),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.play_arrow_rounded, size: 22),
-                          SizedBox(width: 8),
+                          const Icon(Icons.play_arrow_rounded, size: 20),
+                          const SizedBox(width: 6),
                           Text(
                             'ВОЗОБНОВИТЬ',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
-                            ),
+                            style: _T.num(TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: Colors.white,
+                            )),
                           ),
                         ],
                       ),
@@ -1337,39 +1196,25 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
 
                 if (session.status == ProgramSessionStatus.abandoned)
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: _Power.red.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: _Power.red.withOpacity(0.25),
-                        width: 0.8,
-                      ),
+                      color: s.soft,
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: _Power.red.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.info_outline_rounded,
-                            color: _Power.red,
-                            size: 18,
-                          ),
+                        Icon(
+                          Icons.info_outline_rounded,
+                          color: s.color,
+                          size: 16,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Программа была брошена. Начните новую для продолжения.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: _Power.textSecondary(isDark),
-                              height: 1.35,
+                            'Программа была брошена. Начните новую, чтобы продолжить.',
+                            style: _T.captionSm.copyWith(
+                              height: 1.4,
+                              color: _P.textSecondary,
                             ),
                           ),
                         ),
@@ -1384,172 +1229,93 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     );
   }
 
-  Widget _buildDetailDivider(bool isDark) {
+  String _metricLabel(String key) {
+    switch (key) {
+      case 'kg':
+        return 'Тоннаж';
+      case 'km':
+        return 'Дистанция';
+      case 'rounds':
+        return 'Раунды';
+      case 'sec':
+        return 'Время';
+      case 'punches':
+        return 'Удары';
+      case 'kcal':
+        return 'Калории';
+      default:
+        return key;
+    }
+  }
+
+  Widget _rowDivider() => Container(
+    height: 1,
+    color: _P.borderLight,
+  );
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Container(
-        height: 0.5,
-        color: _Power.separator(isDark),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: _P.textTertiary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: _T.caption.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: _T.num(_T.caption.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: _P.text,
+            )),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDetailRow(
-      bool isDark,
-      IconData icon,
-      String label,
-      String value,
-      Color color,
-      ) {
-    return Row(
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 16),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: _Power.textSecondary(isDark),
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.3,
-            color: _Power.textPrimary(isDark),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 🆕 Строка для конкретной метрики (кг / км / раунды / сек / удары / ккал).
-  Widget _buildMetricRow(bool isDark, String key, double value) {
-    String label;
-    String formattedValue;
-    IconData icon;
-    Color color;
-
-    switch (key) {
-      case 'kg':
-        label = 'Тоннаж';
-        formattedValue = value >= 1000
-            ? '${(value / 1000).toStringAsFixed(2)} т'
-            : '${value.toStringAsFixed(0)} кг';
-        icon = Icons.fitness_center_rounded;
-        color = _Power.lime;
-        break;
-      case 'km':
-        label = 'Дистанция';
-        formattedValue = '${value.toStringAsFixed(2)} км';
-        icon = Icons.directions_run_rounded;
-        color = _Power.ice;
-        break;
-      case 'rounds':
-        label = 'Раунды';
-        formattedValue = '${value.toStringAsFixed(0)} р.';
-        icon = Icons.sports_mma_rounded;
-        color = _Power.plasma;
-        break;
-      case 'sec':
-        label = 'Время';
-        if (value >= 3600) {
-          final h = (value / 3600).floor();
-          final m = ((value % 3600) / 60).round();
-          formattedValue = '${h}ч ${m}м';
-        } else {
-          formattedValue = '${(value / 60).toStringAsFixed(0)} мин';
-        }
-        icon = Icons.timer_rounded;
-        color = _Power.ice;
-        break;
-      case 'punches':
-        label = 'Удары';
-        formattedValue = '${value.toStringAsFixed(0)}';
-        icon = Icons.sports_mma_rounded;
-        color = _Power.magma;
-        break;
-      case 'kcal':
-        label = 'Калории';
-        formattedValue = '${value.toStringAsFixed(0)} ккал';
-        icon = Icons.local_fire_department_rounded;
-        color = _Power.magma;
-        break;
-      default:
-        label = key;
-        formattedValue = value.toStringAsFixed(0);
-        icon = Icons.analytics_rounded;
-        color = _Power.volt;
-    }
-
-    return _buildDetailRow(isDark, icon, label, formattedValue, color);
-  }
-
-  // =====================================================================
-  // EMPTY STATE (без изменений)
-  // =====================================================================
-
-  Widget _buildEmptyState(bool isDark) {
+  // ══════════════════════════════════════════════════════════
+  //  EMPTY
+  // ══════════════════════════════════════════════════════════
+  Widget _buildEmptyState() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(40, 60, 40, 40),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 90,
-            height: 90,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              color: _Power.volt.withOpacity(0.10),
+              color: _P.surfaceMuted,
               shape: BoxShape.circle,
-              boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
+              border: Border.all(color: _P.border, width: 1),
             ),
             child: const Icon(
               Icons.history_rounded,
-              size: 42,
-              color: _Power.volt,
+              size: 24,
+              color: _P.textTertiary,
             ),
           ),
-          const SizedBox(height: 22),
-          const Text(
-            'ИСТОРИЯ',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 2.2,
-              color: _Power.volt,
-            ),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 20),
           Text(
             'Пока пусто',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.7,
-              color: _Power.textPrimary(isDark),
-            ),
+            style: _T.subhead.copyWith(fontSize: 16),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           Text(
-            'Завершите первую программу — она появится здесь со всеми подробностями',
+            'Завершённые программы появятся здесь',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.4,
-              color: _Power.textSecondary(isDark),
+            style: _T.caption.copyWith(
+              height: 1.5,
+              color: _P.textTertiary,
             ),
           ),
         ],
@@ -1557,10 +1323,9 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     );
   }
 
-  // =====================================================================
-  // HELPERS
-  // =====================================================================
-
+  // ══════════════════════════════════════════════════════════
+  //  MISC HELPERS
+  // ══════════════════════════════════════════════════════════
   String _formatDate(DateTime date) {
     const months = [
       'янв', 'фев', 'мар', 'апр', 'май', 'июн',
@@ -1568,12 +1333,49 @@ class _CompletedProgramsScreenState extends State<CompletedProgramsScreen> {
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
+}
 
-  String _plural(int n, String one, String few, String many) {
-    final mod10 = n % 10;
-    final mod100 = n % 100;
-    if (mod10 == 1 && mod100 != 11) return one;
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-    return many;
+// ═══════════════════════════════════════════════════════════════════
+//  UNIFIED IMAGE HELPER
+//  assets/ · http(s):// · локальный файл
+// ═══════════════════════════════════════════════════════════════════
+class _AppImage extends StatelessWidget {
+  final String? path;
+  final BoxFit fit;
+  final Widget? fallback;
+  final double? width;
+  final double? height;
+
+  const _AppImage({
+    this.path,
+    this.fit = BoxFit.cover,
+    this.fallback,
+    this.width,
+    this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = path;
+    final fb = fallback ?? const SizedBox.shrink();
+
+    if (p == null || p.isEmpty) return fb;
+    if (p.startsWith('assets/')) {
+      return Image.asset(
+        p, fit: fit, width: width, height: height,
+        errorBuilder: (_, __, ___) => fb,
+      );
+    }
+    if (p.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: p, fit: fit, width: width, height: height,
+        placeholder: (_, __) => fb,
+        errorWidget: (_, __, ___) => fb,
+      );
+    }
+    return Image.file(
+      File(p), fit: fit, width: width, height: height,
+      errorBuilder: (_, __, ___) => fb,
+    );
   }
 }

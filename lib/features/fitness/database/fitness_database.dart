@@ -5,7 +5,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
-import '../models/enums.dart'; // 🆕 v17: для ExerciseType.inferFormatFromName
+import '../models/enums.dart';
+
+import '../data/exercise_default_images.dart';
 
 class FitnessDatabase {
   static final FitnessDatabase _instance = FitnessDatabase._internal();
@@ -46,7 +48,7 @@ class FitnessDatabase {
     final path = join(directory.path, 'fitness_app.db');
     return await openDatabase(
       path,
-      version: 17,
+      version: 20,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -64,15 +66,16 @@ class FitnessDatabase {
     )''');
 
     await db.execute('''CREATE TABLE workout_programs (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT DEFAULT 'weekly',
-      days TEXT DEFAULT '[]', templateName TEXT, description TEXT,
-      createdAt TEXT NOT NULL, updatedAt TEXT NOT NULL,
-      emoji TEXT DEFAULT '💪',
-      accentColorValue INTEGER DEFAULT 4294929975,
-      difficulty TEXT DEFAULT 'medium',
-      goal TEXT DEFAULT 'general',
-      sessionDurationMinutes INTEGER DEFAULT 60
-    )''');
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT DEFAULT 'weekly',
+  days TEXT DEFAULT '[]', templateName TEXT, description TEXT,
+  createdAt TEXT NOT NULL, updatedAt TEXT NOT NULL,
+  emoji TEXT DEFAULT '💪',
+  accentColorValue INTEGER DEFAULT 4294929975,
+  difficulty TEXT DEFAULT 'medium',
+  goal TEXT DEFAULT 'general',
+  sessionDurationMinutes INTEGER DEFAULT 60,
+  backgroundImage TEXT
+)''');
 
     await db.execute('''CREATE TABLE workout_days (
       id TEXT PRIMARY KEY, programId TEXT NOT NULL, dayNumber INTEGER DEFAULT 1,
@@ -514,6 +517,40 @@ class FitnessDatabase {
 
         debugPrint('  ✅ Миграция v17 завершена');
       }
+
+      // 🔥 v18: Добавляем колонку backgroundImage в workout_programs
+      if (oldVersion < 18) {
+        debugPrint('🔧 v18: Добавляем колонку backgroundImage в workout_programs');
+        await _safeAddColumn(db, 'workout_programs', 'backgroundImage', 'TEXT');
+        debugPrint('  ✅ Миграция v18 завершена');
+      }
+
+      // 🔥 v19: проставляем imageUrl всем стандартным упражнениям
+      if (oldVersion < 19) {
+        debugPrint('🔧 v19: проставляем изображения стандартным упражнениям');
+        try {
+          final count = await applyDefaultExerciseImages(db);
+          debugPrint('  ✅ imageUrl обновлён у $count упражнений');
+        } catch (e) {
+          debugPrint('  ⚠️ Ошибка v19: $e');
+        }
+      }
+
+      // 🔥 v21: принудительно ставим локальные assets
+      if (oldVersion < 20) {
+        debugPrint('🔧 v21: ставим локальные assets');
+        try {
+          // 1. Стираем все старые сетевые ссылки у стандартных упражнений
+          await db.update('exercises', {'imageUrl': null}, where: 'isCustom = 0');
+
+          // 2. Проставляем локальные пути (1.jpg - 45.jpg)
+          final filled = await applyDefaultExerciseImages(db);
+          debugPrint('  ✅ Проставлено локальных картинок: $filled');
+        } catch (e) {
+          debugPrint('  ⚠️ Ошибка v21: $e');
+        }
+      }
+
     } catch (e) {
       debugPrint('⚠️ Ошибка миграции фитнес БД: $e');
     }
@@ -5272,6 +5309,14 @@ class FitnessDatabase {
       }
     } catch (e) {
       debugPrint('⚠️ Ошибка пост-обработки defaultFormat: $e');
+    }
+
+    // 🆕 v19: проставляем изображения стандартным упражнениям
+    try {
+      final imgCount = await applyDefaultExerciseImages(db);
+      debugPrint('🖼️ Проставлены изображения для $imgCount упражнений');
+    } catch (e) {
+      debugPrint('⚠️ Ошибка простановки изображений: $e');
     }
   }
 

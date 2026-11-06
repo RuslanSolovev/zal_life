@@ -1,10 +1,15 @@
 // features/fitness/ui/screens/workout_log_screen.dart
-// 🆕 v16: format-aware отображение логов (сила / кардио / бокс / статика)
+// 🎨 Premium Light — унифицировано с fitness_dashboard
 import 'dart:io';
+import 'dart:ui' show FontFeature;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../nutrition/providers/nutrition_provider.dart';
 import '../../../../nutrition/models/nutrition_models.dart';
 import '../../../../nutrition/ui/screens/fuel_dashboard_screen.dart';
@@ -13,62 +18,150 @@ import '../../../models/enums.dart';
 import '../../../models/helpers.dart';
 import '../../../providers/fitness_provider.dart';
 
-// ==================== POWER MODE TOKENS ====================
+// ==================== PREMIUM LIGHT TOKENS ====================
+class _P {
+  static const bg = Color(0xFFF6F7F9);
+  static const surface = Color(0xFFFFFFFF);
+  static const text = Color(0xFF1C2026);
+  static const textMuted = Color(0xFF7C818A);
+  static const textSoft = Color(0xFFA0A5AE);
+  static const divider = Color(0xFFE9EBEF);
+  static const border = Color(0xFFDCE0E5);
+  static const elevated = Color(0xFFF0F1F4);
 
-class _Power {
-  static const Color heroBase = Color(0xFF050505);
-  static const Color heroDeep = Color(0xFF120700);
+  static const greenDeep = Color(0xFF6C9E88);
+  static const greenSoft = Color(0xFFEAF2ED);
+  static const greenText = Color(0xFF47735F);
 
-  static const Color volt = Color(0xFFFF5500);
-  static const Color voltBright = Color(0xFFFF7A1A);
-  static const Color magma = Color(0xFFFF2D55);
-  static const Color plasma = Color(0xFFFFCC00);
-  static const Color ice = Color(0xFF00E5FF);
-  static const Color lime = Color(0xFFB4FF39);
-  static const Color green = Color(0xFF00C853);
-  static const Color red = Color(0xFFFF3B30);
+  static const peachDeep = Color(0xFFEF9563);
+  static const peachSoft = Color(0xFFFCF0E8);
 
-  static const Color darkBg = Color(0xFF0A0A0A);
-  static const Color darkCard = Color(0xFF1C1C1E);
-  static const Color darkCard2 = Color(0xFF2C2C2E);
-  static const Color lightBg = Color(0xFFF2F2F7);
-  static const Color lightCard = Color(0xFFFFFFFF);
+  static const lavenderDeep = Color(0xFF9381BB);
+  static const lavenderSoft = Color(0xFFEEEAF5);
 
-  static Color bg(bool isDark) => isDark ? darkBg : lightBg;
-  static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : const Color(0xFFF9FAFB);
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
-  static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
-  static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
-  static Color separator(bool isDark) =>
-      isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
+  static const skyDeep = Color(0xFF7E9DC6);
+  static const skySoft = Color(0xFFEBF0F8);
 
-  static List<BoxShadow> softGlow(Color color, {double strength = 0.18}) => [
-    BoxShadow(color: color.withOpacity(strength), blurRadius: 16),
+  static const redDeep = Color(0xFFD97B8A);
+  static const redSoft = Color(0xFFFCEBEE);
+
+  static List<BoxShadow> get cardShadow => [
+    BoxShadow(
+      color: const Color(0xFF1D2530).withOpacity(0.02),
+      blurRadius: 14,
+      offset: const Offset(0, 4),
+    ),
   ];
-
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
-      [
-        BoxShadow(
-          color: color.withOpacity(strength),
-          blurRadius: blur,
-          offset: const Offset(0, 6),
-        ),
-      ];
 }
 
+class _T {
+  static TextStyle title1 = GoogleFonts.inter(
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.8,
+    color: _P.text,
+  );
+  static TextStyle title2 = GoogleFonts.inter(
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.6,
+    color: _P.text,
+  );
+  static TextStyle headline = GoogleFonts.inter(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: _P.text,
+  );
+  static TextStyle body = GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: _P.text,
+  );
+  static TextStyle caption = GoogleFonts.inter(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: _P.textMuted,
+  );
+  static TextStyle overline = GoogleFonts.inter(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.4,
+    color: _P.textMuted,
+  );
+  static TextStyle number = GoogleFonts.inter(
+    fontWeight: FontWeight.w600,
+    fontFeatures: const [FontFeature.tabularFigures()],
+  );
+}
+
+class _R {
+  static const xs = 8.0;
+  static const sm = 12.0;
+  static const md = 14.0;
+  static const lg = 18.0;
+  static const xl = 22.0;
+  static const xxl = 28.0;
+}
+
+class _Sp {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 20.0;
+  static const xxl = 24.0;
+}
+
+// ==================== PRESSABLE ====================
+class _Pressable extends StatefulWidget {
+  const _Pressable({
+    required this.child,
+    required this.onTap,
+    this.scale = 0.97,
+    this.haptic = true,
+  });
+
+  final Widget child;
+  final VoidCallback onTap;
+  final double scale;
+  final bool haptic;
+
+  @override
+  State<_Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<_Pressable> {
+  bool _pressed = false;
+  void _set(bool v) {
+    if (_pressed != v) setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _set(true),
+      onTapUp: (_) => _set(false),
+      onTapCancel: () => _set(false),
+      onTap: () {
+        if (widget.haptic) HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? widget.scale : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ==================== SCREEN ====================
 class WorkoutLogScreen extends StatefulWidget {
   final bool isDark;
 
-  const WorkoutLogScreen({
-    super.key,
-    this.isDark = false,
-  });
+  const WorkoutLogScreen({super.key, this.isDark = false});
 
   @override
   State<WorkoutLogScreen> createState() => _WorkoutLogScreenState();
@@ -108,7 +201,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   double _dragOffset = 0;
   bool _isDragging = false;
   double _dragStartY = 0;
-  double _currentSheetHeight = 0;
   bool _isAnimating = false;
 
   final Map<String, bool> _expandedCards = {};
@@ -122,7 +214,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     )..forward();
-
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
       curve: Curves.easeOutCubic,
@@ -132,7 +223,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.15),
       end: Offset.zero,
@@ -140,14 +230,12 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
       parent: _slideController,
       curve: Curves.easeOutCubic,
     ));
-
     _slideController.forward();
 
     _sheetController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-
     _sheetAnimation = CurvedAnimation(
       parent: _sheetController,
       curve: Curves.easeOutQuart,
@@ -174,13 +262,71 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     return _nutritionProvider!;
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 ХЕЛПЕРЫ МЕТРИК
-  // ══════════════════════════════════════════════════════════
+  // ============================================================
+  //  EXERCISE THUMBNAIL — универсальная (assets / http / file)
+  // ============================================================
+  Widget _buildExThumb(
+      String? url, {
+        required double size,
+        required double radius,
+        required Color accent,
+        required String fallbackEmoji,
+      }) {
+    final hasImage = url != null && url.isNotEmpty;
+    final Widget fallback =
+    Text(fallbackEmoji, style: TextStyle(fontSize: size * 0.46));
 
-  /// Доминирующая метрика лога для показа «главной цифры».
-  ({String label, String value, IconData icon, Color color}) _metricPrimaryBadge(
-      WorkoutLog log) {
+    Widget imageWidget() {
+      if (!hasImage) return fallback;
+      if (url!.startsWith('assets/')) {
+        return Image.asset(
+          url,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => fallback,
+        );
+      }
+      if (url.startsWith('http')) {
+        return CachedNetworkImage(
+          imageUrl: url,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          placeholder: (_, __) => Container(color: accent.withOpacity(0.08)),
+          errorWidget: (_, __, ___) => fallback,
+        );
+      }
+      return Image.file(
+        File(url),
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => fallback,
+      );
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(radius),
+        border: hasImage
+            ? Border.all(color: accent.withOpacity(0.18), width: 0.6)
+            : null,
+      ),
+      clipBehavior: Clip.antiAlias,
+      alignment: Alignment.center,
+      child: imageWidget(),
+    );
+  }
+
+  // ============================================================
+  //  METRIC HELPERS
+  // ============================================================
+  ({String label, String value, IconData icon, Color color})
+  _metricPrimaryBadge(WorkoutLog log) {
     final kg = log.metricValue('kg');
     final km = log.metricValue('km');
     final rounds = log.metricValue('rounds');
@@ -188,48 +334,48 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
 
     if (km > 0) {
       return (
-      label: 'КМ',
+      label: 'км',
       value: km.toStringAsFixed(km >= 10 ? 0 : 2),
       icon: Icons.directions_run_rounded,
-      color: _Power.ice,
+      color: _P.skyDeep,
       );
     }
     if (rounds > 0) {
       return (
-      label: 'РАУНД',
+      label: 'раунд',
       value: rounds.toStringAsFixed(0),
       icon: Icons.sports_mma_rounded,
-      color: _Power.volt,
+      color: _P.peachDeep,
       );
     }
     if (kg > 0) {
       return (
-      label: 'КГ',
+      label: 'кг',
       value: kg.toStringAsFixed(0),
       icon: Icons.fitness_center_rounded,
-      color: _Power.plasma,
+      color: _P.lavenderDeep,
       );
     }
     if (sec > 0) {
       return (
-      label: 'СЕК',
+      label: 'сек',
       value: sec.toStringAsFixed(0),
       icon: Icons.timer_rounded,
-      color: _Power.lime,
+      color: _P.greenDeep,
       );
     }
     return (
     label: '—',
     value: '0',
     icon: Icons.remove_rounded,
-    color: _Power.textTertiary(true),
+    color: _P.textMuted,
     );
   }
 
-  /// Все непустые метрики лога для детального отображения.
-  List<({String label, String value, IconData icon, Color color})> _metricBadges(
-      WorkoutLog log) {
-    final result = <({String label, String value, IconData icon, Color color})>[];
+  List<({String label, String value, IconData icon, Color color})>
+  _metricBadges(WorkoutLog log) {
+    final result =
+    <({String label, String value, IconData icon, Color color})>[];
     final kg = log.metricValue('kg');
     final km = log.metricValue('km');
     final sec = log.metricValue('sec');
@@ -240,64 +386,63 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
 
     if (kg > 0) {
       result.add((
-      label: 'КГ',
+      label: 'кг',
       value: kg.toStringAsFixed(0),
       icon: Icons.fitness_center_rounded,
-      color: _Power.plasma,
+      color: _P.lavenderDeep,
       ));
     }
     if (km > 0) {
       result.add((
-      label: 'КМ',
+      label: 'км',
       value: km.toStringAsFixed(km >= 10 ? 1 : 2),
       icon: Icons.directions_run_rounded,
-      color: _Power.ice,
+      color: _P.skyDeep,
       ));
     }
     if (rounds > 0) {
       result.add((
-      label: 'РАУНД',
+      label: 'раунд',
       value: rounds.toStringAsFixed(0),
       icon: Icons.sports_mma_rounded,
-      color: _Power.volt,
+      color: _P.peachDeep,
       ));
     }
     if (sec > 0) {
       result.add((
-      label: 'СЕК',
+      label: 'сек',
       value: sec.toStringAsFixed(0),
       icon: Icons.timer_rounded,
-      color: _Power.lime,
+      color: _P.greenDeep,
       ));
     }
     if (punches > 0) {
       result.add((
-      label: 'УДАР',
+      label: 'удар',
       value: punches.toStringAsFixed(0),
       icon: Icons.sports_mma_rounded,
-      color: _Power.magma,
+      color: _P.redDeep,
       ));
     }
     if (kcal > 0) {
       result.add((
-      label: 'ККАЛ',
+      label: 'ккал',
       value: kcal.toStringAsFixed(0),
       icon: Icons.local_fire_department_rounded,
-      color: _Power.magma,
+      color: _P.peachDeep,
       ));
     }
     if (reps > 0 && kg == 0) {
       result.add((
-      label: 'ПОВТ',
+      label: 'повт',
       value: reps.toStringAsFixed(0),
       icon: Icons.repeat_rounded,
-      color: _Power.volt,
+      color: _P.lavenderDeep,
       ));
     }
     return result;
   }
 
-  /// Резолвит формат WorkoutExercise, используя exercises из provider.
   ExerciseFormat _resolveFormat(
       WorkoutExercise we,
       FitnessProvider provider,
@@ -311,12 +456,11 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
     final provider = context.watch<FitnessProvider>();
     final logs = _getLogsForMonth(provider);
 
     return Scaffold(
-      backgroundColor: _Power.bg(isDark),
+      backgroundColor: _P.bg,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -326,9 +470,9 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
               children: [
                 Column(
                   children: [
-                    _buildHeader(isDark, provider),
-                    _buildMonthNavigator(isDark),
-                    Expanded(child: _buildCalendarGrid(isDark, logs)),
+                    _buildHeader(provider),
+                    _buildMonthNavigator(),
+                    Expanded(child: _buildCalendarGrid(logs)),
                   ],
                 ),
                 if (_isSheetOpen)
@@ -336,10 +480,10 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                     onTap: _closeSheet,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      color: Colors.black.withOpacity(0.55),
+                      color: Colors.black.withOpacity(0.35),
                     ),
                   ),
-                _buildBottomSheet(isDark, provider),
+                _buildBottomSheet(provider),
               ],
             ),
           ),
@@ -351,91 +495,67 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   // =====================================================================
   // HEADER
   // =====================================================================
-
-  Widget _buildHeader(bool isDark, FitnessProvider provider) {
+  Widget _buildHeader(FitnessProvider provider) {
     final monthLogs = _getLogsForMonth(provider);
     final completedCount =
         monthLogs.where((l) => l.status == WorkoutDayStatus.completed).length;
     final totalWorkouts = monthLogs.length;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.md, _Sp.lg, _Sp.xs),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.pop(context);
-            },
+          _Pressable(
+            onTap: () => Navigator.pop(context),
+            scale: 0.9,
+            haptic: false,
             child: Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withOpacity(0.08)
-                    : Colors.black.withOpacity(0.05),
+                color: _P.surface,
                 shape: BoxShape.circle,
+                border: Border.all(color: _P.divider),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.chevron_left_rounded,
-                color: _Power.textPrimary(isDark),
-                size: 22,
+                color: _P.text,
+                size: 20,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: _R.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'ЖУРНАЛ',
-                  style: TextStyle(
-                    color: _Power.volt,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.2,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Тренировки',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.8,
-                    height: 1.1,
-                    color: _Power.textPrimary(isDark),
-                  ),
-                ),
+                Text('ЖУРНАЛ', style: _T.overline),
+                const SizedBox(height: 2),
+                Text('Тренировки', style: _T.title2),
               ],
             ),
           ),
           if (totalWorkouts > 0)
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 9,
-                vertical: 5,
+                horizontal: 10,
+                vertical: 6,
               ),
               decoration: BoxDecoration(
-                color: _Power.volt.withOpacity(0.14),
+                color: _P.greenSoft,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 '$completedCount/$totalWorkouts',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.2,
-                  height: 1,
-                  color: _Power.volt,
+                style: _T.number.copyWith(
+                  fontSize: 12,
+                  color: _P.greenDeep,
                 ),
               ),
             ),
-          const SizedBox(width: 8),
-          GestureDetector(
+          const SizedBox(width: _Sp.sm),
+          _Pressable(
             onTap: () async {
-              HapticFeedback.selectionClick();
               final nutrition = await _getNutritionProvider();
               if (!mounted) return;
               Navigator.push(
@@ -443,45 +563,24 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                 MaterialPageRoute(
                   builder: (_) => ChangeNotifierProvider.value(
                     value: nutrition,
-                    child: const FuelDashboardScreen(isDark: true),
+                    child: const FuelDashboardScreen(isDark: false),
                   ),
                 ),
               );
             },
+            scale: 0.9,
+            haptic: false,
             child: Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: _Power.ice.withOpacity(0.12),
+                color: _P.skySoft,
                 shape: BoxShape.circle,
-                boxShadow: _Power.softGlow(_Power.ice, strength: 0.2),
               ),
               child: const Icon(
-                Icons.bolt_rounded,
-                color: _Power.ice,
+                Icons.restaurant_rounded,
+                color: _P.skyDeep,
                 size: 18,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              _showMonthPicker(context);
-            },
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withOpacity(0.08)
-                    : Colors.black.withOpacity(0.05),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.calendar_month_rounded,
-                color: _Power.textPrimary(isDark),
-                size: 17,
               ),
             ),
           ),
@@ -493,20 +592,18 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   // =====================================================================
   // MONTH NAVIGATOR
   // =====================================================================
-
-  Widget _buildMonthNavigator(bool isDark) {
+  Widget _buildMonthNavigator() {
     const monthNames = [
       'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(_Sp.lg, _Sp.sm, _Sp.lg, _Sp.sm),
       child: Row(
         children: [
-          GestureDetector(
+          _Pressable(
             onTap: () {
-              HapticFeedback.selectionClick();
               setState(() {
                 _selectedMonth = DateTime(
                   _selectedMonth.year,
@@ -514,70 +611,62 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                 );
               });
             },
+            scale: 0.9,
+            haptic: false,
             child: Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: _Power.card(isDark),
-                borderRadius: BorderRadius.circular(11),
-                border: Border.all(
-                  color: _Power.separator(isDark),
-                  width: 0.5,
-                ),
+                color: _P.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _P.divider),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.chevron_left_rounded,
-                color: _Power.textSecondary(isDark),
+                color: _P.textMuted,
                 size: 20,
               ),
             ),
           ),
           Expanded(
-            child: GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                _showMonthPicker(context);
-              },
+            child: _Pressable(
+              onTap: () => _showMonthPicker(context),
+              scale: 0.98,
+              haptic: false,
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12),
+                margin: const EdgeInsets.symmetric(horizontal: _R.md),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 9,
+                  horizontal: _Sp.lg,
+                  vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: _Power.card(isDark),
-                  borderRadius: BorderRadius.circular(11),
-                  border: Border.all(
-                    color: _Power.separator(isDark),
-                    width: 0.5,
-                  ),
+                  color: _P.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _P.divider),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       '${monthNames[_selectedMonth.month - 1]} ${_selectedMonth.year}',
-                      style: TextStyle(
+                      style: _T.number.copyWith(
                         fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.2,
-                        color: _Power.textPrimary(isDark),
+                        color: _P.text,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_drop_down_rounded,
-                      color: _Power.textTertiary(isDark),
-                      size: 20,
+                    const SizedBox(width: _Sp.xs),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: _P.textSoft,
+                      size: 18,
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          GestureDetector(
+          _Pressable(
             onTap: () {
-              HapticFeedback.selectionClick();
               setState(() {
                 _selectedMonth = DateTime(
                   _selectedMonth.year,
@@ -585,20 +674,19 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                 );
               });
             },
+            scale: 0.9,
+            haptic: false,
             child: Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: _Power.card(isDark),
-                borderRadius: BorderRadius.circular(11),
-                border: Border.all(
-                  color: _Power.separator(isDark),
-                  width: 0.5,
-                ),
+                color: _P.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _P.divider),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.chevron_right_rounded,
-                color: _Power.textSecondary(isDark),
+                color: _P.textMuted,
                 size: 20,
               ),
             ),
@@ -611,32 +699,30 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   // =====================================================================
   // CALENDAR GRID
   // =====================================================================
-
-  Widget _buildCalendarGrid(bool isDark, List<WorkoutLog> monthLogs) {
+  Widget _buildCalendarGrid(List<WorkoutLog> monthLogs) {
     final daysInMonth = DateTime(
       _selectedMonth.year,
       _selectedMonth.month + 1,
       0,
     ).day;
-    final firstWeekday = DateTime(
-      _selectedMonth.year,
-      _selectedMonth.month,
-      1,
-    ).weekday;
+    final firstWeekday =
+        DateTime(_selectedMonth.year, _selectedMonth.month, 1).weekday;
 
     final Map<int, List<WorkoutLog>> logsByDay = {};
     for (final log in monthLogs) {
-      final day = log.date.day;
-      logsByDay[day] = [...logsByDay[day] ?? [], log];
+      logsByDay[log.date.day] = [...logsByDay[log.date.day] ?? [], log];
     }
 
-    const dayNames = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
+    const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     final today = DateTime.now();
-    final isCurrentMonth = _selectedMonth.year == today.year &&
-        _selectedMonth.month == today.month;
+    final isCurrentMonth =
+        _selectedMonth.year == today.year && _selectedMonth.month == today.month;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: _Sp.lg,
+        vertical: _Sp.xs,
+      ),
       child: Column(
         children: [
           Row(
@@ -645,18 +731,17 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                 child: Center(
                   child: Text(
                     day,
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      color: _Power.textTertiary(isDark),
-                      letterSpacing: 1.2,
+                    style: _T.overline.copyWith(
+                      fontSize: 10,
+                      letterSpacing: 0.8,
+                      color: _P.textSoft,
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: _Sp.sm),
           Expanded(
             child: GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
@@ -669,9 +754,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
               ),
               itemCount: firstWeekday - 1 + daysInMonth,
               itemBuilder: (context, index) {
-                if (index < firstWeekday - 1) {
-                  return const SizedBox();
-                }
+                if (index < firstWeekday - 1) return const SizedBox();
 
                 final day = index - (firstWeekday - 2);
                 final dayLogs = logsByDay[day] ?? [];
@@ -681,31 +764,25 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                     _selectedDate!.month == _selectedMonth.month &&
                     _selectedDate!.day == day;
 
-                final hasCompleted = dayLogs
-                    .any((l) => l.status == WorkoutDayStatus.completed);
+                final hasCompleted =
+                dayLogs.any((l) => l.status == WorkoutDayStatus.completed);
                 final hasSkipped =
                 dayLogs.any((l) => l.status == WorkoutDayStatus.skipped);
-
-                Color accent;
-                if (isSelected) {
-                  accent = _Power.volt;
-                } else if (isToday) {
-                  accent = _Power.volt;
-                } else if (hasCompleted && hasSkipped) {
-                  accent = _Power.magma;
-                } else if (hasCompleted) {
-                  accent = _Power.green;
-                } else if (hasSkipped) {
-                  accent = _Power.red;
-                } else {
-                  accent = _Power.textTertiary(isDark);
-                }
-
                 final hasLogs = dayLogs.isNotEmpty;
 
-                return GestureDetector(
+                Color statusColor;
+                if (hasCompleted && hasSkipped) {
+                  statusColor = _P.peachDeep;
+                } else if (hasCompleted) {
+                  statusColor = _P.greenDeep;
+                } else if (hasSkipped) {
+                  statusColor = _P.redDeep;
+                } else {
+                  statusColor = _P.textSoft;
+                }
+
+                return _Pressable(
                   onTap: () {
-                    HapticFeedback.selectionClick();
                     setState(() {
                       _selectedDate = DateTime(
                         _selectedMonth.year,
@@ -715,101 +792,66 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                       _openSheet();
                     });
                   },
+                  scale: 0.92,
+                  haptic: false,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? _Power.volt
+                          ? _P.peachSoft
                           : hasLogs
-                          ? accent.withOpacity(0.12)
-                          : _Power.card(isDark),
-                      borderRadius: BorderRadius.circular(11),
+                          ? statusColor.withOpacity(0.06)
+                          : _P.surface,
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
-                            ? _Power.volt
+                            ? _P.peachDeep
                             : isToday
-                            ? _Power.volt.withOpacity(0.6)
+                            ? _P.peachDeep.withOpacity(0.55)
                             : hasLogs
-                            ? accent.withOpacity(0.3)
-                            : _Power.separator(isDark),
-                        width: isToday && !isSelected ? 1.2 : 0.5,
+                            ? statusColor.withOpacity(0.20)
+                            : _P.divider,
+                        width: isToday && !isSelected ? 1.2 : 1,
                       ),
-                      boxShadow: isSelected
-                          ? _Power.softGlow(_Power.volt, strength: 0.4)
-                          : null,
                     ),
                     child: Stack(
                       children: [
                         Center(
                           child: Text(
                             '$day',
-                            style: TextStyle(
+                            style: _T.number.copyWith(
                               fontSize: 13,
-                              fontWeight: isToday || isSelected
-                                  ? FontWeight.w900
-                                  : FontWeight.w700,
-                              letterSpacing: -0.3,
-                              height: 1,
                               color: isSelected
-                                  ? Colors.white
+                                  ? _P.peachDeep
                                   : hasLogs
-                                  ? accent
-                                  : _Power.textPrimary(isDark),
+                                  ? statusColor
+                                  : _P.text,
                             ),
                           ),
                         ),
                         if (hasLogs)
                           Positioned(
-                            bottom: 4,
+                            bottom: 5,
                             left: 0,
                             right: 0,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  width: 5,
-                                  height: 5,
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 1),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : hasCompleted
-                                        ? _Power.green
-                                        : hasSkipped
-                                        ? _Power.red
-                                        : _Power.textTertiary(isDark),
-                                    shape: BoxShape.circle,
-                                  ),
+                                _dot(
+                                  isSelected
+                                      ? _P.peachDeep
+                                      : hasCompleted
+                                      ? _P.greenDeep
+                                      : hasSkipped
+                                      ? _P.redDeep
+                                      : _P.textSoft,
                                 ),
-                                if (dayLogs.length > 1)
-                                  Container(
-                                    width: 5,
-                                    height: 5,
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 1),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? Colors.white.withOpacity(0.7)
-                                          : dayLogs.length > 2
-                                          ? _Power.volt
-                                          : _Power.textTertiary(isDark),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                if (dayLogs.length > 2)
-                                  Container(
-                                    width: 5,
-                                    height: 5,
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 1),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? Colors.white.withOpacity(0.7)
-                                          : _Power.ice,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                                if (dayLogs.length > 1) ...[
+                                  const SizedBox(width: 3),
+                                  _dot(isSelected
+                                      ? _P.peachDeep.withOpacity(0.6)
+                                      : _P.textSoft),
+                                ],
                               ],
                             ),
                           ),
@@ -820,15 +862,15 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
               },
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: _Sp.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildLegendItem(isDark, _Power.green, 'ВЫПОЛНЕНО'),
-              const SizedBox(width: 12),
-              _buildLegendItem(isDark, _Power.red, 'ПРОПУЩЕНО'),
-              const SizedBox(width: 12),
-              _buildLegendItem(isDark, _Power.volt, 'НЕСКОЛЬКО'),
+              _buildLegendItem(_P.greenDeep, 'Выполнено'),
+              const SizedBox(width: _R.md),
+              _buildLegendItem(_P.redDeep, 'Пропущено'),
+              const SizedBox(width: _R.md),
+              _buildLegendItem(_P.peachDeep, 'Смешанный'),
             ],
           ),
         ],
@@ -836,28 +878,27 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildLegendItem(bool isDark, Color color, String label) {
+  Widget _dot(Color color) {
+    return Container(
+      width: 5,
+      height: 5,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            boxShadow: _Power.softGlow(color, strength: 0.4),
-          ),
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 5),
+        const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-            color: _Power.textTertiary(isDark),
-          ),
+          style: _T.caption.copyWith(fontSize: 11),
         ),
       ],
     );
@@ -866,8 +907,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   // =====================================================================
   // BOTTOM SHEET
   // =====================================================================
-
-  Widget _buildBottomSheet(bool isDark, FitnessProvider provider) {
+  Widget _buildBottomSheet(FitnessProvider provider) {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return AnimatedBuilder(
@@ -896,8 +936,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                     ? screenHeight * _sheetExpandedHeight
                     : screenHeight * _sheetCollapsedHeight);
 
-        _currentSheetHeight = animatedHeight;
-
         return Positioned(
           left: 0,
           right: 0,
@@ -905,25 +943,23 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
           child: Container(
             height: animatedHeight,
             decoration: BoxDecoration(
-              color: _Power.card(isDark),
+              color: _P.surface,
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
+                top: Radius.circular(_R.xxl),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.5 : 0.15),
-                  blurRadius: 40,
-                  offset: const Offset(0, -8),
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 30,
+                  offset: const Offset(0, -6),
                 ),
               ],
             ),
             child: Column(
               children: [
-                _buildDraggableHandle(isDark),
-                _buildSheetHeader(isDark),
-                Expanded(
-                  child: _buildSheetContent(isDark, provider),
-                ),
+                _buildDraggableHandle(),
+                _buildSheetHeader(),
+                Expanded(child: _buildSheetContent(provider)),
               ],
             ),
           ),
@@ -932,7 +968,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildDraggableHandle(bool isDark) {
+  Widget _buildDraggableHandle() {
     return GestureDetector(
       onVerticalDragStart: (details) {
         _dragStartY = details.globalPosition.dy;
@@ -941,8 +977,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
         _isAnimating = false;
       },
       onVerticalDragUpdate: (details) {
-        final delta = details.globalPosition.dy - _dragStartY;
-        _dragOffset = delta;
+        _dragOffset = details.globalPosition.dy - _dragStartY;
         setState(() {});
       },
       onVerticalDragEnd: (details) {
@@ -953,24 +988,19 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
         final currentHeight = _isSheetOpen
             ? screenHeight * _sheetExpandedHeight - _dragOffset
             : screenHeight * _sheetCollapsedHeight - _dragOffset;
-
         final midPoint = (screenHeight * _sheetCollapsedHeight +
             screenHeight * _sheetExpandedHeight) /
             2;
 
-        bool shouldOpen;
-        if (velocity.abs() > 300) {
-          shouldOpen = velocity < 0;
-        } else {
-          shouldOpen = currentHeight > midPoint;
-        }
+        final shouldOpen = velocity.abs() > 300
+            ? velocity < 0
+            : currentHeight > midPoint;
 
         if (shouldOpen) {
           _openSheet();
         } else {
           _closeSheet();
         }
-
         _dragOffset = 0;
         Future.delayed(const Duration(milliseconds: 500), () {
           _isAnimating = false;
@@ -979,31 +1009,25 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
       },
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        padding: const EdgeInsets.symmetric(
+          vertical: _Sp.md,
+          horizontal: _Sp.xl,
+        ),
         width: double.infinity,
         child: Column(
           children: [
             Container(
               width: 40,
-              height: 5,
+              height: 4,
               decoration: BoxDecoration(
-                color: _Power.textTertiary(isDark),
-                borderRadius: BorderRadius.circular(3),
+                color: _P.divider,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 6),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                _isSheetOpen ? 'СВЕРНУТЬ' : 'ПОТЯНИТЕ ВВЕРХ',
-                key: ValueKey(_isSheetOpen),
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.4,
-                  color: _Power.textTertiary(isDark),
-                ),
-              ),
+            Text(
+              _isSheetOpen ? 'Свернуть' : 'Потяните вверх',
+              style: _T.caption.copyWith(fontSize: 11),
             ),
           ],
         ),
@@ -1011,65 +1035,50 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildSheetHeader(bool isDark) {
+  Widget _buildSheetHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      padding: const EdgeInsets.fromLTRB(_Sp.xl, _Sp.xs, _Sp.xl, _Sp.sm),
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: _Power.volt.withOpacity(0.14),
+              color: _P.peachSoft,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: _Power.softGlow(_Power.volt, strength: 0.25),
             ),
             alignment: Alignment.center,
             child: const Icon(
               Icons.calendar_today_rounded,
-              color: _Power.volt,
-              size: 20,
+              color: _P.peachDeep,
+              size: 18,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: _R.md),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _selectedDate != null
-                      ? _formatDateFull(_selectedDate!).toUpperCase()
-                      : 'ВЫБЕРИТЕ ДЕНЬ',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.3,
-                    height: 1.1,
-                    color: _Power.textPrimary(isDark),
-                  ),
-                ),
-              ],
+            child: Text(
+              _selectedDate != null
+                  ? _formatDateFull(_selectedDate!)
+                  : 'Выберите день',
+              style: _T.headline,
             ),
           ),
           if (_isSheetOpen)
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                _closeSheet();
-              },
+            _Pressable(
+              onTap: _closeSheet,
+              scale: 0.9,
+              haptic: false,
               child: Container(
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.08)
-                      : Colors.black.withOpacity(0.05),
+                  color: _P.elevated,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.close_rounded,
-                  color: _Power.textPrimary(isDark),
-                  size: 18,
+                  color: _P.text,
+                  size: 16,
                 ),
               ),
             ),
@@ -1104,28 +1113,17 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     }
   }
 
-  Widget _buildSheetContent(bool isDark, FitnessProvider provider) {
+  Widget _buildSheetContent(FitnessProvider provider) {
     if (_selectedDate == null) {
-      return Center(
-        child: Text(
-          'Нажмите на день',
-          style: TextStyle(
-            color: _Power.textTertiary(isDark),
-            fontSize: 13,
-          ),
-        ),
-      );
+      return Center(child: Text('Нажмите на день', style: _T.caption));
     }
-
-    return _buildDayContent(isDark, provider, _selectedDate!);
+    return _buildDayContent(provider, _selectedDate!);
   }
 
   // =====================================================================
   // DAY CONTENT
   // =====================================================================
-
-  Widget _buildDayContent(
-      bool isDark, FitnessProvider provider, DateTime date) {
+  Widget _buildDayContent(FitnessProvider provider, DateTime date) {
     final logs = provider.getLogsForDate(date);
     final dayKey = 'stats_${date.year}_${date.month}_${date.day}';
 
@@ -1143,20 +1141,14 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
         p.date.day == date.day)
         .toList();
 
-    final hasWellbeing = dayWellbeing.isNotEmpty;
-    final hasPhotos = dayPhotos.isNotEmpty;
-
     return FutureBuilder<List<dynamic>>(
-      future: Future.wait([
-        _getDaySteps(dayKey),
-        _getNutritionProvider(),
-      ]),
+      future: Future.wait([_getDaySteps(dayKey), _getNutritionProvider()]),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(_Power.volt),
+              valueColor: AlwaysStoppedAnimation(_P.peachDeep),
             ),
           );
         }
@@ -1174,12 +1166,10 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
         final hasAnyData = logs.isNotEmpty ||
             steps > 0 ||
             nutritionSummary.entriesCount > 0 ||
-            hasWellbeing ||
-            hasPhotos;
+            dayWellbeing.isNotEmpty ||
+            dayPhotos.isNotEmpty;
 
-        if (!hasAnyData) {
-          return _buildEmptyDayState(isDark, date);
-        }
+        if (!hasAnyData) return _buildEmptyDayState(date);
 
         final totalExercises =
         logs.fold(0, (sum, l) => sum + l.exercisesLog.length);
@@ -1188,42 +1178,42 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
 
         final sections = <Widget>[];
 
-        sections.add(
-          _buildDaySummary(
-            isDark,
-            logs,
-            completedCount,
-            totalExercises,
-            steps,
-            distanceKm,
-            stepsCalories,
-            nutritionSummary,
-            nutritionGoals,
-            nutrition,
-          ),
-        );
+        sections.add(_buildDaySummary(
+          logs,
+          completedCount,
+          totalExercises,
+          steps,
+          distanceKm,
+          stepsCalories,
+          nutritionSummary,
+          nutritionGoals,
+          nutrition,
+        ));
 
-        if (hasWellbeing) {
-          sections.add(const SizedBox(height: 12));
-          sections.add(_buildDayWellbeingCard(isDark, dayWellbeing.first));
+        if (dayWellbeing.isNotEmpty) {
+          sections.add(const SizedBox(height: _R.md));
+          sections.add(_buildDayWellbeingCard(dayWellbeing.first));
         }
 
-        if (hasPhotos) {
-          sections.add(const SizedBox(height: 12));
-          sections.add(_buildDayPhotosGrid(isDark, dayPhotos));
+        if (dayPhotos.isNotEmpty) {
+          sections.add(const SizedBox(height: _R.md));
+          sections.add(_buildDayPhotosGrid(dayPhotos));
         }
 
         if (logs.isNotEmpty) {
-          sections.add(const SizedBox(height: 16));
-          sections.add(_buildSectionLabel(isDark, 'ТРЕНИРОВКИ', logs.length));
-          sections.add(const SizedBox(height: 8));
+          sections.add(const SizedBox(height: _Sp.lg));
+          sections.add(_buildSectionLabel('Тренировки', logs.length));
+          sections.add(const SizedBox(height: _Sp.sm));
           for (final log in logs) {
-            sections.add(_buildExpansionLogCard(isDark, log, provider));
+            sections.add(_buildLogCard(log, provider));
           }
         }
 
         return ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.symmetric(
+            horizontal: _Sp.lg,
+            vertical: _Sp.xs,
+          ),
           physics: const BouncingScrollPhysics(),
           children: sections,
         );
@@ -1231,44 +1221,20 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildSectionLabel(bool isDark, String label, int count) {
+  Widget _buildSectionLabel(String label, int count) {
     return Row(
       children: [
+        Text(label, style: _T.headline),
+        const SizedBox(width: _Sp.sm),
         Container(
-          width: 3,
-          height: 14,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: _Power.volt,
-            borderRadius: BorderRadius.circular(2),
-            boxShadow: _Power.softGlow(_Power.volt, strength: 0.6),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.8,
-            color: _Power.textPrimary(isDark),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: _Power.volt.withOpacity(0.14),
-            borderRadius: BorderRadius.circular(7),
+            color: _P.elevated,
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
             '$count',
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.2,
-              height: 1,
-              color: _Power.volt,
-            ),
+            style: _T.number.copyWith(fontSize: 11, color: _P.textMuted),
           ),
         ),
       ],
@@ -1278,78 +1244,45 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   // =====================================================================
   // EMPTY STATE
   // =====================================================================
-
-  Widget _buildEmptyDayState(bool isDark, DateTime date) {
-    final randomQuote = _emptyStateQuotes[date.day % _emptyStateQuotes.length];
-
-    return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 76,
-                height: 76,
-                decoration: BoxDecoration(
-                  color: _Power.volt.withOpacity(0.10),
-                  shape: BoxShape.circle,
-                  boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
-                ),
-                child: Center(
-                  child: Text(
-                    ['🌟', '💪', '🔥', '🏆', '⭐'][date.day % 5],
-                    style: const TextStyle(fontSize: 32),
-                  ),
-                ),
+  Widget _buildEmptyDayState(DateTime date) {
+    final quote = _emptyStateQuotes[date.day % _emptyStateQuotes.length];
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: _P.elevated,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 18),
-              const Text(
-                'НЕТ ДАННЫХ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2.2,
-                  color: _Power.volt,
-                ),
+              child: const Icon(
+                Icons.self_improvement_rounded,
+                size: 28,
+                color: _P.textSoft,
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Пустой день',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                  color: _Power.textPrimary(isDark),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                randomQuote,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.4,
-                  fontStyle: FontStyle.italic,
-                  color: _Power.textSecondary(isDark),
-                ),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: _R.lg),
+            Text('Пустой день', style: _T.title2.copyWith(fontSize: 18)),
+            const SizedBox(height: 6),
+            Text(
+              quote,
+              textAlign: TextAlign.center,
+              style: _T.caption.copyWith(height: 1.4),
+            ),
+          ],
         ),
       ),
     );
   }
 
   // =====================================================================
-  // WELLBEING CARD (без изменений)
+  // WELLBEING CARD
   // =====================================================================
-
-  Widget _buildDayWellbeingCard(bool isDark, WellbeingNote note) {
+  Widget _buildDayWellbeingCard(WellbeingNote note) {
     final energyEmoji = note.energyLevel >= 1 && note.energyLevel <= 10
         ? _moodEmojis[note.energyLevel - 1]
         : '🙂';
@@ -1362,21 +1295,12 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
         : '🙂';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(_Sp.lg),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _Power.green.withOpacity(0.10),
-            _Power.green.withOpacity(0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: _Power.green.withOpacity(0.25),
-          width: 0.8,
-        ),
+        color: _P.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _P.divider),
+        boxShadow: _P.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1384,91 +1308,62 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: _Power.green.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow:
-                  _Power.softGlow(_Power.green, strength: 0.2),
+                  color: _P.greenSoft,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
                   Icons.favorite_rounded,
-                  color: _Power.green,
-                  size: 16,
+                  color: _P.greenDeep,
+                  size: 14,
                 ),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'САМОЧУВСТВИЕ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.6,
-                  color: _Power.green,
-                ),
-              ),
+              Text('Самочувствие', style: _T.headline.copyWith(fontSize: 14)),
               const Spacer(),
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _Power.card2(isDark),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Text(
-                  '${note.date.hour}:${note.date.minute.toString().padLeft(2, '0')}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.2,
-                    color: _Power.textSecondary(isDark),
-                  ),
-                ),
+              Text(
+                '${note.date.hour}:${note.date.minute.toString().padLeft(2, '0')}',
+                style: _T.number.copyWith(fontSize: 11, color: _P.textMuted),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: _R.md),
           Row(
             children: [
-              _buildSmallMoodStat(
-                  energyEmoji, 'ЭНЕРГИЯ', note.energyLevel, isDark),
-              _buildSmallMoodStat(sleepEmoji, 'СОН', note.sleepQuality, isDark),
-              _buildSmallMoodStat(
-                  motivationEmoji, 'МОТИВ', note.motivationLevel, isDark),
+              _buildMoodStat(energyEmoji, 'Энергия', note.energyLevel),
+              _buildMoodStat(sleepEmoji, 'Сон', note.sleepQuality),
+              _buildMoodStat(motivationEmoji, 'Мотив', note.motivationLevel),
             ],
           ),
           if (note.painAreas.isNotEmpty &&
               !note.painAreas.contains('Нет болей')) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: _R.md),
             Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: _Sp.sm,
+              ),
               decoration: BoxDecoration(
-                color: _Power.volt.withOpacity(0.10),
+                color: _P.peachSoft,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _Power.volt.withOpacity(0.25),
-                  width: 0.6,
-                ),
               ),
               child: Row(
                 children: [
                   const Icon(
                     Icons.healing_rounded,
-                    color: _Power.volt,
+                    color: _P.peachDeep,
                     size: 14,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: _Sp.sm),
                   Expanded(
                     child: Text(
-                      'БОЛИ: ${note.painAreas.join(" • ").toUpperCase()}',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.6,
-                        color: _Power.volt,
+                      'Боли: ${note.painAreas.join(" · ")}',
+                      style: _T.caption.copyWith(
+                        color: _P.peachDeep,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -1478,32 +1373,14 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
           ],
           if (note.notes != null && note.notes!.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: _Power.card(isDark).withOpacity(0.6),
-                borderRadius: BorderRadius.circular(10),
+            Text(
+              note.notes!,
+              style: _T.caption.copyWith(
+                fontStyle: FontStyle.italic,
+                height: 1.4,
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('💭', style: TextStyle(fontSize: 12)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      note.notes!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        height: 1.4,
-                        color: _Power.textSecondary(isDark),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ],
@@ -1511,84 +1388,54 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildSmallMoodStat(
-      String emoji, String label, int value, bool isDark) {
+  Widget _buildMoodStat(String emoji, String label, int value) {
     final color = _getMoodColor(value);
     return Expanded(
       child: Column(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.14),
+              color: color.withOpacity(0.08),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: color.withOpacity(0.4),
-                width: 1,
-              ),
-              boxShadow: _Power.softGlow(color, strength: 0.2),
             ),
             alignment: Alignment.center,
-            child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            child: Text(emoji, style: const TextStyle(fontSize: 20)),
           ),
           const SizedBox(height: 6),
           Text(
             '$value/10',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.4,
-              height: 1,
-              color: color,
-            ),
+            style: _T.number.copyWith(fontSize: 13, color: color),
           ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.0,
-              color: _Power.textTertiary(isDark),
-            ),
-          ),
+          const SizedBox(height: 2),
+          Text(label, style: _T.caption.copyWith(fontSize: 11)),
         ],
       ),
     );
   }
 
   Color _getMoodColor(int value) {
-    if (value <= 3) return _Power.red;
-    if (value <= 5) return _Power.volt;
-    if (value <= 7) return _Power.plasma;
-    return _Power.green;
+    if (value <= 3) return _P.redDeep;
+    if (value <= 5) return _P.peachDeep;
+    if (value <= 7) return _P.lavenderDeep;
+    return _P.greenDeep;
   }
 
   // =====================================================================
-  // PHOTOS GRID (без изменений)
+  // PHOTOS GRID
   // =====================================================================
-
-  Widget _buildDayPhotosGrid(bool isDark, List<FitnessPhoto> photos) {
-    final displayPhotos = photos.take(4).toList();
-    final remainingCount = photos.length - displayPhotos.length;
+  Widget _buildDayPhotosGrid(List<FitnessPhoto> photos) {
+    final display = photos.take(4).toList();
+    final remaining = photos.length - display.length;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(_Sp.lg),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _Power.plasma.withOpacity(0.10),
-            _Power.plasma.withOpacity(0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: _Power.plasma.withOpacity(0.25),
-          width: 0.8,
-        ),
+        color: _P.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _P.divider),
+        boxShadow: _P.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1596,79 +1443,49 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: _Power.plasma.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow:
-                  _Power.softGlow(_Power.plasma, strength: 0.2),
+                  color: _P.lavenderSoft,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
                   Icons.photo_camera_rounded,
-                  color: _Power.plasma,
-                  size: 16,
+                  color: _P.lavenderDeep,
+                  size: 14,
                 ),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'ФОТО ДНЯ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.6,
-                  color: _Power.plasma,
-                ),
-              ),
+              Text('Фото дня', style: _T.headline.copyWith(fontSize: 14)),
               const Spacer(),
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _Power.plasma.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Text(
-                  '${photos.length}',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    height: 1,
-                    color: _Power.plasma,
-                  ),
-                ),
+              Text(
+                '${photos.length}',
+                style: _T.number.copyWith(fontSize: 12, color: _P.textMuted),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: _R.md),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: displayPhotos.length == 1 ? 1 : 2,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: displayPhotos.length == 1 ? 1.8 : 1.0,
+              crossAxisCount: display.length == 1 ? 1 : 2,
+              crossAxisSpacing: _Sp.sm,
+              mainAxisSpacing: _Sp.sm,
+              childAspectRatio: display.length == 1 ? 1.8 : 1.0,
             ),
-            itemCount: displayPhotos.length,
-            itemBuilder: (context, index) {
-              final photo = displayPhotos[index];
-              return _buildSmallPhotoTile(isDark, photo);
-            },
+            itemCount: display.length,
+            itemBuilder: (context, index) =>
+                _buildSmallPhotoTile(display[index]),
           ),
-          if (remainingCount > 0)
+          if (remaining > 0)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: _Sp.sm),
               child: Center(
                 child: Text(
-                  '+ ЕЩЁ $remainingCount',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.0,
-                    color: _Power.textTertiary(isDark),
-                  ),
+                  '+ ещё $remaining',
+                  style: _T.caption,
                 ),
               ),
             ),
@@ -1677,79 +1494,67 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildSmallPhotoTile(bool isDark, FitnessPhoto photo) {
+  Widget _buildSmallPhotoTile(FitnessPhoto photo) {
     final file = File(photo.imageUrl);
     final hasFile = file.existsSync();
 
-    return GestureDetector(
+    return _Pressable(
       onTap: () {
-        if (hasFile) {
-          _showFullScreenPhoto(context, file);
-        }
+        if (hasFile) _showFullScreenPhoto(context, file);
       },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _Power.separator(isDark),
-            width: 0.5,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              hasFile
-                  ? Image.file(file, fit: BoxFit.cover)
-                  : Container(
-                color: _Power.card2(isDark),
-                child: const Icon(
-                  Icons.broken_image_rounded,
-                  color: Colors.grey,
-                  size: 24,
-                ),
+      scale: 0.96,
+      haptic: false,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(_R.sm),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            hasFile
+                ? Image.file(file, fit: BoxFit.cover)
+                : Container(
+              color: _P.elevated,
+              child: const Icon(
+                Icons.broken_image_rounded,
+                color: _P.textSoft,
+                size: 24,
               ),
-              if (photo.label != null && photo.label!.isNotEmpty)
-                Positioned(
-                  bottom: 6,
-                  left: 6,
-                  right: 6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 3,
+            ),
+            if (photo.label != null && photo.label!.isNotEmpty)
+              Positioned(
+                bottom: 6,
+                left: 6,
+                right: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.55),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    photo.label!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.65),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      photo.label!.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.6,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 🆕 DAY SUMMARY — мультиметрики (кг / км / раунды / сек)
-  // ══════════════════════════════════════════════════════════════════
-
+  // =====================================================================
+  // DAY SUMMARY
+  // =====================================================================
   Widget _buildDaySummary(
-      bool isDark,
       List<WorkoutLog> logs,
       int completed,
       int totalExercises,
@@ -1763,34 +1568,25 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     final hasNutrition = nutrition.entriesCount > 0;
     final hasWorkouts = logs.isNotEmpty;
 
-    // 🆕 Суммируем все метрики по логам дня
     final totalKg = logs.fold<double>(0, (s, l) => s + l.metricValue('kg'));
     final totalKm = logs.fold<double>(0, (s, l) => s + l.metricValue('km'));
     final totalSec = logs.fold<double>(0, (s, l) => s + l.metricValue('sec'));
     final totalRounds =
     logs.fold<double>(0, (s, l) => s + l.metricValue('rounds'));
-
-    // 🆕 Выбираем «главную» метрику дня для замены единого «КГ»
     final dominant = _dominantDayMetric(
-        kg: totalKg, km: totalKm, sec: totalSec, rounds: totalRounds);
+      kg: totalKg,
+      km: totalKm,
+      sec: totalSec,
+      rounds: totalRounds,
+    );
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(_Sp.lg),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _Power.volt.withOpacity(0.10),
-            _Power.volt.withOpacity(0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: _Power.volt.withOpacity(0.25),
-          width: 0.8,
-        ),
-        boxShadow: _Power.softGlow(_Power.volt, strength: 0.08),
+        color: _P.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _P.divider),
+        boxShadow: _P.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1798,111 +1594,126 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: _Power.volt.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow:
-                  _Power.softGlow(_Power.volt, strength: 0.2),
+                  color: _P.peachSoft,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
                   Icons.insights_rounded,
-                  color: _Power.volt,
-                  size: 16,
+                  color: _P.peachDeep,
+                  size: 14,
                 ),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'СВОДКА ДНЯ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.6,
-                  color: _Power.volt,
-                ),
+              Text('Сводка дня', style: _T.headline.copyWith(fontSize: 14)),
+            ],
+          ),
+          const SizedBox(height: _R.md),
+          Row(
+            children: [
+              _buildSummaryItem(
+                Icons.directions_walk_rounded,
+                '$steps',
+                'шагов',
+                _P.skyDeep,
+              ),
+              _divider(),
+              _buildSummaryItem(
+                Icons.straighten_rounded,
+                distanceKm.toStringAsFixed(1),
+                'км',
+                _P.greenDeep,
+              ),
+              _divider(),
+              _buildSummaryItem(
+                Icons.local_fire_department_rounded,
+                '$calories',
+                'ккал',
+                _P.peachDeep,
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              _buildSummaryItem(isDark, '👟', '$steps', 'ШАГОВ', _Power.ice),
-              _summaryDivider(isDark),
-              _buildSummaryItem(
-                  isDark, '📏', distanceKm.toStringAsFixed(1), 'КМ', _Power.lime),
-              _summaryDivider(isDark),
-              _buildSummaryItem(
-                  isDark, '🔥', '$calories', 'ККАЛ', _Power.volt),
-            ],
-          ),
           if (hasWorkouts) ...[
-            const SizedBox(height: 14),
-            Container(height: 0.5, color: _Power.separator(isDark)),
-            const SizedBox(height: 14),
+            const SizedBox(height: _R.md),
+            Container(height: 0.5, color: _P.divider),
+            const SizedBox(height: _R.md),
             Row(
               children: [
                 _buildSummaryItem(
-                    isDark, '🏋️', '${logs.length}', 'ТРЕН.', _Power.volt),
-                _summaryDivider(isDark),
+                  Icons.fitness_center_rounded,
+                  '${logs.length}',
+                  'трен.',
+                  _P.lavenderDeep,
+                ),
+                _divider(),
                 _buildSummaryItem(
-                    isDark, '✅', '$completed', 'ГОТОВО', _Power.green),
-                _summaryDivider(isDark),
-                // 🆕 Мультиметрика вместо жёсткого «КГ»
+                  Icons.check_circle_rounded,
+                  '$completed',
+                  'готово',
+                  _P.greenDeep,
+                ),
+                _divider(),
                 _buildSummaryItem(
-                  isDark,
                   dominant.icon,
                   dominant.value,
                   dominant.label,
                   dominant.color,
                 ),
-                _summaryDivider(isDark),
+                _divider(),
                 _buildSummaryItem(
-                    isDark, '💪', '$totalExercises', 'УПР', _Power.magma),
+                  Icons.repeat_rounded,
+                  '$totalExercises',
+                  'упр',
+                  _P.peachDeep,
+                ),
               ],
             ),
           ],
           if (hasNutrition) ...[
-            const SizedBox(height: 14),
-            Container(height: 0.5, color: _Power.separator(isDark)),
-            const SizedBox(height: 14),
-            _buildCompactNutrition(isDark, nutrition, goals),
+            const SizedBox(height: _R.md),
+            Container(height: 0.5, color: _P.divider),
+            const SizedBox(height: _R.md),
+            _buildCompactNutrition(nutrition, goals),
             const SizedBox(height: 10),
-            GestureDetector(
+            _Pressable(
               onTap: () {
-                HapticFeedback.selectionClick();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => ChangeNotifierProvider.value(
                       value: nutritionProvider,
-                      child: const FuelDashboardScreen(isDark: true),
+                      child: const FuelDashboardScreen(isDark: false),
                     ),
                   ),
                 );
               },
+              scale: 0.98,
+              haptic: false,
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: _Power.ice.withOpacity(0.10),
+                  color: _P.skySoft,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'ПОДРОБНЕЕ О ПИТАНИИ',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                        color: _Power.ice,
+                      'Подробнее о питании',
+                      style: _T.caption.copyWith(
+                        color: _P.skyDeep,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(width: 4),
-                    Icon(Icons.arrow_forward_rounded,
-                        size: 14, color: _Power.ice),
+                    const SizedBox(width: _Sp.xs),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: _P.skyDeep,
+                    ),
                   ],
                 ),
               ),
@@ -1913,8 +1724,8 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  /// 🆕 Выбор доминирующей метрики дня (для замены единого «КГ»).
-  ({String icon, String value, String label, Color color}) _dominantDayMetric({
+  ({IconData icon, String value, String label, Color color})
+  _dominantDayMetric({
     required double kg,
     required double km,
     required double sec,
@@ -1922,55 +1733,50 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   }) {
     if (km > 0) {
       return (
-      icon: '📏',
+      icon: Icons.directions_run_rounded,
       value: km.toStringAsFixed(km >= 10 ? 0 : 2),
-      label: 'КМ',
-      color: _Power.ice,
+      label: 'км',
+      color: _P.skyDeep,
       );
     }
     if (rounds > 0) {
       return (
-      icon: '🥊',
+      icon: Icons.sports_mma_rounded,
       value: rounds.toStringAsFixed(0),
-      label: 'РАУНД',
-      color: _Power.volt,
+      label: 'раунд',
+      color: _P.peachDeep,
       );
     }
     if (kg > 0) {
       return (
-      icon: '📊',
+      icon: Icons.fitness_center_rounded,
       value: kg.toStringAsFixed(0),
-      label: 'КГ',
-      color: _Power.plasma,
+      label: 'кг',
+      color: _P.lavenderDeep,
       );
     }
     if (sec > 0) {
       return (
-      icon: '⏱️',
+      icon: Icons.timer_rounded,
       value: sec.toStringAsFixed(0),
-      label: 'СЕК',
-      color: _Power.lime,
+      label: 'сек',
+      color: _P.greenDeep,
       );
     }
     return (
-    icon: '📊',
+    icon: Icons.fitness_center_rounded,
     value: '0',
-    label: 'КГ',
-    color: _Power.plasma,
+    label: 'кг',
+    color: _P.textMuted,
     );
   }
 
-  Widget _summaryDivider(bool isDark) {
-    return Container(
-      width: 0.5,
-      height: 36,
-      color: _Power.separator(isDark),
-    );
+  Widget _divider() {
+    return Container(width: 0.5, height: 36, color: _P.divider);
   }
 
   Widget _buildSummaryItem(
-      bool isDark,
-      String emoji,
+      IconData icon,
       String value,
       String label,
       Color color,
@@ -1978,27 +1784,16 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     return Expanded(
       child: Column(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 18)),
+          Icon(icon, size: 18, color: color),
           const SizedBox(height: 6),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.4,
-              height: 1,
-              color: _Power.textPrimary(isDark),
-            ),
+            style: _T.number.copyWith(fontSize: 15, color: _P.text),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.0,
-              color: color,
-            ),
+            style: _T.caption.copyWith(fontSize: 10),
           ),
         ],
       ),
@@ -2006,7 +1801,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   }
 
   Widget _buildCompactNutrition(
-      bool isDark,
       DailyNutritionSummary summary,
       NutritionGoals goals,
       ) {
@@ -2029,9 +1823,9 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                 child: CircularProgressIndicator(
                   value: calPercent.clamp(0, 1),
                   strokeWidth: 6,
-                  backgroundColor: _Power.separator(isDark),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    calPercent > 1 ? _Power.magma : _Power.ice,
+                  backgroundColor: _P.elevated,
+                  valueColor: AlwaysStoppedAnimation(
+                    calPercent > 1 ? _P.peachDeep : _P.skyDeep,
                   ),
                 ),
               ),
@@ -2040,40 +1834,29 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                 children: [
                   Text(
                     '${summary.calories.round()}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                      height: 1,
-                      color: _Power.textPrimary(isDark),
-                    ),
+                    style: _T.number.copyWith(fontSize: 14),
                   ),
                   Text(
-                    'ККАЛ',
-                    style: TextStyle(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
-                      color: _Power.textTertiary(isDark),
-                    ),
+                    'ккал',
+                    style: _T.caption.copyWith(fontSize: 9),
                   ),
                 ],
               ),
             ],
           ),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: _R.md),
         Expanded(
           child: Column(
             children: [
               _buildSmallMacro(
-                  'Б', summary.protein, goals.protein, pPercent, _Power.lime),
+                  'Б', summary.protein, goals.protein, pPercent, _P.greenDeep),
               const SizedBox(height: 6),
               _buildSmallMacro(
-                  'Ж', summary.fat, goals.fat, fPercent, _Power.magma),
+                  'Ж', summary.fat, goals.fat, fPercent, _P.redDeep),
               const SizedBox(height: 6),
-              _buildSmallMacro(
-                  'У', summary.carbs, goals.carbs, cPercent, _Power.plasma),
+              _buildSmallMacro('У', summary.carbs, goals.carbs, cPercent,
+                  _P.peachDeep),
             ],
           ),
         ),
@@ -2096,8 +1879,8 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
             label,
             style: TextStyle(
               color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -2108,7 +1891,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
               Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: _Power.separator(false),
+                  color: _P.elevated,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -2129,133 +1912,88 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
         const SizedBox(width: 6),
         Text(
           '${current.round()}/${goal.round()}',
-          style: TextStyle(
-            color: color,
-            fontSize: 9,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.2,
-          ),
+          style: _T.number.copyWith(fontSize: 10, color: _P.textMuted),
         ),
       ],
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 🆕 EXPANSION LOG CARD — бейдж активности вместо «КГ»
-  // ══════════════════════════════════════════════════════════════════
-
-  Widget _buildExpansionLogCard(
-      bool isDark, WorkoutLog log, FitnessProvider provider) {
+  // =====================================================================
+  // LOG CARD — с превью первого упражнения
+  // =====================================================================
+  Widget _buildLogCard(WorkoutLog log, FitnessProvider provider) {
     final isCompleted = log.status == WorkoutDayStatus.completed;
     final cardKey = log.id;
-    final accent = isCompleted ? _Power.green : _Power.red;
+    final accent = isCompleted ? _P.greenDeep : _P.redDeep;
 
     _expandedCards.putIfAbsent(cardKey, () => false);
-
-    // 🆕 Бейдж главной метрики (кг / км / раунды)
-    final primaryBadge = _metricPrimaryBadge(log);
+    final primary = _metricPrimaryBadge(log);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: _Power.card(isDark),
+        color: _P.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _Power.separator(isDark),
-          width: 0.5,
-        ),
+        border: Border.all(color: _P.divider),
+        boxShadow: _P.cardShadow,
       ),
       child: Column(
         children: [
-          InkWell(
+          _Pressable(
             onTap: () {
-              HapticFeedback.selectionClick();
               setState(() {
                 _expandedCards[cardKey] = !(_expandedCards[cardKey] ?? false);
               });
             },
-            borderRadius: BorderRadius.circular(16),
+            scale: 0.99,
+            haptic: false,
             child: Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.all(_R.md),
               child: Row(
                 children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: accent.withOpacity(0.14),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow:
-                      _Power.softGlow(accent, strength: 0.2),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      isCompleted
-                          ? Icons.fitness_center_rounded
-                          : Icons.cancel_rounded,
-                      color: accent,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
+                  // 🆕 Превью первого упражнения (вместо generic-иконки)
+                  _buildLogCardLeading(log, provider, accent, isCompleted),
+                  const SizedBox(width: _R.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isCompleted ? 'ТРЕНИРОВКА' : 'ПРОПУЩЕНО',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                            height: 1,
-                            color: accent,
-                          ),
+                          isCompleted ? 'Тренировка' : 'Пропущено',
+                          style: _T.headline.copyWith(fontSize: 14),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
                             Text(
                               '${log.date.hour}:${log.date.minute.toString().padLeft(2, '0')}',
-                              style: TextStyle(
+                              style: _T.number.copyWith(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.3,
-                                height: 1,
-                                color: _Power.textPrimary(isDark),
+                                color: _P.textMuted,
                               ),
                             ),
                             if (isCompleted) ...[
-                              const SizedBox(width: 8),
-                              // 🆕 Бейдж главной метрики
+                              const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: primaryBadge.color
-                                      .withOpacity(0.14),
-                                  borderRadius: BorderRadius.circular(6),
+                                  color: primary.color.withOpacity(0.10),
+                                  borderRadius: BorderRadius.circular(5),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
-                                      primaryBadge.icon,
-                                      size: 9,
-                                      color: primaryBadge.color,
-                                    ),
+                                    Icon(primary.icon,
+                                        size: 10, color: primary.color),
                                     const SizedBox(width: 3),
                                     Text(
-                                      '${primaryBadge.value} ${primaryBadge.label}',
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.4,
-                                        height: 1,
-                                        color: primaryBadge.color,
+                                      '${primary.value} ${primary.label}',
+                                      style: _T.number.copyWith(
+                                        fontSize: 10,
+                                        color: primary.color,
                                       ),
                                     ),
                                   ],
@@ -2270,17 +2008,14 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: _Power.ice.withOpacity(0.14),
-                                  borderRadius: BorderRadius.circular(6),
+                                  color: _P.skySoft,
+                                  borderRadius: BorderRadius.circular(5),
                                 ),
                                 child: Text(
-                                  '${log.exercisesLog.length} УПР',
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.4,
-                                    height: 1,
-                                    color: _Power.ice,
+                                  '${log.exercisesLog.length} упр',
+                                  style: _T.number.copyWith(
+                                    fontSize: 10,
+                                    color: _P.skyDeep,
                                   ),
                                 ),
                               ),
@@ -2289,15 +2024,14 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                         ),
                         if (log.comment != null &&
                             log.comment!.isNotEmpty) ...[
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
                           Text(
                             log.comment!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: _T.caption.copyWith(
                               fontSize: 11,
                               fontStyle: FontStyle.italic,
-                              color: _Power.textSecondary(isDark),
                             ),
                           ),
                         ],
@@ -2307,9 +2041,9 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                   AnimatedRotation(
                     duration: const Duration(milliseconds: 300),
                     turns: (_expandedCards[cardKey] ?? false) ? 0.5 : 0,
-                    child: Icon(
+                    child: const Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: _Power.textTertiary(isDark),
+                      color: _P.textSoft,
                       size: 20,
                     ),
                   ),
@@ -2321,8 +2055,13 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
             duration: const Duration(milliseconds: 300),
             firstChild: const SizedBox.shrink(),
             secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: _buildExpandedContent(isDark, log, provider),
+              padding: const EdgeInsets.fromLTRB(
+                _R.md,
+                0,
+                _R.md,
+                _R.md,
+              ),
+              child: _buildExpandedContent(log, provider),
             ),
             crossFadeState: (_expandedCards[cardKey] ?? false)
                 ? CrossFadeState.showSecond
@@ -2333,54 +2072,70 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildExpandedContent(
-      bool isDark, WorkoutLog log, FitnessProvider provider) {
+  /// 🆕 Превью первого упражнения в заголовке карточки тренировки.
+  /// Если у лога есть упражнения — показываем thumbnail первого.
+  /// Иначе (пропущено / пусто) — иконку-заглушку.
+  Widget _buildLogCardLeading(
+      WorkoutLog log,
+      FitnessProvider provider,
+      Color accent,
+      bool isCompleted,
+      ) {
+    if (isCompleted && log.exercisesLog.isNotEmpty) {
+      final first = log.exercisesLog.first;
+      final exData = provider.exercises.firstWhere(
+            (e) => e.id == first.exerciseId,
+        orElse: () => Exercise(id: '', name: ''),
+      );
+      if (exData.id.isNotEmpty) {
+        return _buildExThumb(
+          exData.imageUrl,
+          size: 40,
+          radius: 11,
+          accent: accent,
+          fallbackEmoji: exData.exerciseType.emoji,
+        );
+      }
+    }
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        isCompleted ? Icons.fitness_center_rounded : Icons.cancel_rounded,
+        color: accent,
+        size: 18,
+      ),
+    );
+  }
+
+  Widget _buildExpandedContent(WorkoutLog log, FitnessProvider provider) {
     if (log.status != WorkoutDayStatus.completed) {
-      return _buildSkippedContent(isDark, log, provider);
+      return _buildSkippedContent(log, provider);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDetailedStats(isDark, log),
+        _buildDetailedStats(log),
         const SizedBox(height: 10),
-        // 🆕 Мультиметрики лога
-        _buildLogMetricsRow(isDark, log),
-        const SizedBox(height: 12),
+        _buildLogMetricsRow(log),
+        const SizedBox(height: _R.md),
         if (log.moodEnergy != null || log.moodNotes != null) ...[
-          _buildMoodSection(isDark, log),
-          const SizedBox(height: 12),
+          _buildMoodSection(log),
+          const SizedBox(height: _R.md),
         ],
         if (log.workoutPhotoPath != null &&
             File(log.workoutPhotoPath!).existsSync()) ...[
-          _buildWorkoutPhoto(isDark, log),
-          const SizedBox(height: 12),
+          _buildWorkoutPhoto(log),
+          const SizedBox(height: _R.md),
         ],
         if (log.exercisesLog.isNotEmpty) ...[
-          Row(
-            children: [
-              Container(
-                width: 3,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: _Power.volt,
-                  borderRadius: BorderRadius.circular(2),
-                  boxShadow:
-                  _Power.softGlow(_Power.volt, strength: 0.6),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'УПРАЖНЕНИЯ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.6,
-                  color: _Power.textPrimary(isDark),
-                ),
-              ),
-            ],
-          ),
+          Text('Упражнения', style: _T.headline.copyWith(fontSize: 13)),
           const SizedBox(height: 10),
           ...log.exercisesLog.asMap().entries.map((entry) {
             final exercise = entry.value;
@@ -2388,121 +2143,89 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                   (e) => e.id == exercise.exerciseId,
               orElse: () => Exercise(id: '', name: 'Удалено'),
             );
-            return _buildDetailedExerciseTile(
-                isDark, exercise, exerciseData, provider);
+            return _buildExerciseTile(exercise, exerciseData, provider);
           }),
         ],
         const SizedBox(height: 10),
-        _buildCommentField(isDark, log, provider),
+        _buildCommentField(log, provider),
       ],
     );
   }
 
-  Widget _buildSkippedContent(
-      bool isDark, WorkoutLog log, FitnessProvider provider) {
+  Widget _buildSkippedContent(WorkoutLog log, FitnessProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(_R.md),
           decoration: BoxDecoration(
-            color: _Power.plasma.withOpacity(0.10),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _Power.plasma.withOpacity(0.25),
-              width: 0.6,
-            ),
+            color: _P.elevated,
+            borderRadius: BorderRadius.circular(_R.sm),
           ),
           child: Row(
             children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: _Power.plasma.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.info_rounded,
-                  color: _Power.plasma,
-                  size: 14,
-                ),
+              const Icon(
+                Icons.info_outline_rounded,
+                color: _P.textMuted,
+                size: 16,
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Тренировка была пропущена',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: _Power.textPrimary(isDark),
-                  ),
+              Text(
+                'Тренировка была пропущена',
+                style: _T.body.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 10),
-        _buildCommentField(isDark, log, provider),
+        _buildCommentField(log, provider),
       ],
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 🆕 DETAILED STATS — 4-я карточка «АКТИВНОСТЬ» (динамическая)
-  // ══════════════════════════════════════════════════════════════════
-
-  Widget _buildDetailedStats(bool isDark, WorkoutLog log) {
+  // =====================================================================
+  // DETAILED STATS
+  // =====================================================================
+  Widget _buildDetailedStats(WorkoutLog log) {
     final duration = log.duration;
     final hours = duration?.inHours ?? 0;
     final minutes = duration?.inMinutes.remainder(60) ?? 0;
-
-    // 🆕 4-я карточка: доминирующая метрика лога
     final primary = _metricPrimaryBadge(log);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: _R.md),
       decoration: BoxDecoration(
-        color: _Power.card2(isDark),
-        borderRadius: BorderRadius.circular(14),
+        color: _P.elevated,
+        borderRadius: BorderRadius.circular(_R.md),
       ),
       child: Row(
         children: [
           _buildDetailStat(
-            isDark,
-            '⏱️',
+            Icons.timer_rounded,
             hours > 0 ? '${hours}ч ${minutes}м' : '${minutes}м',
-            'ВРЕМЯ',
-            _Power.ice,
+            'время',
+            _P.skyDeep,
           ),
-          _statDivider(isDark),
+          _statDivider(),
           _buildDetailStat(
-            isDark,
-            '📊',
+            Icons.speed_rounded,
             log.avgRpe != null ? log.avgRpe!.toStringAsFixed(1) : '--',
             'RPE',
-            _Power.plasma,
+            _P.lavenderDeep,
           ),
-          _statDivider(isDark),
+          _statDivider(),
           _buildDetailStat(
-            isDark,
-            '💪',
+            Icons.fitness_center_rounded,
             '${log.exercisesLog.length}',
-            'УПР',
-            _Power.lime,
+            'упр',
+            _P.greenDeep,
           ),
-          _statDivider(isDark),
-          // 🆕 Доминирующая метрика (кг / км / раунды / сек)
+          _statDivider(),
           _buildDetailStat(
-            isDark,
-            primary.icon == Icons.fitness_center_rounded
-                ? '🏋️'
-                : primary.icon == Icons.directions_run_rounded
-                ? '🏃'
-                : primary.icon == Icons.sports_mma_rounded
-                ? '🥊'
-                : '⏱️',
+            primary.icon,
             primary.value,
             primary.label,
             primary.color,
@@ -2512,17 +2235,12 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _statDivider(bool isDark) {
-    return Container(
-      width: 0.5,
-      height: 34,
-      color: _Power.separator(isDark),
-    );
+  Widget _statDivider() {
+    return Container(width: 0.5, height: 34, color: _P.divider);
   }
 
   Widget _buildDetailStat(
-      bool isDark,
-      String emoji,
+      IconData icon,
       String value,
       String label,
       Color color,
@@ -2530,35 +2248,23 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     return Expanded(
       child: Column(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 16)),
-          const SizedBox(height: 5),
+          Icon(icon, size: 16, color: color),
+          const SizedBox(height: 6),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.4,
-              height: 1,
-              color: _Power.textPrimary(isDark),
-            ),
+            style: _T.number.copyWith(fontSize: 13, color: _P.text),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.0,
-              color: color,
-            ),
+            style: _T.caption.copyWith(fontSize: 10),
           ),
         ],
       ),
     );
   }
 
-  /// 🆕 Ряд со ВСЕМИ непустыми метриками лога (кг / км / сек / раунды / удары / ккал / повторы).
-  Widget _buildLogMetricsRow(bool isDark, WorkoutLog log) {
+  Widget _buildLogMetricsRow(WorkoutLog log) {
     final badges = _metricBadges(log);
     if (badges.isEmpty) return const SizedBox.shrink();
 
@@ -2572,12 +2278,8 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
             vertical: 6,
           ),
           decoration: BoxDecoration(
-            color: b.color.withOpacity(0.10),
+            color: b.color.withOpacity(0.08),
             borderRadius: BorderRadius.circular(9),
-            border: Border.all(
-              color: b.color.withOpacity(0.25),
-              width: 0.6,
-            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -2586,23 +2288,14 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
               const SizedBox(width: 5),
               Text(
                 b.value,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.2,
-                  height: 1,
-                  color: b.color,
-                ),
+                style: _T.number.copyWith(fontSize: 12, color: b.color),
               ),
               const SizedBox(width: 3),
               Text(
                 b.label,
-                style: TextStyle(
-                  fontSize: 8,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.6,
-                  height: 1,
-                  color: b.color.withOpacity(0.85),
+                style: _T.caption.copyWith(
+                  fontSize: 10,
+                  color: b.color.withOpacity(0.8),
                 ),
               ),
             ],
@@ -2612,51 +2305,39 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 🆕 DETAILED EXERCISE TILE — format-aware чипы подходов
-  // ══════════════════════════════════════════════════════════════════
-
-  Widget _buildDetailedExerciseTile(
-      bool isDark,
+  // =====================================================================
+  // EXERCISE TILE
+  // =====================================================================
+  Widget _buildExerciseTile(
       WorkoutExercise exercise,
       Exercise exerciseData,
       FitnessProvider provider,
       ) {
-    final completedSets = exercise.sets
-        .where((s) => s.status == SetStatus.completed)
-        .toList();
+    final completedSets =
+    exercise.sets.where((s) => s.status == SetStatus.completed).toList();
     final accent = exerciseData.muscleGroups.isNotEmpty
         ? exerciseData.muscleGroups.first.color
-        : _Power.volt;
-
-    // 🆕 Резолвим формат для корректного отображения
+        : _P.peachDeep;
     final format = _resolveFormat(exercise, provider);
 
-    // 🆕 Чипы подходов — через formatSetForDisplay
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: _Sp.sm),
+      padding: const EdgeInsets.all(_R.md),
       decoration: BoxDecoration(
-        color: _Power.card2(isDark),
-        borderRadius: BorderRadius.circular(12),
+        color: _P.elevated,
+        borderRadius: BorderRadius.circular(_R.sm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: accent.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  exerciseData.exerciseType.emoji,
-                  style: const TextStyle(fontSize: 15),
-                ),
+              _buildExThumb(
+                exerciseData.imageUrl,
+                size: 32,
+                radius: 9,
+                accent: accent,
+                fallbackEmoji: exerciseData.exerciseType.emoji,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -2665,54 +2346,37 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                   children: [
                     Text(
                       exerciseData.name,
-                      style: TextStyle(
+                      style: _T.body.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2,
-                        color: _Power.textPrimary(isDark),
+                        fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
-                    // 🆕 Бейдж формата
+                    const SizedBox(height: 3),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 1,
+                        horizontal: 6,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: _Power.ice.withOpacity(0.14),
+                        color: _P.surface,
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Text(
                         '${format.emoji} ${format.shortName}',
-                        style: const TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.4,
-                          height: 1,
-                          color: _Power.ice,
-                        ),
+                        style: _T.caption.copyWith(fontSize: 10),
                       ),
                     ),
                   ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${completedSets.length} ПОДХ',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
-                      height: 1,
-                      color: _Power.textTertiary(isDark),
-                    ),
-                  ),
-                ],
+              Text(
+                '${completedSets.length} подх',
+                style: _T.number.copyWith(
+                  fontSize: 10,
+                  color: _P.textMuted,
+                ),
               ),
             ],
           ),
@@ -2722,32 +2386,22 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
               spacing: 6,
               runSpacing: 6,
               children: completedSets.map((set) {
-                // 🆕 Единый формат-зависимый рендер
-                final displayText = FitnessHelpers.formatSetForDisplay(
-                  set,
-                  format,
-                );
+                final displayText =
+                FitnessHelpers.formatSetForDisplay(set, format);
                 return Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: _Sp.sm,
+                    vertical: _Sp.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: _Power.card(isDark),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _Power.separator(isDark),
-                      width: 0.5,
-                    ),
+                    color: _P.surface,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     displayText,
-                    style: TextStyle(
+                    style: _T.number.copyWith(
                       fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.2,
-                      height: 1,
-                      color: _Power.textPrimary(isDark),
+                      color: _P.text,
                     ),
                   ),
                 );
@@ -2759,86 +2413,52 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildMoodSection(bool isDark, WorkoutLog log) {
+  Widget _buildMoodSection(WorkoutLog log) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(_R.md),
       decoration: BoxDecoration(
-        color: _Power.plasma.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: _Power.plasma.withOpacity(0.25),
-          width: 0.6,
-        ),
+        color: _P.lavenderSoft.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(_R.md),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: _Power.plasma.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.mood_rounded,
-                  color: _Power.plasma,
-                  size: 14,
-                ),
+              const Icon(
+                Icons.mood_rounded,
+                color: _P.lavenderDeep,
+                size: 14,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Text(
-                'НАСТРОЕНИЕ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.4,
-                  color: _Power.textPrimary(isDark),
+                'Настроение',
+                style: _T.caption.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _P.lavenderDeep,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: _R.md),
           Row(
             children: [
               if (log.moodEnergy != null)
-                _buildMoodChip(
-                    '⚡', 'ЭНЕРГИЯ', log.moodEnergy!, isDark),
+                _buildMoodChip('⚡', 'энергия', log.moodEnergy!),
               if (log.moodSleep != null)
-                _buildMoodChip('😴', 'СОН', log.moodSleep!, isDark),
+                _buildMoodChip('😴', 'сон', log.moodSleep!),
               if (log.moodMotivation != null)
-                _buildMoodChip(
-                    '🎯', 'МОТИВ', log.moodMotivation!, isDark),
+                _buildMoodChip('🎯', 'мотив', log.moodMotivation!),
             ],
           ),
           if (log.moodNotes != null && log.moodNotes!.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: _Power.card(isDark).withOpacity(0.6),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('💭', style: TextStyle(fontSize: 12)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      log.moodNotes!,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontStyle: FontStyle.italic,
-                        height: 1.4,
-                        color: _Power.textSecondary(isDark),
-                      ),
-                    ),
-                  ),
-                ],
+            Text(
+              log.moodNotes!,
+              style: _T.caption.copyWith(
+                fontStyle: FontStyle.italic,
+                height: 1.4,
               ),
             ),
           ],
@@ -2847,84 +2467,62 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildMoodChip(
-      String emoji, String label, int value, bool isDark) {
+  Widget _buildMoodChip(String emoji, String label, int value) {
     final color = _getMoodColor(value);
     return Expanded(
       child: Column(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.14),
+              color: color.withOpacity(0.10),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: color.withOpacity(0.4),
-                width: 1,
-              ),
             ),
             alignment: Alignment.center,
-            child: Text(emoji, style: const TextStyle(fontSize: 18)),
+            child: Text(emoji, style: const TextStyle(fontSize: 16)),
           ),
           const SizedBox(height: 5),
           Text(
             '$value/10',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.3,
-              height: 1,
-              color: color,
-            ),
+            style: _T.number.copyWith(fontSize: 12, color: color),
           ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.0,
-              color: _Power.textTertiary(isDark),
-            ),
-          ),
+          const SizedBox(height: 2),
+          Text(label, style: _T.caption.copyWith(fontSize: 10)),
         ],
       ),
     );
   }
 
-  Widget _buildWorkoutPhoto(bool isDark, WorkoutLog log) {
+  Widget _buildWorkoutPhoto(WorkoutLog log) {
     final file = File(log.workoutPhotoPath!);
 
-    return GestureDetector(
+    return _Pressable(
       onTap: () {
-        if (file.existsSync()) {
-          _showFullScreenPhoto(context, file);
-        }
+        if (file.existsSync()) _showFullScreenPhoto(context, file);
       },
+      scale: 0.98,
+      haptic: false,
       child: Container(
         height: 170,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: _Power.separator(isDark),
-            width: 0.5,
-          ),
+          borderRadius: BorderRadius.circular(_R.md),
+          border: Border.all(color: _P.divider),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(_R.md),
           child: Stack(
             fit: StackFit.expand,
             children: [
               file.existsSync()
                   ? Image.file(file, fit: BoxFit.cover)
                   : Container(
-                color: _Power.card2(isDark),
+                color: _P.elevated,
                 child: const Center(
                   child: Icon(
                     Icons.broken_image_rounded,
-                    color: Colors.grey,
-                    size: 40,
+                    color: _P.textSoft,
+                    size: 32,
                   ),
                 ),
               ),
@@ -2937,8 +2535,8 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.65),
-                    borderRadius: BorderRadius.circular(9),
+                    color: Colors.black.withOpacity(0.55),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -2950,12 +2548,11 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                       ),
                       SizedBox(width: 4),
                       Text(
-                        'ОТКРЫТЬ',
+                        'Открыть',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.8,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -2986,13 +2583,12 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                   ),
                 ),
                 Positioned(
-                  top: 8,
-                  left: 16,
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.pop(ctx);
-                    },
+                  top: _Sp.sm,
+                  left: _Sp.lg,
+                  child: _Pressable(
+                    onTap: () => Navigator.pop(ctx),
+                    scale: 0.9,
+                    haptic: false,
                     child: Container(
                       width: 36,
                       height: 36,
@@ -3016,58 +2612,41 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     );
   }
 
-  Widget _buildCommentField(
-      bool isDark, WorkoutLog log, FitnessProvider provider) {
+  Widget _buildCommentField(WorkoutLog log, FitnessProvider provider) {
     final isCompleted = log.status == WorkoutDayStatus.completed;
 
     return TextField(
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: _Power.textPrimary(isDark),
-      ),
+      style: _T.body.copyWith(fontSize: 13),
       maxLines: 2,
       decoration: InputDecoration(
-        hintText: isCompleted
-            ? 'Добавить комментарий…'
-            : 'Почему пропустили?',
-        hintStyle: TextStyle(
-          color: _Power.textTertiary(isDark),
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
+        hintText: isCompleted ? 'Добавить комментарий…' : 'Почему пропустили?',
+        hintStyle: _T.caption.copyWith(fontSize: 12),
         filled: true,
-        fillColor: _Power.card2(isDark),
+        fillColor: _P.elevated,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(_R.sm),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: _Power.separator(isDark),
-            width: 0.5,
-          ),
+          borderRadius: BorderRadius.circular(_R.sm),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: _Power.volt,
-            width: 1.5,
-          ),
+          borderRadius: BorderRadius.circular(_R.sm),
+          borderSide: const BorderSide(color: _P.peachDeep, width: 1.2),
         ),
-        contentPadding: const EdgeInsets.all(12),
-        prefixIcon: Icon(
+        contentPadding: const EdgeInsets.all(_R.md),
+        prefixIcon: const Icon(
           Icons.comment_rounded,
           size: 16,
-          color: _Power.textTertiary(isDark),
+          color: _P.textSoft,
         ),
       ),
       onSubmitted: (value) {
         if (value.isNotEmpty) {
           provider.updateLogComment(log.id, value);
           HapticFeedback.mediumImpact();
-          _showSnack('Комментарий сохранён', _Power.green, success: true);
+          _showSnack('Комментарий сохранён', success: true);
         }
       },
     );
@@ -3076,21 +2655,24 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   // =====================================================================
   // MONTH PICKER
   // =====================================================================
-
   void _showMonthPicker(BuildContext context) {
-    final isDark = widget.isDark;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) => Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          decoration: BoxDecoration(
-            color: _Power.card(isDark),
-            borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(28)),
+          padding: const EdgeInsets.fromLTRB(
+            _Sp.xl,
+            _R.md,
+            _Sp.xl,
+            _Sp.xxl,
+          ),
+          decoration: const BoxDecoration(
+            color: _P.surface,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(_R.xxl),
+            ),
           ),
           child: SafeArea(
             top: false,
@@ -3099,67 +2681,23 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
               children: [
                 Container(
                   width: 36,
-                  height: 5,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: _Power.textTertiary(isDark),
-                    borderRadius: BorderRadius.circular(3),
+                    color: _P.divider,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: _Sp.xl),
                 Row(
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: _Power.volt.withOpacity(0.14),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow:
-                        _Power.softGlow(_Power.volt, strength: 0.25),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.calendar_month_rounded,
-                        color: _Power.volt,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'ВЫБОР',
-                            style: TextStyle(
-                              color: _Power.volt,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2.2,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Месяц и год',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.6,
-                              height: 1.1,
-                              color: _Power.textPrimary(isDark),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    Text('Месяц и год', style: _T.title2),
                   ],
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: _R.lg),
                 Row(
                   children: [
-                    GestureDetector(
+                    _Pressable(
                       onTap: () {
-                        HapticFeedback.selectionClick();
                         setState(() {
                           _selectedMonth = DateTime(
                             _selectedMonth.year - 1,
@@ -3168,51 +2706,45 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                         });
                         setSheetState(() {});
                       },
+                      scale: 0.9,
+                      haptic: false,
                       child: Container(
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: _Power.card2(isDark),
+                          color: _P.elevated,
                           borderRadius: BorderRadius.circular(11),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.chevron_left_rounded,
-                          color: _Power.textSecondary(isDark),
+                          color: _P.textMuted,
                           size: 20,
                         ),
                       ),
                     ),
                     Expanded(
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 12),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: _R.md,
                         ),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: _Power.volt.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _Power.volt.withOpacity(0.3),
-                            width: 0.8,
-                          ),
+                          color: _P.peachSoft,
+                          borderRadius: BorderRadius.circular(_R.sm),
                         ),
                         child: Center(
                           child: Text(
                             '${_selectedMonth.year}',
-                            style: const TextStyle(
+                            style: _T.number.copyWith(
                               fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.8,
-                              height: 1,
-                              color: _Power.volt,
+                              color: _P.peachDeep,
                             ),
                           ),
                         ),
                       ),
                     ),
-                    GestureDetector(
+                    _Pressable(
                       onTap: () {
-                        HapticFeedback.selectionClick();
                         setState(() {
                           _selectedMonth = DateTime(
                             _selectedMonth.year + 1,
@@ -3221,37 +2753,39 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                         });
                         setSheetState(() {});
                       },
+                      scale: 0.9,
+                      haptic: false,
                       child: Container(
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: _Power.card2(isDark),
+                          color: _P.elevated,
                           borderRadius: BorderRadius.circular(11),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.chevron_right_rounded,
-                          color: _Power.textSecondary(isDark),
+                          color: _P.textMuted,
                           size: 20,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: _R.lg),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate:
                   const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 4,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
+                    crossAxisSpacing: _Sp.sm,
+                    mainAxisSpacing: _Sp.sm,
                     childAspectRatio: 1.4,
                   ),
                   itemCount: 12,
                   itemBuilder: (context, index) {
                     final month = index + 1;
-                    final monthNames = [
+                    const monthNames = [
                       'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн',
                       'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек',
                     ];
@@ -3259,102 +2793,64 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
                     final isCurrent = DateTime.now().month == month &&
                         DateTime.now().year == _selectedMonth.year;
 
-                    return GestureDetector(
+                    return _Pressable(
                       onTap: () {
-                        HapticFeedback.selectionClick();
                         setState(() {
                           _selectedMonth =
                               DateTime(_selectedMonth.year, month);
                         });
                         Navigator.pop(ctx);
                       },
+                      scale: 0.94,
+                      haptic: false,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? _Power.volt
+                              ? _P.peachDeep
                               : isCurrent
-                              ? _Power.volt.withOpacity(0.12)
-                              : _Power.card2(isDark),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSelected
-                                ? _Power.volt
-                                : _Power.separator(isDark),
-                            width: 0.6,
-                          ),
-                          boxShadow: isSelected
-                              ? _Power.softGlow(_Power.volt,
-                              strength: 0.35)
-                              : null,
+                              ? _P.peachSoft
+                              : _P.elevated,
+                          borderRadius: BorderRadius.circular(_R.sm),
                         ),
                         alignment: Alignment.center,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              monthNames[index].toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.6,
-                                color: isSelected
-                                    ? Colors.white
-                                    : _Power.textPrimary(isDark),
-                              ),
-                            ),
-                            if (isCurrent && !isSelected) ...[
-                              const SizedBox(height: 3),
-                              Container(
-                                width: 4,
-                                height: 4,
-                                decoration: const BoxDecoration(
-                                  color: _Power.volt,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ],
-                          ],
+                        child: Text(
+                          monthNames[index],
+                          style: _T.body.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? Colors.white : _P.text,
+                          ),
                         ),
                       ),
                     );
                   },
                 ),
-                const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() {
-                      _selectedMonth = DateTime.now();
-                    });
-                    Navigator.pop(ctx);
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: _Power.volt.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(14),
+                const SizedBox(height: _Sp.lg),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedMonth = DateTime.now();
+                      });
+                      Navigator.pop(ctx);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _P.peachSoft,
+                      foregroundColor: _P.peachDeep,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(_R.md),
+                      ),
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.today_rounded,
-                          size: 16,
-                          color: _Power.volt,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'СЕГОДНЯ',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                            color: _Power.volt,
-                          ),
-                        ),
-                      ],
+                    child: const Text(
+                      'Сегодня',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -3369,8 +2865,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
   // =====================================================================
   // HELPERS
   // =====================================================================
-
-  void _showSnack(String text, Color color, {bool success = false}) {
+  void _showSnack(String text, {bool success = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -3379,15 +2874,15 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
             if (success) ...[
               const Icon(Icons.check_circle_rounded,
                   color: Colors.white, size: 18),
-              const SizedBox(width: 8),
+              const SizedBox(width: _Sp.sm),
             ],
             Expanded(child: Text(text)),
           ],
         ),
-        backgroundColor: color,
+        backgroundColor: success ? _P.greenDeep : _P.redDeep,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(_R.md),
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -3425,24 +2920,14 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen>
     final isToday = date.day == now.day &&
         date.month == now.month &&
         date.year == now.year;
-
     if (isToday) return 'Сегодня';
 
     final yesterday = now.subtract(const Duration(days: 1));
     final isYesterday = date.day == yesterday.day &&
         date.month == yesterday.month &&
         date.year == yesterday.year;
-
     if (isYesterday) return 'Вчера';
 
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
-  String _formatDate(DateTime date) {
-    const months = [
-      'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
-      'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
-    ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }

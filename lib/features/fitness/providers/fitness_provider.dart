@@ -527,6 +527,7 @@ class FitnessProvider extends ChangeNotifier {
     String difficulty = 'medium',
     String goal = 'general',
     int sessionDurationMinutes = 60,
+    String? backgroundImage, // 🆕 Добавлен параметр
   }) async {
     final program = WorkoutProgram(
       id: _uuid.v4(),
@@ -538,6 +539,7 @@ class FitnessProvider extends ChangeNotifier {
       difficulty: difficulty,
       goal: goal,
       sessionDurationMinutes: sessionDurationMinutes,
+      backgroundImage: backgroundImage, // 🆕 Передаем в модель
     );
     await _db.insert('workout_programs', program.toMap());
 
@@ -577,8 +579,12 @@ class FitnessProvider extends ChangeNotifier {
     }
 
     final updatedProgram = program.copyWith(days: days);
-    await _db.update('workout_programs', updatedProgram.toMap(),
-        where: 'id = ?', whereArgs: [program.id]);
+    await _db.update(
+      'workout_programs',
+      updatedProgram.toMap(),
+      where: 'id = ?',
+      whereArgs: [program.id],
+    );
 
     _programs.insert(0, updatedProgram);
     notifyListeners();

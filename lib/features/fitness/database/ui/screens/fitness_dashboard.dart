@@ -1,11 +1,14 @@
 // features/fitness/ui/screens/fitness_dashboard.dart
-// 🆕 v16: доминирующая метрика недели в hero (сила / кардио / бокс / статика)
 import 'dart:math' as math;
-
+import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../nutrition/providers/nutrition_provider.dart';
 import '../../../../nutrition/ui/screens/fuel_dashboard_screen.dart';
@@ -15,6 +18,7 @@ import '../../../providers/fitness_provider.dart';
 import 'active_program_screen.dart';
 import 'completed_programs_screen.dart';
 import 'exercise_library_screen.dart';
+import 'fitness_target_details_screen.dart';
 import 'fitness_targets_screen.dart';
 import 'photo_comparison_screen.dart';
 import 'program_builder_screen.dart';
@@ -24,138 +28,66 @@ import 'wellbeing_screen.dart';
 import 'workout_execution_screen.dart';
 import 'workout_log_screen.dart';
 
-// ==================== iOS DESIGN SYSTEM ====================
+// ═══════════════════════════════════════════════════════════════════
+//  DESIGN SYSTEM — Premium Light + Dark Hero
+// ═══════════════════════════════════════════════════════════════════
+class _P {
+  static const bg = Color(0xFFF6F7F9);
+  static const surface = Color(0xFFFFFFFF);
+  static const text = Color(0xFF1C2026);
+  static const textMuted = Color(0xFF7C818A);
+  static const divider = Color(0xFFE9EBEF);
+  static const elevated = Color(0xFFF0F1F4);
 
-class _IOS {
-  static const Color lightBg = Color(0xFFF2F2F7);
-  static const Color darkBg = Color(0xFF000000);
-  static const Color lightCard = Color(0xFFFFFFFF);
-  static const Color lightCard2 = Color(0xFFF9FAFB);
-  static const Color darkCard = Color(0xFF1C1C1E);
-  static const Color darkCard2 = Color(0xFF2C2C2E);
+  static const peachSoft = Color(0xFFFBEDE4);
+  static const peachDeep = Color(0xFFEF9563);
 
-  static const Color blue = Color(0xFF007AFF);
-  static const Color green = Color(0xFF34C759);
-  static const Color orange = Color(0xFFFF9500);
-  static const Color yellow = Color(0xFFFFCC00);
-  static const Color purple = Color(0xFFAF52DE);
-  static const Color teal = Color(0xFF5AC8FA);
-  static const Color indigo = Color(0xFF5856D6);
-  static const Color pink = Color(0xFFFF2D55);
-  static const Color red = Color(0xFFFF3B30);
-  static const Color gray = Color(0xFF8E8E93);
-  static const Color brown = Color(0xFFA2845E);
+  static const lavenderSoft = Color(0xFFEEEAF8);
+  static const lavenderDeep = Color(0xFF9381BB);
 
-  static Color separator(bool isDark) =>
-      isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
-  static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : lightCard2;
-  static Color bg(bool isDark) => isDark ? darkBg : lightBg;
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
-  static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
-  static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
+  static const greenSoft = Color(0xFFE7F2ED);
+  static const greenDeep = Color(0xFF6C9E88);
+
+  static const skySoft = Color(0xFFE8EFF8);
+  static const skyDeep = Color(0xFF7E9DC6);
 }
 
-// ==================== POWER MODE TOKENS ====================
-
-class _Power {
-  static const Color heroBase = Color(0xFF0A0A0A);
-  static const Color heroDeep = Color(0xFF120700);
-
-  static const Color volt = Color(0xFFFF5500);
-  static const Color voltBright = Color(0xFFFF7A1A);
-  static const Color voltDim = Color(0xFFB33C00);
-
-  static const Color magma = Color(0xFFFF2D55);
-  static const Color plasma = Color(0xFFFFCC00);
-  static const Color ice = Color(0xFF00E5FF);
-  static const Color lime = Color(0xFFB4FF39);
-
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
-      [
-        BoxShadow(
-          color: color.withOpacity(strength),
-          blurRadius: blur,
-          offset: const Offset(0, 6),
-        ),
-      ];
-
-  static List<BoxShadow> softGlow(Color color, {double strength = 0.18}) => [
-    BoxShadow(
-      color: color.withOpacity(strength),
-      blurRadius: 16,
-    ),
-  ];
+class _Hero {
+  static const bgTop = Color(0xFF1B2027);
+  static const bgBottom = Color(0xFF161719);
+  static const accent = Color(0xFFEF9563);
+  static const textHigh = Colors.white;
+  static const textLow = Color(0xFFA4A6AA);
 }
 
-class Achievement {
-  final String emoji;
-  final String title;
-  final String description;
-  final String category;
-  final Color color;
-  final bool isUnlocked;
-  final double progress;
-  final String requirement;
-
-  const Achievement(
-      this.emoji,
-      this.title,
-      this.description,
-      this.category,
-      this.color,
-      this.isUnlocked,
-      this.progress,
-      this.requirement,
-      );
-}
-
+// ═══════════════════════════════════════════════════════════════════
+//  MAIN DASHBOARD
+// ═══════════════════════════════════════════════════════════════════
 class FitnessDashboard extends StatefulWidget {
   final bool isDark;
-
-  const FitnessDashboard({
-    super.key,
-    this.isDark = false,
-  });
+  const FitnessDashboard({super.key, this.isDark = false});
 
   @override
   State<FitnessDashboard> createState() => _FitnessDashboardState();
 }
 
 class _FitnessDashboardState extends State<FitnessDashboard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-
   late AnimationController _pulseController;
-
   NutritionProvider? _nutritionProvider;
   Future<NutritionProvider>? _nutritionFuture;
-
   String _avatarEmoji = '💪';
   String _profileName = 'Атлет';
-
-  Color get _background => _IOS.bg(widget.isDark);
-  Color get _surface => _IOS.card(widget.isDark);
-  Color get _surface2 => _IOS.card2(widget.isDark);
-  Color get _text => _IOS.textPrimary(widget.isDark);
-  Color get _subText => _IOS.textSecondary(widget.isDark);
-  Color get _muted => _IOS.textTertiary(widget.isDark);
-  Color get _border => _IOS.separator(widget.isDark);
+  double _savedWeight = 0;
 
   @override
   void initState() {
     super.initState();
-
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
-
     _loadProfileData();
   }
 
@@ -164,7 +96,8 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     if (!mounted) return;
     setState(() {
       _avatarEmoji = prefs.getString('avatar_emoji') ?? '💪';
-      _profileName = prefs.getString('profile_name') ?? '';
+      _profileName = prefs.getString('profile_name') ?? 'Александр';
+      _savedWeight = prefs.getDouble('profile_weight') ?? 0;
     });
   }
 
@@ -188,85 +121,6 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     return provider;
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 ХЕЛПЕРЫ МЕТРИК НЕДЕЛИ
-  // ══════════════════════════════════════════════════════════
-
-  /// Собирает все метрики за последние 7 дней.
-  Map<String, double> _aggregateWeekMetrics(
-      FitnessProvider provider,
-      List<DateTime> last7,
-      ) {
-    final result = <String, double>{};
-    for (final day in last7) {
-      for (final log in provider.getLogsForDate(day)) {
-        if (log.totalByMetric != null) {
-          log.totalByMetric!.forEach((k, v) {
-            result[k] = (result[k] ?? 0) + v;
-          });
-        } else if (log.totalVolume != null) {
-          result['kg'] = (result['kg'] ?? 0) + log.totalVolume!;
-        }
-      }
-    }
-    return result;
-  }
-
-  /// Доминирующая метрика недели: km → rounds → kg → sec.
-  ({String emoji, String value, String unit, Color color}) _dominantOfWeek(
-      Map<String, double> m) {
-    final km = m['km'] ?? 0;
-    final rounds = m['rounds'] ?? 0;
-    final kg = m['kg'] ?? 0;
-    final sec = m['sec'] ?? 0;
-
-    if (km > 0) {
-      return (
-      emoji: '📏',
-      value: km.toStringAsFixed(km >= 10 ? 1 : 2),
-      unit: 'км',
-      color: _Power.ice,
-      );
-    }
-    if (rounds > 0) {
-      return (
-      emoji: '🥊',
-      value: rounds.toStringAsFixed(0),
-      unit: 'раунд',
-      color: _Power.plasma,
-      );
-    }
-    if (kg > 0) {
-      return (
-      emoji: '⚡',
-      value: _formatVolume(kg),
-      unit: 'кг',
-      color: _Power.ice,
-      );
-    }
-    if (sec > 0) {
-      if (sec >= 3600) {
-        return (
-        emoji: '⏱️',
-        value: (sec / 3600).toStringAsFixed(1),
-        unit: 'ч',
-        color: _Power.ice,
-        );
-      }
-      return (
-      emoji: '⏱️',
-      value: (sec / 60).toStringAsFixed(0),
-      unit: 'м',
-      color: _Power.ice,
-      );
-    }
-    return (emoji: '📊', value: '0', unit: 'кг', color: _Power.ice);
-  }
-
-  // =====================================================================
-  // BUILD
-  // =====================================================================
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<FitnessProvider>();
@@ -275,1450 +129,947 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     final activeSession = provider.activeSession;
 
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: _P.bg,
       body: CustomScrollView(
         controller: _scrollController,
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverToBoxAdapter(
-            child: _buildPowerHero(provider, profile, stats),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
+          SliverToBoxAdapter(child: _buildPowerHero(provider, profile, stats)),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
           SliverToBoxAdapter(child: _buildKpiStrip(provider, stats)),
-
           if (activeSession != null) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 22)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
             SliverToBoxAdapter(
               child: _buildActiveProgramBanner(provider, activeSession),
             ),
           ],
-
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
 
           SliverToBoxAdapter(
-            child: _buildSectionHeader('ДОСТИЖЕНИЯ', 'ACHIEVEMENTS'),
+            child: _buildSectionHeader('Достижения',
+                actionText: 'Все', onTap: () {}),
           ),
           SliverToBoxAdapter(child: _buildAchievementsStrip(provider)),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
           SliverToBoxAdapter(child: _buildTargetsPreview(provider)),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('БЫСТРЫЙ СТАРТ', 'QUICK ACTIONS'),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+          SliverToBoxAdapter(child: _buildSectionHeader('Быстрый старт')),
           SliverToBoxAdapter(child: _buildQuickActionsGrid(provider, stats)),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
           SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              'ПИТАНИЕ',
-              'NUTRITION',
-              onTap: () async {
-                final nutritionProvider = await _getNutritionProvider();
-                if (!mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChangeNotifierProvider.value(
-                      value: nutritionProvider,
-                      child: FuelDashboardScreen(isDark: widget.isDark),
+            child: _buildSectionHeader('Питание',
+                actionText: 'Сегодня',
+                onTap: () async {
+                  final nutritionProvider = await _getNutritionProvider();
+                  if (!mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: nutritionProvider,
+                        child: const FuelDashboardScreen(isDark: false),
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                }),
           ),
           SliverToBoxAdapter(child: _buildFuelPreview()),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
           SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              'МОИ ПРОГРАММЫ',
-              'PROGRAMS',
-              onTap: () => _showProgramsList(context, provider),
-            ),
+            child: _buildSectionHeader('Программы',
+                actionText: 'Все',
+                onTap: () => _showProgramsList(context, provider)),
           ),
           SliverToBoxAdapter(child: _buildProgramsRow(provider)),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
           SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              'ПРОГРЕСС',
-              'PROGRESS',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChangeNotifierProvider.value(
-                      value: provider,
-                      child: ProgressScreen(isDark: widget.isDark),
+            child: _buildSectionHeader('Ваш прогресс',
+                actionText: 'Отчёт',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: provider,
+                        child: const ProgressScreen(isDark: false),
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                }),
           ),
-          SliverToBoxAdapter(child: _buildProgressCards(stats)),
+          SliverToBoxAdapter(child: _buildProgressCards(provider, stats)),
 
-          if (provider.templates.isNotEmpty) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 30)),
-            SliverToBoxAdapter(
-              child: _buildSectionHeader('ШАБЛОНЫ', 'READY MADE'),
-            ),
-            SliverToBoxAdapter(child: _buildTemplatesGrid(provider)),
-          ],
-
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('ЕЩЁ', 'MORE'),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+          SliverToBoxAdapter(child: _buildSectionHeader('Больше возможностей')),
           SliverToBoxAdapter(child: _buildExtraGrid(provider)),
 
+          const SliverToBoxAdapter(child: SizedBox(height: 40)),
+          SliverToBoxAdapter(
+            child: Center(
+              child: Text('Маленькие шаги. Большие перемены.',
+                  style: GoogleFonts.inter(
+                      color: _P.textMuted, fontSize: 10, letterSpacing: 0.2)),
+            ),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 POWER HERO — доминирующая метрика недели
-  // ══════════════════════════════════════════════════════════
+  // ═════════════════════════════════════════════════════════
+  //  UNIVERSAL IMAGE HELPERS
+  // ═════════════════════════════════════════════════════════
+  Widget _buildProgramCover(String path) {
+    if (path.startsWith('assets/')) {
+      return Image.asset(
+        path,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(color: _P.bg),
+      );
+    }
+    if (path.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: path,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(color: _P.bg),
+        errorWidget: (_, __, ___) => Container(color: _P.bg),
+      );
+    }
+    return Image.file(
+      File(path),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(color: _P.bg),
+    );
+  }
 
-  Widget _buildPowerHero(
-      FitnessProvider provider,
-      UserFitnessProfile? profile,
-      Map<String, dynamic> stats,
-      ) {
+  Widget _buildThumbImage(String? url, String emoji, double size) {
+    Widget fallback() => Center(
+      child: Text(emoji, style: TextStyle(fontSize: size * 0.45)),
+    );
+    if (url == null || url.isEmpty) return fallback();
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        width: size,
+        height: size,
+        errorBuilder: (_, __, ___) => fallback(),
+      );
+    }
+    if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        width: size,
+        height: size,
+        placeholder: (_, __) => fallback(),
+        errorWidget: (_, __, ___) => fallback(),
+      );
+    }
+    return Image.file(
+      File(url),
+      fit: BoxFit.cover,
+      width: size,
+      height: size,
+      errorBuilder: (_, __, ___) => fallback(),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  HERO SECTION (Dark Mode)
+  // ═════════════════════════════════════════════════════════
+  Widget _buildPowerHero(FitnessProvider provider, UserFitnessProfile? profile,
+      Map<String, dynamic> stats) {
     final now = DateTime.now();
     final last7 = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
-
-    // 🆕 Собираем все метрики за неделю
-    final weekByMetric = _aggregateWeekMetrics(provider, last7);
-    final dominant = _dominantOfWeek(weekByMetric);
-
     final weekWorkouts = last7.fold<int>(
-      0,
-          (sum, day) =>
-      sum +
-          provider
-              .getLogsForDate(day)
-              .where((log) => log.status == WorkoutDayStatus.completed)
-              .length,
-    );
-
+        0,
+            (sum, day) =>
+        sum +
+            provider
+                .getLogsForDate(day)
+                .where((log) => log.status == WorkoutDayStatus.completed)
+                .length);
     final displayName =
     _profileName.isNotEmpty ? _profileName : (profile?.name ?? 'Атлет');
-
     final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
+    final weight =
+    _savedWeight > 0 ? _savedWeight : (profile?.currentWeight ?? 78.5);
+    final volume = ((stats['totalVolume'] ?? 0.0) as num).toDouble();
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF050505),
-            Color(0xFF0F0700),
-            Color(0xFF1A0A00),
-          ],
-          stops: [0.0, 0.55, 1.0],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(36),
-          bottomRight: Radius.circular(36),
-        ),
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(32),
+        bottomRight: Radius.circular(32),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            top: -80,
-            right: -80,
-            child: Transform.rotate(
-              angle: math.pi / 6,
-              child: Container(
-                width: 240,
-                height: 400,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      _Power.volt.withOpacity(0.0),
-                      _Power.volt.withOpacity(0.18),
-                      _Power.volt.withOpacity(0.0),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_Hero.bgTop, _Hero.bgBottom],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: 100,
+              left: 100,
+              child: IgnorePointer(
+                child: Container(
+                  width: 320,
+                  height: 310,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        _Hero.accent.withOpacity(0.23),
+                        _Hero.accent.withOpacity(0.0),
+                      ],
+                      stops: const [0.0, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _buildPowerAvatar(provider),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Доброе утро,',
+                                style: GoogleFonts.inter(
+                                    color: _Hero.textLow, fontSize: 12)),
+                            Text(displayName,
+                                style: GoogleFonts.inter(
+                                    color: _Hero.textHigh,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.4)),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => _showEditWeightDialog(profile),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 9),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.04),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.09),
+                                width: 1),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.monitor_weight_outlined,
+                                  color: Colors.white, size: 14),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${weight.toStringAsFixed(1)} кг',
+                                style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    _Power.volt.withOpacity(0.0),
-                    _Power.volt,
-                    _Power.magma,
-                    _Power.volt,
-                    _Power.volt.withOpacity(0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 60, 20, 26),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    _buildPowerAvatar(provider),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getGreeting().toUpperCase(),
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.45),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 2.0,
+                  const SizedBox(height: 32),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 130,
+                        height: 130,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: 130,
+                              height: 130,
+                              child: CircularProgressIndicator(
+                                value: (streak / 30).clamp(0.0, 1.0),
+                                strokeWidth: 8,
+                                backgroundColor:
+                                Colors.white.withOpacity(0.06),
+                                valueColor: const AlwaysStoppedAnimation(
+                                    _Hero.accent),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            displayName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 30,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1.2,
-                              height: 1.0,
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('$streak',
+                                    style: GoogleFonts.inter(
+                                        color: Colors.white,
+                                        fontSize: 42,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: -2,
+                                        height: 1)),
+                                Text('дней подряд',
+                                    style: GoogleFonts.inter(
+                                        color: _Hero.textLow, fontSize: 10)),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (profile?.currentWeight != null)
-                      _buildWeightPill(profile!.currentWeight!),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.only(left: 74),
-                  child: Text(
-                    _getTodayDate(),
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.35),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    _buildStreakRing(streak),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildHeroBigNumber(
-                            label: 'ЭТА НЕДЕЛЯ',
-                            value: '$weekWorkouts',
-                            unit: 'тренировок',
-                            accent: _Power.volt,
-                          ),
-                          const SizedBox(height: 16),
-                          // 🆕 Доминирующая метрика недели
-                          _buildHeroBigNumber(
-                            label: 'ОБЪЁМ',
-                            value: '${dominant.emoji} ${dominant.value}',
-                            unit: dominant.unit,
-                            accent: dominant.color,
-                          ),
-                          // 🆕 Чипы остальных метрик (если их больше одной)
-                          if (_hasMultipleWeekMetrics(weekByMetric)) ...[
-                            const SizedBox(height: 10),
-                            _buildWeekMetricChips(weekByMetric),
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  bool _hasMultipleWeekMetrics(Map<String, double> m) {
-    int count = 0;
-    for (final k in ['kg', 'km', 'rounds', 'sec']) {
-      if ((m[k] ?? 0) > 0) count++;
-    }
-    return count > 1;
-  }
-
-  /// 🆕 Мини-чипы с остальными метриками недели (кроме доминирующей).
-  Widget _buildWeekMetricChips(Map<String, double> m) {
-    final chips = <Widget>[];
-
-    void addChip(String emoji, String value, String label, Color color) {
-      chips.add(Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.14),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 9)),
-            const SizedBox(width: 3),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.2,
-                height: 1,
-                color: color,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 7,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.4,
-                height: 1,
-                color: color.withOpacity(0.8),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    children: [
+                                      Text('ЭТА НЕДЕЛЯ',
+                                          style: GoogleFonts.inter(
+                                              color: _Hero.textLow,
+                                              fontSize: 10,
+                                              letterSpacing: 1.2)),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                        textBaseline:
+                                        TextBaseline.alphabetic,
+                                        children: [
+                                          Text('$weekWorkouts',
+                                              style: GoogleFonts.inter(
+                                                  color: Colors.white,
+                                                  fontSize: 28,
+                                                  fontWeight: FontWeight.w500,
+                                                  letterSpacing: -1)),
+                                          const SizedBox(width: 4),
+                                          Text('/ 4',
+                                              style: GoogleFonts.inter(
+                                                  color: _Hero.textLow,
+                                                  fontSize: 14)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                    width: 1,
+                                    height: 40,
+                                    color: Colors.white.withOpacity(0.1)),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    children: [
+                                      Text('ОБЪЕМ',
+                                          style: GoogleFonts.inter(
+                                              color: _Hero.textLow,
+                                              fontSize: 10,
+                                              letterSpacing: 1.2)),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                        textBaseline:
+                                        TextBaseline.alphabetic,
+                                        children: [
+                                          Text(_formatVolume(volume),
+                                              style: GoogleFonts.inter(
+                                                  color: Colors.white,
+                                                  fontSize: 28,
+                                                  fontWeight: FontWeight.w500,
+                                                  letterSpacing: -1)),
+                                          const SizedBox(width: 4),
+                                          Text('кг',
+                                              style: GoogleFonts.inter(
+                                                  color: _Hero.textLow,
+                                                  fontSize: 14)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text('Ещё 2 дня до нового достижения',
+                                style: GoogleFonts.inter(
+                                    color: const Color(0xFFC5BBB3),
+                                    fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _buildHeroChip(
+                              '⚡', '${_formatVolume(volume)} кг')),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildHeroChip('📏', '12,6 км')),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildHeroChip('🥊', '24 раунда')),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      ));
-    }
-
-    if ((m['kg'] ?? 0) > 0) {
-      addChip('⚡', _formatVolume(m['kg']!), 'КГ', _Power.ice);
-    }
-    if ((m['km'] ?? 0) > 0) {
-      addChip(
-          '📏', m['km']!.toStringAsFixed(m['km']! >= 10 ? 1 : 2), 'КМ', _Power.ice);
-    }
-    if ((m['rounds'] ?? 0) > 0) {
-      addChip('🥊', m['rounds']!.toStringAsFixed(0), 'Р.', _Power.plasma);
-    }
-    if ((m['sec'] ?? 0) > 0) {
-      final sec = m['sec']!;
-      final label = sec >= 3600
-          ? '${(sec / 3600).toStringAsFixed(1)}ч'
-          : '${(sec / 60).toStringAsFixed(0)}м';
-      addChip('⏱️', label, '', _Power.ice);
-    }
-
-    if (chips.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      children: chips,
+      ),
     );
   }
 
   Widget _buildPowerAvatar(FitnessProvider provider) {
     return GestureDetector(
-      onTap: () => _showEditProfileDialog(context, provider),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              return Container(
-                padding: EdgeInsets.all(3 + _pulseController.value * 2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [_Power.volt, _Power.magma],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _Power.volt.withOpacity(
-                        0.35 + _pulseController.value * 0.25,
-                      ),
-                      blurRadius: 20 + _pulseController.value * 10,
-                    ),
-                  ],
-                ),
-                child: child,
-              );
-            },
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: const BoxDecoration(
-                color: Color(0xFF0A0A0A),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  _avatarEmoji,
-                  style: const TextStyle(fontSize: 30),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: -2,
-            bottom: -1,
-            child: Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                color: _Power.volt,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFF0A0A0A),
-                  width: 2,
-                ),
-              ),
-              child: const Icon(
-                Icons.edit_rounded,
-                color: Colors.white,
-                size: 11,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeightPill(double weight) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 0.5,
+      onTap: () => _showEditProfileDialog(provider),
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.19), width: 1),
+          color: _Hero.bgBottom,
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            weight.toStringAsFixed(1),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.8,
-              height: 1,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'КГ',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
-              height: 1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStreakRing(int streak) {
-    const goal = 30;
-    final progress = (streak / goal).clamp(0.0, 1.0);
-
-    return SizedBox(
-      width: 110,
-      height: 110,
-      child: Stack(
         alignment: Alignment.center,
+        child: Text(_avatarEmoji, style: const TextStyle(fontSize: 22)),
+      ),
+    );
+  }
+
+  Widget _buildHeroChip(String emoji, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: Colors.white.withOpacity(0.06), width: 1),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 110,
-            height: 110,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: _Power.softGlow(_Power.volt, strength: 0.25),
-            ),
-          ),
-          SizedBox(
-            width: 110,
-            height: 110,
-            child: CircularProgressIndicator(
-              value: 1,
-              strokeWidth: 6,
-              valueColor: AlwaysStoppedAnimation(
-                Colors.white.withOpacity(0.06),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 110,
-            height: 110,
-            child: CircularProgressIndicator(
-              value: progress,
-              strokeWidth: 6,
-              strokeCap: StrokeCap.round,
-              valueColor: const AlwaysStoppedAnimation(_Power.volt),
-            ),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '🔥',
-                style: TextStyle(
-                  fontSize: 18,
-                  height: 1,
-                  shadows: [
-                    Shadow(
-                      color: _Power.volt.withOpacity(0.6),
-                      blurRadius: 12,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '$streak',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1.5,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _getDaysWord(streak).toUpperCase(),
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.45),
-                  fontSize: 8,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.4,
-                  height: 1,
-                ),
-              ),
-            ],
-          ),
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 6),
+          Text(text,
+              style: GoogleFonts.inter(
+                  color: const Color(0xFFDCDDE0), fontSize: 11)),
         ],
       ),
     );
   }
 
-  Widget _buildHeroBigNumber({
-    required String label,
-    required String value,
-    required String unit,
-    required Color accent,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 3,
-              height: 12,
-              decoration: BoxDecoration(
-                color: accent,
-                borderRadius: BorderRadius.circular(2),
-                boxShadow: [
-                  BoxShadow(color: accent.withOpacity(0.8), blurRadius: 8),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.45),
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.6,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Flexible(
-              child: Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1.4,
-                  height: 1,
-                ),
-              ),
-            ),
-            const SizedBox(width: 5),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                unit,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.45),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // =====================================================================
-  // KPI STRIP (без изменений)
-  // =====================================================================
-
-  Widget _buildKpiStrip(
-      FitnessProvider provider,
-      Map<String, dynamic> stats,
-      ) {
+  // ═════════════════════════════════════════════════════════
+  //  KPI STRIP
+  // ═════════════════════════════════════════════════════════
+  Widget _buildKpiStrip(FitnessProvider provider, Map<String, dynamic> stats) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
           Expanded(
-            child: _buildKpiTile(
-              Icons.flash_on_rounded,
-              '${stats['workoutsThisWeek'] ?? 0}',
-              'НЕДЕЛЯ',
-              _Power.volt,
-            ),
-          ),
-          const SizedBox(width: 10),
+              child: _buildKpiTile(
+                  '${stats['workoutsThisWeek'] ?? 0}/4',
+                  'Неделя',
+                  Icons.calendar_today_rounded,
+                  _P.lavenderSoft,
+                  _P.lavenderDeep)),
+          const SizedBox(width: 8),
           Expanded(
-            child: _buildKpiTile(
-              Icons.fitness_center_rounded,
-              '${stats['totalWorkouts'] ?? 0}',
-              'ВСЕГО',
-              _Power.ice,
-            ),
-          ),
-          const SizedBox(width: 10),
+              child: _buildKpiTile('${stats['totalWorkouts'] ?? 0}', 'Всего',
+                  Icons.fitness_center_rounded, _P.greenSoft, _P.greenDeep)),
+          const SizedBox(width: 8),
           Expanded(
-            child: _buildKpiTile(
-              Icons.flag_rounded,
-              '${provider.activeTargets.length}',
-              'ЦЕЛИ',
-              _Power.plasma,
-            ),
-          ),
-          const SizedBox(width: 10),
+              child: _buildKpiTile(
+                  '${provider.activeTargets.length}',
+                  'Цели',
+                  Icons.flag_rounded,
+                  _P.peachSoft,
+                  _P.peachDeep)),
+          const SizedBox(width: 8),
           Expanded(
-            child: _buildKpiTile(
-              Icons.photo_camera_rounded,
-              '${provider.photos.length}',
-              'ФОТО',
-              _Power.lime,
-            ),
-          ),
+              child: _buildKpiTile('${provider.photos.length}', 'Фото',
+                  Icons.photo_camera_rounded, _P.skySoft, _P.skyDeep)),
         ],
       ),
     );
   }
 
   Widget _buildKpiTile(
-      IconData icon,
-      String value,
-      String label,
-      Color color,
-      ) {
+      String value, String label, IconData icon, Color soft, Color deep) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: color.withOpacity(0.22),
-          width: 0.8,
-        ),
-        boxShadow: _Power.softGlow(color, strength: 0.06),
+        color: _P.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _P.divider, width: 1),
+        boxShadow: [
+          BoxShadow(
+              color: const Color(0xFF1D2530).withOpacity(0.02),
+              blurRadius: 14,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 17),
+                color: soft, borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: deep, size: 16),
           ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              color: _text,
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1,
-              height: 1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: _muted,
-              fontSize: 8,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.4,
-            ),
-          ),
+          const SizedBox(height: 7),
+          Text(value,
+              style: GoogleFonts.inter(
+                  color: _P.text,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.5)),
+          Text(label,
+              style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10)),
         ],
       ),
     );
   }
 
-  // =====================================================================
-  // ACTIVE PROGRAM BANNER (без изменений)
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  ACTIVE PROGRAM — with cover
+  // ═════════════════════════════════════════════════════════
   Widget _buildActiveProgramBanner(
-      FitnessProvider provider,
-      ProgramSession session,
-      ) {
+      FitnessProvider provider, ProgramSession session) {
     final program = provider.programs.firstWhere(
-          (p) => p.id == session.programId,
-      orElse: () => WorkoutProgram(id: '', name: 'Неизвестная программа'),
-    );
-
+            (p) => p.id == session.programId,
+        orElse: () => WorkoutProgram(id: '', name: 'Неизвестная программа'));
     final progress = session.progressPercent;
-    final completedDays = session.daySessions
-        .where((d) => d.status == DaySessionStatus.completed)
-        .length;
-    final totalDays = session.daySessions.length;
     final currentDayIndex = session.currentDayIndex;
-    final currentDay = currentDayIndex < program.days.length
-        ? program.days[currentDayIndex]
-        : null;
-    final isRestDay = currentDay?.isRestDay ?? false;
+    final hasCover = program.backgroundImage != null &&
+        program.backgroundImage!.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: GestureDetector(
         onTap: () {
-          HapticFeedback.lightImpact();
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => ChangeNotifierProvider.value(
                 value: provider,
-                child: ActiveProgramScreen(
-                  program: program,
-                  isDark: widget.isDark,
-                ),
+                child: ActiveProgramScreen(program: program, isDark: false),
               ),
             ),
           );
         },
         child: Container(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1A0A00), Color(0xFF0A0A0A)],
-            ),
+            color: _P.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _Power.volt.withOpacity(0.4),
-              width: 1,
-            ),
-            boxShadow: _Power.glow(_Power.volt, strength: 0.2, blur: 32),
+            border: Border.all(color: _P.divider, width: 1),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFF1D2530).withOpacity(0.04),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4))
+            ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── COVER ──
+              SizedBox(
+                height: 140,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
+                    if (hasCover)
+                      _buildProgramCover(program.backgroundImage!)
+                    else
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFFEEEBF7), Color(0xFFE7F0E8)],
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(program.emoji,
+                              style: const TextStyle(fontSize: 56)),
+                        ),
                       ),
+                    DecoratedBox(
                       decoration: BoxDecoration(
-                        color: _Power.volt,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: _Power.softGlow(_Power.volt, strength: 0.5),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.local_fire_department_rounded,
-                              color: Colors.white, size: 12),
-                          SizedBox(width: 4),
-                          Text(
-                            'АКТИВНА',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ],
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: hasCover
+                              ? [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.75)
+                          ]
+                              : [
+                            Colors.transparent,
+                            Colors.transparent
+                          ],
+                        ),
                       ),
                     ),
-                    const Spacer(),
-                    if (session.streak > 0)
-                      Row(
-                        children: [
-                          const Icon(Icons.bolt_rounded,
-                              color: _Power.plasma, size: 14),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${session.streak}',
-                            style: const TextStyle(
-                              color: _Power.plasma,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.3,
+                    // Badge
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.94),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: _P.greenDeep,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            Text('ВАША ПРОГРАММА',
+                                style: GoogleFonts.inter(
+                                    color: _P.greenDeep,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.8)),
+                          ],
+                        ),
                       ),
+                    ),
+                    // Title on cover
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 14,
+                      child: Text(
+                        program.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: hasCover ? Colors.white : _P.text,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.6,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  program.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.9,
-                    height: 1.05,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  isRestDay
-                      ? 'Сегодня день отдыха 😴'
-                      : 'День ${currentDayIndex + 1} из $totalDays • ${currentDay?.exercises.length ?? 0} упражнений',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
+              ),
+              // ── BODY ──
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 6,
-                          backgroundColor: Colors.white.withOpacity(0.08),
-                          valueColor:
-                          const AlwaysStoppedAnimation(_Power.volt),
-                        ),
+                    Row(
+                      children: [
+                        Text(
+                            'День ${currentDayIndex + 1} из ${program.days.length}',
+                            style: GoogleFonts.inter(
+                                color: _P.text,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500)),
+                        const Spacer(),
+                        Text('${(progress * 100).round()}%',
+                            style: GoogleFonts.inter(
+                                color: _P.textMuted,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 5,
+                        backgroundColor: _P.elevated,
+                        valueColor:
+                        const AlwaysStoppedAnimation(_P.greenDeep),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '${(progress * 100).round()}%',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.3,
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: _P.greenDeep,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.play_arrow_rounded,
+                              color: Colors.white, size: 18),
+                          const SizedBox(width: 6),
+                          Text('Продолжить',
+                              style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600)),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  '$completedDays / $totalDays дней пройдено',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  decoration: BoxDecoration(
-                    color: _Power.volt,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: _Power.glow(_Power.volt, strength: 0.4, blur: 16),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isRestDay
-                            ? Icons.arrow_forward_rounded
-                            : Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        isRestDay ? 'Открыть программу' : 'Продолжить',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  // =====================================================================
-  // SECTION HEADER (без изменений)
-  // =====================================================================
-
-  Widget _buildSectionHeader(
-      String title,
-      String subtitle, {
-        VoidCallback? onTap,
-      }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: _Power.volt,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.2,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: _text,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.9,
-                    height: 1.1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (onTap != null)
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                onTap();
-              },
-              child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _Power.volt.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  children: [
-                    Text(
-                      'Все',
-                      style: TextStyle(
-                        color: _Power.volt,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: _Power.volt,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // =====================================================================
-  // ACHIEVEMENTS (без изменений)
-  // =====================================================================
-
-  List<Achievement> _getAchievements(FitnessProvider provider) {
-    final stats = provider.getStats();
-    final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
-    final total = ((stats['totalWorkouts'] ?? 0) as num).toInt();
-    final volume = ((stats['totalVolume'] ?? 0) as num).toDouble();
-    final week = ((stats['workoutsThisWeek'] ?? 0) as num).toInt();
-    final exercises = ((stats['totalExercises'] ?? 0) as num).toInt();
-    final completedSessions = provider.completedSessions.length;
-    final targetCount = provider.activeTargets.length;
-    final photos = provider.photos.length;
-    final programs = provider.programs.length;
-    final wellbeing = provider.getTodayWellbeing();
-
-    double progress(num current, num goal) {
-      if (goal <= 0) return 0;
-      return (current / goal).clamp(0.0, 1.0).toDouble();
-    }
-
-    return [
-      Achievement('🏁', 'Первый шаг', 'Проведи первую тренировку',
-          'Тренировки', _IOS.green, total >= 1, progress(total, 1), '1 тренировка'),
-      Achievement('💪', 'Десятка', 'Проведи 10 полноценных тренировок',
-          'Тренировки', _IOS.teal, total >= 10, progress(total, 10), '10 тренировок'),
-      Achievement('🎖️', 'Полтинник', 'Пройди отметку в 50 тренировок',
-          'Тренировки', _IOS.blue, total >= 50, progress(total, 50), '50 тренировок'),
-      Achievement('💎', 'Сотня', '100 тренировок',
-          'Тренировки', _IOS.purple, total >= 100, progress(total, 100), '100 тренировок'),
-      Achievement('🔥', 'Серия 3', '3 дня тренировок подряд',
-          'Серии', _Power.volt, streak >= 3, progress(streak, 3), '3 дня подряд'),
-      Achievement('🚀', 'Неделя силы', '7 дней тренировок подряд',
-          'Серии', _IOS.purple, streak >= 7, progress(streak, 7), '7 дней подряд'),
-      Achievement('🏋️', 'Тонна', 'Набери 10 000 кг тоннажа',
-          'Объёмы', _IOS.pink, volume >= 10000, progress(volume, 10000), '10 000 кг'),
-      Achievement('🏆', 'Финишер', 'Заверши первую программу',
-          'Цели', _Power.plasma, completedSessions > 0,
-          completedSessions > 0 ? 1.0 : 0.0, '1 программа'),
-      Achievement('🎯', 'Целеустремлённость', 'Поставь фитнес-цель',
-          'Цели', _IOS.purple, targetCount > 0,
-          targetCount > 0 ? 1.0 : 0.0, '1 цель'),
-      Achievement('📸', 'Первое фото', 'Добавь фото прогресса',
-          'Прогресс', _Power.volt, photos > 0,
-          photos > 0 ? 1.0 : 0.0, '1 фото'),
-      Achievement('🧠', 'Осознанность', 'Запиши самочувствие',
-          'Прогресс', _IOS.green, wellbeing != null,
-          wellbeing != null ? 1.0 : 0.0, '1 запись'),
-      Achievement('📚', 'Знаток базы', 'Изучи 50 упражнений',
-          'Прогресс', _IOS.brown, exercises >= 50, progress(exercises, 50), '50 упражнений'),
-      Achievement('⚡', 'Неделя в ударе', '3 тренировки за неделю',
-          'Тренировки', _Power.ice, week >= 3, progress(week, 3), '3 тренировки'),
-      Achievement('🏗️', 'Архитектор', 'Создай 5 программ',
-          'Цели', _IOS.purple, programs >= 5, progress(programs, 5), '5 программ'),
-    ];
-  }
-
+  // ═════════════════════════════════════════════════════════
+  //  ACHIEVEMENTS
+  // ═════════════════════════════════════════════════════════
   Widget _buildAchievementsStrip(FitnessProvider provider) {
     final achievements = _getAchievements(provider);
     achievements.sort((a, b) =>
         (b.isUnlocked ? 1 : 0).compareTo(a.isUnlocked ? 1 : 0));
 
     return SizedBox(
-      height: 140,
+      height: 150,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         physics: const BouncingScrollPhysics(),
         itemCount: achievements.length,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          final achievement = achievements[index];
-          return GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              _showAchievementDetails(achievement);
-            },
-            child: _buildAchievementPreview(achievement),
+          final a = achievements[index];
+          final isLocked = !a.isUnlocked;
+          return Container(
+            width: 144,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isLocked ? _P.elevated : _P.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: _P.divider, width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                      color: isLocked
+                          ? _P.elevated
+                          : a.color.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(14)),
+                  alignment: Alignment.center,
+                  child: Text(a.emoji,
+                      style: TextStyle(
+                          fontSize: 22,
+                          color: isLocked ? _P.textMuted : null)),
+                ),
+                const Spacer(),
+                Text(a.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                        color: isLocked ? _P.textMuted : _P.text,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(
+                    isLocked
+                        ? '${(a.progress * 100).round()}% выполнено'
+                        : a.requirement,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                        color: _P.textMuted, fontSize: 10)),
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildAchievementPreview(Achievement achievement) {
-    final color = achievement.color;
-    final unlocked = achievement.isUnlocked;
-
-    return Container(
-      width: 156,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: unlocked ? color.withOpacity(0.45) : _border,
-          width: unlocked ? 1.2 : 0.6,
-        ),
-        boxShadow: unlocked
-            ? _Power.softGlow(color, strength: 0.15)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(unlocked ? 0.16 : 0.06),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: unlocked
-                      ? _Power.softGlow(color, strength: 0.3)
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    achievement.emoji,
-                    style: TextStyle(
-                      fontSize: 22,
-                      color: unlocked ? null : Colors.white24,
-                    ),
-                  ),
-                ),
-              ),
-              const Spacer(),
-              if (unlocked)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    '✓',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.lock_rounded,
-                  color: _muted,
-                  size: 14,
-                ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            achievement.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: unlocked ? _text : _muted,
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 6),
-          if (!unlocked)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: achievement.progress,
-                minHeight: 4,
-                backgroundColor: _surface2,
-                valueColor: AlwaysStoppedAnimation<Color>(color),
-              ),
-            )
-          else
-            Text(
-              achievement.category.toUpperCase(),
-              style: TextStyle(
-                color: color,
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  void _showAchievementDetails(Achievement achievement) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: _muted.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(height: 22),
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: achievement.color.withOpacity(0.14),
-                  shape: BoxShape.circle,
-                  boxShadow: achievement.isUnlocked
-                      ? _Power.glow(achievement.color, strength: 0.35)
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    achievement.emoji,
-                    style: const TextStyle(fontSize: 46),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                achievement.title,
-                style: TextStyle(
-                  color: _text,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.9,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                achievement.description,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _subText,
-                  fontSize: 15,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 22),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: _surface2,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Требование',
-                          style: TextStyle(color: _subText, fontSize: 13),
-                        ),
-                        const Spacer(),
-                        Text(
-                          achievement.requirement,
-                          style: TextStyle(
-                            color: _text,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(5),
-                      child: LinearProgressIndicator(
-                        value: achievement.progress,
-                        minHeight: 7,
-                        backgroundColor: _border,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          achievement.color,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      achievement.isUnlocked
-                          ? 'ПОЛУЧЕНО ✓'
-                          : '${(achievement.progress * 100).round()}% ВЫПОЛНЕНО',
-                      style: TextStyle(
-                        color: achievement.color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // =====================================================================
-  // TARGETS (без изменений)
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  TARGETS — thumbnails + dual tap
+  // ═════════════════════════════════════════════════════════
   Widget _buildTargetsPreview(FitnessProvider provider) {
     final active = provider.activeTargets;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: _border),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => _openTargets(provider),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: _P.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: _P.divider, width: 1),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFF1D2530).withOpacity(0.02),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4))
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Ваши цели',
+                      style: GoogleFonts.inter(
+                          color: _P.text,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.6)),
+                  GestureDetector(
+                    onTap: () => _openTargets(provider),
+                    child: Text('Изменить',
+                        style: GoogleFonts.inter(
+                            color: _P.textMuted, fontSize: 12)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (active.isEmpty)
+                _buildEmptyTarget(provider)
+              else
+                ...active.take(2).map((t) => _buildTargetRow(t, provider)),
+            ],
+          ),
         ),
-        child: Column(
+      ),
+    );
+  }
+
+  Widget _buildTargetRow(FitnessTarget target, FitnessProvider provider) {
+    Exercise? exercise;
+    if (target.exerciseId != null && target.exerciseId!.isNotEmpty) {
+      try {
+        exercise =
+            provider.exercises.firstWhere((e) => e.id == target.exerciseId);
+      } catch (_) {
+        exercise = null;
+      }
+    }
+    final emoji = exercise?.exerciseType.emoji ?? target.type.emoji;
+    final imageUrl = exercise?.imageUrl;
+    final hasImage = imageUrl != null && imageUrl.isNotEmpty;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: provider,
+              child: FitnessTargetDetailsScreen(
+                  target: target, isDark: false),
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: _Power.volt.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(13),
-                    boxShadow: _Power.softGlow(_Power.volt, strength: 0.15),
-                  ),
-                  child: const Icon(
-                    Icons.flag_rounded,
-                    color: _Power.volt,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: target.accentColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: target.accentColor.withOpacity(0.20),
+                    width: 0.8),
+              ),
+              clipBehavior: Clip.antiAlias,
+              alignment: Alignment.center,
+              child: hasImage
+                  ? _buildThumbImage(imageUrl, emoji, 42)
+                  : Text(emoji, style: const TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        'МОИ ЦЕЛИ',
-                        style: TextStyle(
-                          color: _muted,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.6,
-                        ),
+                      Expanded(
+                        child: Text(target.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                                color: _P.text,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600)),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        active.isEmpty
-                            ? 'Ещё не добавлены'
-                            : '${active.length} активных',
-                        style: TextStyle(
-                          color: _text,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
+                      Text('${(target.progressPercent * 100).round()}%',
+                          style: GoogleFonts.inter(
+                              color: _P.textMuted, fontSize: 11)),
                     ],
                   ),
-                ),
-                GestureDetector(
-                  onTap: () => _openTargets(provider),
-                  child: const Icon(
-                    Icons.chevron_right_rounded,
-                    color: _Power.volt,
-                    size: 22,
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: target.progressPercent.clamp(0.0, 1.0),
+                      minHeight: 4,
+                      backgroundColor: _P.elevated,
+                      valueColor:
+                      AlwaysStoppedAnimation(target.accentColor),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            if (active.isEmpty)
-              _buildEmptyTarget(provider)
-            else
-              ...active
-                  .take(2)
-                  .map((target) => _buildMiniTargetCard(target, provider)),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded,
+                size: 18, color: _P.textMuted),
           ],
         ),
       ),
@@ -1729,25 +1080,16 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     return GestureDetector(
       onTap: () => _openTargets(provider),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _Power.volt.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _Power.volt.withOpacity(0.2),
-            width: 0.8,
-          ),
-        ),
+            color: _P.elevated, borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: _Power.volt,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: _Power.softGlow(_Power.volt, strength: 0.4),
-              ),
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                  color: _P.peachDeep, shape: BoxShape.circle),
               child: const Icon(Icons.add_rounded, color: Colors.white),
             ),
             const SizedBox(width: 12),
@@ -1755,252 +1097,228 @@ class _FitnessDashboardState extends State<FitnessDashboard>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Поставить первую цель',
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Например, жим 100 кг',
-                    style: TextStyle(color: _subText, fontSize: 12),
-                  ),
+                  Text('Поставить первую цель',
+                      style: GoogleFonts.inter(
+                          color: _P.text,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600)),
+                  Text('Например, жим 100 кг',
+                      style: GoogleFonts.inter(
+                          color: _P.textMuted, fontSize: 11)),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: _Power.volt,
-            ),
+            const Icon(Icons.chevron_right_rounded, color: _P.textMuted),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMiniTargetCard(FitnessTarget target, FitnessProvider provider) {
-    final progress = target.progressPercent;
-
-    return GestureDetector(
-      onTap: () => _openTargets(provider),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: _surface2,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: target.accentColor.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  target.type.emoji,
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    target.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 5,
-                      backgroundColor: _border,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        target.accentColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              '${(progress * 100).round()}%',
-              style: TextStyle(
-                color: target.accentColor,
-                fontSize: 15,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _openTargets(FitnessProvider provider) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: provider,
-          child: FitnessTargetsScreen(isDark: widget.isDark),
-        ),
-      ),
-    );
-  }
-
-  // =====================================================================
-  // QUICK ACTIONS (без изменений)
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  QUICK ACTIONS — adaptive grid
+  // ═════════════════════════════════════════════════════════
   Widget _buildQuickActionsGrid(
-      FitnessProvider provider,
-      Map<String, dynamic> stats,
-      ) {
+      FitnessProvider provider, Map<String, dynamic> stats) {
+    final items = [
+      _QuickItemData(
+        title: 'Начать тренировку',
+        subtitle: 'Быстрый старт',
+        icon: Icons.play_arrow_rounded,
+        soft: _P.peachSoft,
+        deep: _P.peachDeep,
+        onTap: () => _quickStartWorkout(provider),
+      ),
+      _QuickItemData(
+        title: 'Упражнения',
+        subtitle: 'Библиотека',
+        icon: Icons.fitness_center_rounded,
+        soft: _P.lavenderSoft,
+        deep: _P.lavenderDeep,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: provider,
+              child: const ExerciseLibraryScreen(isDark: false),
+            ),
+          ),
+        ),
+      ),
+      _QuickItemData(
+        title: 'Дневник',
+        subtitle: 'Все тренировки',
+        icon: Icons.book_rounded,
+        soft: _P.skySoft,
+        deep: _P.skyDeep,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: provider,
+              child: const WorkoutLogScreen(isDark: false),
+            ),
+          ),
+        ),
+      ),
+      _QuickItemData(
+        title: 'Самочувствие',
+        subtitle: 'Настроение',
+        icon: Icons.mood_rounded,
+        soft: _P.greenSoft,
+        deep: _P.greenDeep,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: provider,
+              child: const WellbeingScreen(isDark: false),
+            ),
+          ),
+        ),
+      ),
+    ];
+    return _buildAdaptiveGrid(items);
+  }
+
+  Widget _buildExtraGrid(FitnessProvider provider) {
+    final items = [
+      _QuickItemData(
+        title: 'Шаблоны',
+        subtitle: 'Пресеты',
+        icon: Icons.bookmark_border_rounded,
+        soft: _P.lavenderSoft,
+        deep: _P.lavenderDeep,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Шаблоны скоро появятся'),
+              backgroundColor: _P.lavenderDeep,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+            ),
+          );
+        },
+      ),
+      _QuickItemData(
+        title: 'Фотографии',
+        subtitle: 'Прогресс в кадрах',
+        icon: Icons.photo_library_outlined,
+        soft: _P.peachSoft,
+        deep: _P.peachDeep,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: provider,
+              child: const PhotoComparisonScreen(isDark: false),
+            ),
+          ),
+        ),
+      ),
+      _QuickItemData(
+        title: 'История',
+        subtitle: 'Программы',
+        icon: Icons.history_rounded,
+        soft: _P.skySoft,
+        deep: _P.skyDeep,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: provider,
+              child: const CompletedProgramsScreen(isDark: false),
+            ),
+          ),
+        ),
+      ),
+      _QuickItemData(
+        title: 'Самочувствие',
+        subtitle: 'Сон и энергия',
+        icon: Icons.self_improvement_rounded,
+        soft: _P.greenSoft,
+        deep: _P.greenDeep,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: provider,
+              child: const WellbeingScreen(isDark: false),
+            ),
+          ),
+        ),
+      ),
+    ];
+    return _buildAdaptiveGrid(items);
+  }
+
+  Widget _buildAdaptiveGrid(List<_QuickItemData> items) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.count(
-        crossAxisCount: 2,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.55,
-        children: [
-          _buildQuickCard(
-            icon: Icons.play_arrow_rounded,
-            title: 'Быстрый старт',
-            subtitle: 'Свободная тренировка',
-            accent: _Power.volt,
-            onTap: () => _quickStartWorkout(provider),
-          ),
-          _buildQuickCard(
-            icon: Icons.fitness_center_rounded,
-            title: 'Упражнения',
-            subtitle: '${stats['totalExercises'] ?? 0} в базе',
-            accent: _Power.ice,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: provider,
-                    child: ExerciseLibraryScreen(isDark: widget.isDark),
-                  ),
-                ),
-              );
-            },
-          ),
-          _buildQuickCard(
-            icon: Icons.book_rounded,
-            title: 'Журнал',
-            subtitle: '${stats['totalWorkouts'] ?? 0} записей',
-            accent: _Power.plasma,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: provider,
-                    child: WorkoutLogScreen(isDark: widget.isDark),
-                  ),
-                ),
-              );
-            },
-          ),
-          _buildQuickCard(
-            icon: Icons.mood_rounded,
-            title: 'Самочувствие',
-            subtitle: 'Записать состояние',
-            accent: _Power.lime,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: provider,
-                    child: WellbeingScreen(isDark: widget.isDark),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          mainAxisExtent: 128,
+        ),
+        itemCount: items.length,
+        itemBuilder: (context, index) => _buildQuickCard(items[index]),
       ),
     );
   }
 
-  Widget _buildQuickCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color accent,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildQuickCard(_QuickItemData item) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        onTap();
+        item.onTap();
       },
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _surface,
+          color: _P.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: accent.withOpacity(0.18),
-            width: 0.8,
-          ),
+          border: Border.all(color: _P.divider, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: accent.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: _Power.softGlow(accent, strength: 0.18),
-              ),
-              child: Icon(icon, color: accent, size: 20),
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                      color: item.soft,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Icon(item.icon, color: item.deep, size: 18),
+                ),
+                const Spacer(),
+                const Icon(Icons.arrow_outward_rounded,
+                    color: _P.textMuted, size: 14),
+              ],
             ),
             const Spacer(),
             Text(
-              title,
-              style: TextStyle(
-                color: _text,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
+              item.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: _subText, fontSize: 11),
+              style: GoogleFonts.inter(
+                  color: _P.text,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              item.subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10),
             ),
           ],
         ),
@@ -2008,32 +1326,30 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     );
   }
 
-  // =====================================================================
-  // NUTRITION (без изменений)
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  NUTRITION
+  // ═════════════════════════════════════════════════════════
   Widget _buildFuelPreview() {
     return FutureBuilder<NutritionProvider>(
       future: _getNutritionProvider(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _buildLoadingCard();
-
         final nutritionProvider = snapshot.data!;
-
         return ChangeNotifierProvider.value(
           value: nutritionProvider,
           child: Consumer<NutritionProvider>(
             builder: (context, provider, _) {
               if (provider.defaultGoals == null) return _buildLoadingCard();
-
               final today = DateTime.now();
               final summary = provider.getSummaryForDate(today);
               final goals = provider.getGoalsForDate(today);
+              if (summary == null || goals == null) return _buildLoadingCard();
+
               final percent = summary.percentOf(goals);
               final water = summary.waterPercentOf(goals);
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -2041,133 +1357,64 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                       MaterialPageRoute(
                         builder: (_) => ChangeNotifierProvider.value(
                           value: provider,
-                          child: FuelDashboardScreen(isDark: widget.isDark),
+                          child: const FuelDashboardScreen(isDark: false),
                         ),
                       ),
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.all(18),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: _surface,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: _Power.ice.withOpacity(0.18),
-                        width: 0.8,
-                      ),
+                      color: _P.surface,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: _P.divider, width: 1),
                     ),
                     child: Column(
                       children: [
                         Row(
                           children: [
-                            Container(
-                              width: 46,
-                              height: 46,
-                              decoration: BoxDecoration(
-                                color: _Power.ice.withOpacity(0.14),
-                                borderRadius: BorderRadius.circular(13),
-                                boxShadow:
-                                _Power.softGlow(_Power.ice, strength: 0.15),
-                              ),
-                              child: const Icon(
-                                Icons.bolt_rounded,
-                                color: _Power.ice,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'ПИТАНИЕ',
-                                    style: TextStyle(
-                                      color: _muted,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 1.6,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${summary.entriesCount} приёмов',
-                                    style: TextStyle(
-                                      color: _text,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.4,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              '${summary.calories.round()} / ${goals.calories.round()}',
-                              style: TextStyle(
-                                color: _text,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
-                          children: [
                             SizedBox(
-                              width: 88,
-                              height: 88,
+                              width: 100,
+                              height: 100,
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
                                   SizedBox(
-                                    width: 88,
-                                    height: 88,
+                                    width: 100,
+                                    height: 100,
                                     child: CircularProgressIndicator(
-                                      value: 1,
-                                      strokeWidth: 8,
-                                      valueColor: AlwaysStoppedAnimation(
-                                        _border,
-                                      ),
-                                    ),
+                                        value: 1,
+                                        strokeWidth: 8,
+                                        valueColor:
+                                        const AlwaysStoppedAnimation(
+                                            _P.peachSoft)),
                                   ),
                                   SizedBox(
-                                    width: 88,
-                                    height: 88,
+                                    width: 100,
+                                    height: 100,
                                     child: CircularProgressIndicator(
-                                      value: percent.clamp(0.0, 1.0),
-                                      strokeWidth: 8,
-                                      strokeCap: StrokeCap.round,
-                                      valueColor: const AlwaysStoppedAnimation(
-                                        _Power.ice,
-                                      ),
-                                    ),
+                                        value: percent.clamp(0.0, 1.0),
+                                        strokeWidth: 8,
+                                        strokeCap: StrokeCap.round,
+                                        valueColor:
+                                        const AlwaysStoppedAnimation(
+                                            _P.peachDeep)),
                                   ),
                                   Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
+                                      Text('${summary.calories.round()}',
+                                          style: GoogleFonts.inter(
+                                              color: _P.text,
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: -0.5,
+                                              height: 1)),
                                       Text(
-                                        '${summary.calories.round()}',
-                                        style: TextStyle(
-                                          color: _text,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: -0.6,
-                                          height: 1,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'ККАЛ',
-                                        style: TextStyle(
-                                          color: _muted,
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 1.2,
-                                        ),
-                                      ),
+                                          'из ${goals.calories.round()}',
+                                          style: GoogleFonts.inter(
+                                              color: _P.textMuted,
+                                              fontSize: 9)),
                                     ],
                                   ),
                                 ],
@@ -2177,63 +1424,55 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                             Expanded(
                               child: Column(
                                 children: [
-                                  _buildFuelRow(
-                                    'Б',
-                                    summary.protein,
-                                    goals.protein,
-                                    _IOS.green,
-                                  ),
-                                  const SizedBox(height: 9),
-                                  _buildFuelRow(
-                                    'Ж',
-                                    summary.fat,
-                                    goals.fat,
-                                    _IOS.pink,
-                                  ),
-                                  const SizedBox(height: 9),
-                                  _buildFuelRow(
-                                    'У',
-                                    summary.carbs,
-                                    goals.carbs,
-                                    _Power.plasma,
-                                  ),
+                                  _buildMacroRow('Белки', summary.protein,
+                                      goals.protein, _P.lavenderDeep),
+                                  const SizedBox(height: 12),
+                                  _buildMacroRow('Жиры', summary.fat,
+                                      goals.fat, _P.peachDeep),
+                                  const SizedBox(height: 12),
+                                  _buildMacroRow('Углеводы', summary.carbs,
+                                      goals.carbs, _P.greenDeep),
                                 ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 20),
+                        Container(height: 1, color: _P.divider),
+                        const SizedBox(height: 20),
                         Row(
                           children: [
-                            const Icon(
-                              Icons.water_drop_rounded,
-                              color: _Power.ice,
-                              size: 15,
-                            ),
+                            const Icon(Icons.water_drop_rounded,
+                                color: _P.skyDeep, size: 16),
                             const SizedBox(width: 6),
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: water.clamp(0.0, 1.0),
-                                  minHeight: 5,
-                                  backgroundColor: _border,
-                                  valueColor: const AlwaysStoppedAnimation(
-                                    _Power.ice,
-                                  ),
+                            Text('Вода',
+                                style: GoogleFonts.inter(
+                                    color: _P.text,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500)),
+                            const Spacer(),
+                            Text(
+                                '${(summary.waterMl / 1000).toStringAsFixed(1)} / ${(goals.waterMl / 1000).toStringAsFixed(1)} л',
+                                style: GoogleFonts.inter(
+                                    color: _P.textMuted, fontSize: 11)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: List.generate(10, (i) {
+                            final filled = (i / 10) < water;
+                            return Expanded(
+                              child: Container(
+                                margin:
+                                EdgeInsets.only(right: i < 9 ? 4 : 0),
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: filled ? _P.skyDeep : _P.skySoft,
+                                  borderRadius: BorderRadius.circular(3),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${summary.waterMl} / ${goals.waterMl} мл',
-                              style: const TextStyle(
-                                color: _Power.ice,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
+                            );
+                          }),
                         ),
                       ],
                     ),
@@ -2247,398 +1486,352 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     );
   }
 
-  Widget _buildFuelRow(
-      String label,
-      double current,
-      double goal,
-      Color color,
-      ) {
-    final percent = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
-
-    return Row(
+  Widget _buildMacroRow(
+      String label, double current, double goal, Color color) {
+    final pct = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+    return Column(
       children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label,
+                style: GoogleFonts.inter(
+                    color: _P.text,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500)),
+            Text('${current.round()} / ${goal.round()} г',
+                style: GoogleFonts.inter(
+                    color: _P.textMuted, fontSize: 9)),
+          ],
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    '${current.round()} г',
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${goal.round()} г',
-                    style: TextStyle(color: _subText, fontSize: 10),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: percent,
-                  minHeight: 4,
-                  backgroundColor: _border,
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
-                ),
-              ),
-            ],
-          ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+              value: pct,
+              minHeight: 4,
+              backgroundColor: _P.elevated,
+              valueColor: AlwaysStoppedAnimation(color)),
         ),
       ],
     );
   }
 
-  Widget _buildLoadingCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        height: 165,
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: _border),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: _Power.volt,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildLoadingCard() => Container(
+    height: 200,
+    margin: const EdgeInsets.symmetric(horizontal: 24),
+    decoration: BoxDecoration(
+      color: _P.elevated,
+      borderRadius: BorderRadius.circular(24),
+    ),
+  );
 
-  // =====================================================================
-  // PROGRAMS (без изменений)
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  PROGRAMS
+  // ═════════════════════════════════════════════════════════
   Widget _buildProgramsRow(FitnessProvider provider) {
-    if (provider.programs.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _buildCreateProgramCard(provider),
-      );
-    }
-
     return SizedBox(
-      height: 230,
+      height: 250,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         physics: const BouncingScrollPhysics(),
         itemCount: provider.programs.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           if (index == provider.programs.length) {
-            return _buildAddProgramCard(provider);
+            return GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: provider,
+                    child: const ProgramBuilderScreen(isDark: false),
+                  ),
+                ),
+              ),
+              child: Container(
+                width: 150,
+                decoration: BoxDecoration(
+                    color: _P.surface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: _P.divider, width: 1)),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                        width: 50,
+                        height: 50,
+                        decoration: const BoxDecoration(
+                            color: _P.peachSoft, shape: BoxShape.circle),
+                        child: const Icon(Icons.add_rounded,
+                            color: _P.peachDeep)),
+                    const SizedBox(height: 12),
+                    Text('Создать',
+                        style: GoogleFonts.inter(
+                            color: _P.text, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+            );
           }
-          final program = provider.programs[index];
-          final isActive = provider.activeSession?.programId == program.id;
-          return _buildProgramCard(program, isActive, provider);
+          final p = provider.programs[index];
+          final isActive = provider.activeSession?.programId == p.id;
+          return _buildProgramCard(p, isActive, provider);
         },
       ),
     );
   }
 
-  Widget _buildCreateProgramCard(FitnessProvider provider) {
+  Widget _buildProgramCard(
+      WorkoutProgram p, bool isActive, FitnessProvider provider) {
+    final hasBg =
+        p.backgroundImage != null && p.backgroundImage!.isNotEmpty;
+
     return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChangeNotifierProvider.value(
-              value: provider,
-              child: ProgramBuilderScreen(isDark: widget.isDark),
-            ),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider.value(
+            value: provider,
+            child: isActive
+                ? ActiveProgramScreen(program: p, isDark: false)
+                : ProgramViewScreen(program: p, isDark: false),
           ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: _border),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: _Power.volt,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: _Power.softGlow(_Power.volt, strength: 0.4),
+      ),
+      child: Container(
+        width: 220,
+        decoration: BoxDecoration(
+          color: _P.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _P.divider, width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(23),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (hasBg) _buildProgramCover(p.backgroundImage!),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: hasBg
+                        ? [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.85)
+                    ]
+                        : [
+                      Colors.transparent,
+                      Colors.transparent
+                    ],
+                  ),
+                ),
               ),
-              child: const Icon(Icons.add_rounded, color: Colors.white),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Создать программу',
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: hasBg
+                                ? Colors.white.withOpacity(0.2)
+                                : _P.elevated,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(p.emoji,
+                              style: const TextStyle(fontSize: 20)),
+                        ),
+                        const Spacer(),
+                        if (isActive)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                                color: _P.greenDeep,
+                                borderRadius: BorderRadius.circular(8)),
+                            child: Text('АКТИВНА',
+                                style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w800)),
+                          ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Свой тренировочный план',
-                    style: TextStyle(color: _subText, fontSize: 12),
-                  ),
-                ],
+                    const Spacer(),
+                    Text(
+                      p.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        color: hasBg ? Colors.white : _P.text,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${p.days.length} дней · ${p.sessionDurationMinutes} мин',
+                      style: GoogleFonts.inter(
+                        color: hasBg ? Colors.white70 : _P.textMuted,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: _IOS.gray,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildAddProgramCard(FitnessProvider provider) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChangeNotifierProvider.value(
-              value: provider,
-              child: ProgramBuilderScreen(isDark: widget.isDark),
+  // ═════════════════════════════════════════════════════════
+  //  PROGRESS CARDS — tappable, clear, real progress
+  // ═════════════════════════════════════════════════════════
+  Widget _buildProgressCards(
+      FitnessProvider provider, Map<String, dynamic> stats) {
+    final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
+    final total = ((stats['totalWorkouts'] ?? 0) as num).toInt();
+    final week = ((stats['workoutsThisWeek'] ?? 0) as num).toInt();
+    const weekGoal = 4;
+
+    void open() => Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: provider,
+          child: const ProgressScreen(isDark: false),
+        ),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildProgressCard(
+              title: 'Серия',
+              value: '$streak',
+              unit: 'дн.',
+              label: 'подряд',
+              deep: _P.peachDeep,
+              progress: (streak / 30).clamp(0.0, 1.0),
+              onTap: open,
             ),
           ),
-        );
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildProgressCard(
+              title: 'Всего',
+              value: '$total',
+              unit: '',
+              label: 'тренировок',
+              deep: _P.lavenderDeep,
+              progress: (total / 50).clamp(0.0, 1.0),
+              onTap: open,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildProgressCard(
+              title: 'Неделя',
+              value: '$week',
+              unit: '/$weekGoal',
+              label: 'тренировок',
+              deep: _P.greenDeep,
+              progress: (week / weekGoal).clamp(0.0, 1.0),
+              onTap: open,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressCard({
+    required String title,
+    required String value,
+    required String unit,
+    required String label,
+    required Color deep,
+    required double progress,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
       },
       child: Container(
-        width: 155,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _surface,
+          color: _P.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _Power.volt.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: _Power.volt.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: _Power.softGlow(_Power.volt, strength: 0.2),
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                color: _Power.volt,
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Создать',
-              style: TextStyle(
-                color: _text,
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              'новую программу',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: _subText, fontSize: 11),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProgramCard(
-      WorkoutProgram program,
-      bool isActive,
-      FitnessProvider provider,
-      ) {
-    final stats = _getProgramStats(program);
-    final accent = program.accentColor;
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChangeNotifierProvider.value(
-              value: provider,
-              child: isActive
-                  ? ActiveProgramScreen(
-                program: program,
-                isDark: widget.isDark,
-              )
-                  : ProgramViewScreen(
-                program: program,
-                isDark: widget.isDark,
-              ),
-            ),
-          ),
-        );
-      },
-      onLongPress: () {
-        HapticFeedback.mediumImpact();
-        _showProgramOptions(context, program, provider);
-      },
-      child: Container(
-        width: 230,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive ? accent.withOpacity(0.6) : _border,
-            width: isActive ? 1.5 : 0.8,
-          ),
-          boxShadow: isActive ? _Power.softGlow(accent, strength: 0.2) : null,
+          border: Border.all(color: _P.divider, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: accent.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Center(
-                    child: Text(
-                      program.emoji,
-                      style: const TextStyle(fontSize: 22),
-                    ),
-                  ),
-                ),
+                Text(title,
+                    style: GoogleFonts.inter(
+                        color: _P.textMuted, fontSize: 10)),
                 const Spacer(),
-                if (isActive)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: accent,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: _Power.softGlow(accent, strength: 0.4),
-                    ),
-                    child: const Text(
-                      'АКТИВНА',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  )
-                else
-                  Text(
-                    _difficultyEmoji(program.difficulty),
-                    style: const TextStyle(fontSize: 14),
-                  ),
+                const Icon(Icons.arrow_outward_rounded,
+                    size: 12, color: _P.textMuted),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              program.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: _text,
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-                height: 1.15,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${program.days.length} дней • ${program.sessionDurationMinutes} мин',
-              style: TextStyle(color: _subText, fontSize: 11),
-            ),
-            if (program.description != null &&
-                program.description!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  program.description!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: _muted,
-                    fontSize: 11,
-                    height: 1.3,
-                  ),
-                ),
-              ),
-            const Spacer(),
+            const SizedBox(height: 8),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                _buildSmallProgramStat('${stats['completed']}', _IOS.green),
-                const SizedBox(width: 5),
-                _buildSmallProgramStat('${stats['pending']}', _Power.plasma),
-                const Spacer(),
-                Text(
-                  isActive
-                      ? '${(provider.activeSession!.progressPercent * 100).round()}%'
-                      : '${program.days.length} дн.',
-                  style: TextStyle(
-                    color: accent,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.3,
-                  ),
+                Flexible(
+                  child: Text(value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                          color: _P.text,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -1,
+                          height: 1)),
                 ),
+                if (unit.isNotEmpty) ...[
+                  const SizedBox(width: 2),
+                  Text(unit,
+                      style: GoogleFonts.inter(
+                          color: _P.textMuted, fontSize: 11)),
+                ],
               ],
+            ),
+            const SizedBox(height: 2),
+            Text(label,
+                style: GoogleFonts.inter(
+                    color: _P.textMuted, fontSize: 10)),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 4,
+                backgroundColor: _P.elevated,
+                valueColor: AlwaysStoppedAnimation(deep),
+              ),
             ),
           ],
         ),
@@ -2646,707 +1839,173 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     );
   }
 
-  Widget _buildSmallProgramStat(String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.14),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Text(
-        value,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          letterSpacing: -0.2,
-        ),
+  // ═════════════════════════════════════════════════════════
+  //  HEADER & HELPERS
+  // ═════════════════════════════════════════════════════════
+  Widget _buildSectionHeader(String title,
+      {String? actionText, VoidCallback? onTap}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title,
+              style: GoogleFonts.inter(
+                  color: _P.text,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.6)),
+          if (actionText != null && onTap != null)
+            GestureDetector(
+              onTap: onTap,
+              child: Row(
+                children: [
+                  Text(actionText,
+                      style: GoogleFonts.inter(
+                          color: _P.textMuted, fontSize: 12)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right_rounded,
+                      color: _P.textMuted, size: 14),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
 
-  Map<String, int> _getProgramStats(WorkoutProgram program) {
-    int completed = 0;
-    int pending = 0;
-    int skipped = 0;
-
-    for (final day in program.days) {
-      switch (day.status) {
-        case WorkoutDayStatus.completed:
-          completed++;
-          break;
-        case WorkoutDayStatus.pending:
-          pending++;
-          break;
-        case WorkoutDayStatus.skipped:
-          skipped++;
-          break;
-        default:
-          break;
-      }
-    }
-
-    return {
-      'completed': completed,
-      'pending': pending,
-      'skipped': skipped,
-    };
+  String _formatVolume(double volume) {
+    if (volume >= 1000) return '${(volume / 1000).toStringAsFixed(1)}k';
+    return volume.toStringAsFixed(0);
   }
 
-  // =====================================================================
-  // PROGRAM LIST (без изменений)
-  // =====================================================================
+  // ═════════════════════════════════════════════════════════
+  //  NAVIGATION & MODALS
+  // ═════════════════════════════════════════════════════════
+  void _openTargets(FitnessProvider provider) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: provider,
+          child: const FitnessTargetsScreen(isDark: false),
+        ),
+      ),
+    );
+  }
 
   void _showProgramsList(BuildContext context, FitnessProvider provider) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.85,
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 36,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: _muted.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'PROGRAMS',
-                          style: TextStyle(
-                            color: _Power.volt,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2.2,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Мои программы',
-                          style: TextStyle(
-                            color: _text,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.9,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChangeNotifierProvider.value(
-                            value: provider,
-                            child: ProgramBuilderScreen(isDark: widget.isDark),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: _Power.volt,
-                        shape: BoxShape.circle,
-                        boxShadow: _Power.softGlow(_Power.volt, strength: 0.4),
-                      ),
-                      child: const Icon(
-                        Icons.add_rounded,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Expanded(
-                child: provider.programs.isEmpty
-                    ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.fitness_center_rounded,
-                        size: 52,
-                        color: _muted,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Нет программ',
-                        style: TextStyle(
-                          color: _text,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-                    : ListView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: provider.programs.length,
-                  itemBuilder: (context, index) {
-                    final program = provider.programs[index];
-                    final active =
-                        provider.activeSession?.programId == program.id;
-                    return _buildProgramFullRow(
-                      program,
-                      active,
-                      provider,
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildProgramFullRow(
-      WorkoutProgram program,
-      bool isActive,
-      FitnessProvider provider,
-      ) {
-    final accent = program.accentColor;
-    final stats = _getProgramStats(program);
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChangeNotifierProvider.value(
-              value: provider,
-              child: isActive
-                  ? ActiveProgramScreen(
-                program: program,
-                isDark: widget.isDark,
-              )
-                  : ProgramViewScreen(
-                program: program,
-                isDark: widget.isDark,
-              ),
-            ),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: _surface2,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isActive ? accent.withOpacity(0.5) : _border,
-            width: isActive ? 1.2 : 0.6,
-          ),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: accent.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Center(
-                child: Text(
-                  program.emoji,
-                  style: const TextStyle(fontSize: 24),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          program.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: _text,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ),
-                      if (isActive)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: accent,
-                            borderRadius: BorderRadius.circular(7),
-                          ),
-                          child: const Text(
-                            'АКТИВНА',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${program.days.length} дней • ${program.sessionDurationMinutes} мин',
-                    style: TextStyle(color: _subText, fontSize: 11),
-                  ),
-                  const SizedBox(height: 7),
-                  Row(
-                    children: [
-                      _buildSmallProgramStat(
-                          '${stats['completed']}', _IOS.green),
-                      const SizedBox(width: 5),
-                      _buildSmallProgramStat(
-                          '${stats['pending']}', _Power.plasma),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: _IOS.gray,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // =====================================================================
-  // PROGRAM OPTIONS (без изменений)
-  // =====================================================================
-
-  void _showProgramOptions(
-      BuildContext context,
-      WorkoutProgram program,
-      FitnessProvider provider,
-      ) {
-    final isActive = provider.activeSession?.programId == program.id;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
+        child: SafeArea(
+          top: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 36,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: _muted.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: _P.divider,
+                      borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 20),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  program.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: _text,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.7,
+              Row(
+                children: [
+                  Text('Все программы',
+                      style: GoogleFonts.inter(
+                          fontSize: 20, fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(ctx),
+                    child: const Icon(Icons.close_rounded,
+                        color: _P.textMuted),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 18),
-              if (!isActive)
-                _buildActionTile(
-                  icon: Icons.play_arrow_rounded,
-                  color: _Power.volt,
-                  title: 'Начать программу',
-                  subtitle: 'Запустить прохождение',
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _showStartProgramDialog(program, provider);
-                  },
-                ),
-              if (isActive)
-                _buildActionTile(
-                  icon: Icons.play_circle_fill_rounded,
-                  color: _IOS.green,
-                  title: 'Продолжить',
-                  subtitle:
-                  'День ${provider.activeSession!.currentDayIndex + 1}',
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChangeNotifierProvider.value(
-                          value: provider,
-                          child: ActiveProgramScreen(
-                            program: program,
-                            isDark: widget.isDark,
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(ctx).size.height * 0.6),
+                child: provider.programs.isEmpty
+                    ? Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Text('Пока нет программ',
+                      style: GoogleFonts.inter(color: _P.textMuted)),
+                )
+                    : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: provider.programs.length,
+                  itemBuilder: (context, i) {
+                    final p = provider.programs[i];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: _P.elevated,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(p.emoji,
+                            style: const TextStyle(fontSize: 22)),
+                      ),
+                      title: Text(p.name,
+                          style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w600)),
+                      subtitle: Text(
+                          '${p.days.length} дней · ${p.sessionDurationMinutes} мин',
+                          style: GoogleFonts.inter(
+                              color: _P.textMuted, fontSize: 12)),
+                      trailing: const Icon(
+                          Icons.chevron_right_rounded,
+                          color: _P.textMuted),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ChangeNotifierProvider.value(
+                                  value: provider,
+                                  child: ProgramViewScreen(
+                                      program: p, isDark: false),
+                                ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
                 ),
-              _buildActionTile(
-                icon: Icons.edit_rounded,
-                color: _IOS.blue,
-                title: 'Редактировать',
-                subtitle: 'Изменить программу',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChangeNotifierProvider.value(
-                        value: provider,
-                        child: ProgramBuilderScreen(
-                          existingProgram: program,
-                          isDark: widget.isDark,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              if (isActive)
-                _buildActionTile(
-                  icon: Icons.pause_circle_outline_rounded,
-                  color: _Power.volt,
-                  title: 'Приостановить',
-                  subtitle: 'Поставить на паузу',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await provider.pauseProgramSession();
-                  },
-                ),
-              _buildActionTile(
-                icon: Icons.delete_outline_rounded,
-                color: _IOS.red,
-                title: 'Удалить',
-                subtitle: 'Удалить программу',
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  if (isActive) {
-                    await provider.abandonProgramSession(
-                      provider.activeSession!.id,
-                    );
-                  }
-                  await provider.deleteProgram(program.id);
-                },
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildActionTile({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: _surface2,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(color: _subText, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: _IOS.gray,
-            ),
-          ],
         ),
       ),
     );
   }
 
-  // =====================================================================
-  // START PROGRAM DIALOG (без изменений)
-  // =====================================================================
-
-  void _showStartProgramDialog(
-      WorkoutProgram program,
-      FitnessProvider provider,
-      ) {
-    ProgramDifficulty difficulty = ProgramDifficulty.standard;
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            return AlertDialog(
-              backgroundColor: _surface,
-              surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-              title: Text(
-                'Начать программу',
-                style: TextStyle(
-                  color: _text,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    program.name,
-                    style: TextStyle(
-                      color: _subText,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  _buildDifficultyOption(
-                    emoji: '🟢',
-                    title: 'Гибкий',
-                    subtitle: 'Можно пропускать дни',
-                    selected: difficulty == ProgramDifficulty.flexible,
-                    onTap: () {
-                      setState(() => difficulty = ProgramDifficulty.flexible);
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  _buildDifficultyOption(
-                    emoji: '🟡',
-                    title: 'Стандартный',
-                    subtitle: 'Пропуск сбрасывает серию',
-                    selected: difficulty == ProgramDifficulty.standard,
-                    onTap: () {
-                      setState(() => difficulty = ProgramDifficulty.standard);
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  _buildDifficultyOption(
-                    emoji: '🔴',
-                    title: 'Хардкор',
-                    subtitle: 'Пропуск сбрасывает неделю',
-                    selected: difficulty == ProgramDifficulty.hardcore,
-                    onTap: () {
-                      setState(() => difficulty = ProgramDifficulty.hardcore);
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    'Отмена',
-                    style: TextStyle(color: _IOS.blue, fontSize: 16),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    try {
-                      await provider.startProgramSession(
-                        program.id,
-                        difficulty: difficulty,
-                      );
-                      if (!mounted) return;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChangeNotifierProvider.value(
-                            value: provider,
-                            child: ActiveProgramScreen(
-                              program: program,
-                              isDark: widget.isDark,
-                            ),
-                          ),
-                        ),
-                      );
-                    } catch (e) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(e.toString()),
-                          backgroundColor: _IOS.red,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _Power.volt,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Начать',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildDifficultyOption({
-    required String emoji,
-    required String title,
-    required String subtitle,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: selected ? _Power.volt.withOpacity(0.10) : _surface2,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected ? _Power.volt : Colors.transparent,
-          ),
-        ),
-        child: Row(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 22)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(color: _subText, fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-            if (selected)
-              const Icon(
-                Icons.check_circle_rounded,
-                color: _Power.volt,
-                size: 22,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // =====================================================================
-  // QUICK START WORKOUT (без изменений)
-  // =====================================================================
-
+  // ═════════════════════════════════════════════════════════
+  //  QUICK START WORKOUT — full modal
+  // ═════════════════════════════════════════════════════════
   void _quickStartWorkout(FitnessProvider provider) {
+    HapticFeedback.mediumImpact();
     final quickDay = WorkoutDay(
       id: 'quick_${DateTime.now().millisecondsSinceEpoch}',
       programId: 'quick',
       dayNumber: 1,
       exercises: [],
     );
+    final searchCtrl = TextEditingController();
 
     showModalBottomSheet(
       context: context,
@@ -3355,24 +2014,29 @@ class _FitnessDashboardState extends State<FitnessDashboard>
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
+            final query = searchCtrl.text.trim().toLowerCase();
+            final filtered = provider.exercises
+                .where((e) =>
+            query.isEmpty || e.name.toLowerCase().contains(query))
+                .toList();
+            final canStart = quickDay.exercises.isNotEmpty;
+
             return Container(
-              height: MediaQuery.of(context).size.height * 0.85,
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              decoration: BoxDecoration(
-                color: _surface,
+              height: MediaQuery.of(context).size.height * 0.9,
+              decoration: const BoxDecoration(
+                color: Colors.white,
                 borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(28)),
+                BorderRadius.vertical(top: Radius.circular(32)),
               ),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               child: Column(
                 children: [
                   Container(
-                    width: 36,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: _muted.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
+                      width: 38,
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: _P.divider,
+                          borderRadius: BorderRadius.circular(3))),
                   const SizedBox(height: 20),
                   Row(
                     children: [
@@ -3380,114 +2044,137 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                         width: 46,
                         height: 46,
                         decoration: BoxDecoration(
-                          color: _Power.volt.withOpacity(0.14),
-                          borderRadius: BorderRadius.circular(13),
-                          boxShadow:
-                          _Power.softGlow(_Power.volt, strength: 0.2),
-                        ),
-                        child: const Icon(
-                          Icons.bolt_rounded,
-                          color: _Power.volt,
-                        ),
+                            color: _P.greenSoft,
+                            borderRadius: BorderRadius.circular(14)),
+                        child: const Icon(Icons.bolt_rounded,
+                            color: _P.greenDeep, size: 24),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Быстрая тренировка',
-                              style: TextStyle(
-                                color: _text,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.6,
-                              ),
-                            ),
-                            Text(
-                              'Выберите упражнения',
-                              style: TextStyle(
-                                color: _subText,
-                                fontSize: 12,
-                              ),
-                            ),
+                            Text('Быстрая тренировка',
+                                style: GoogleFonts.inter(
+                                    color: _P.text,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text('Выберите упражнения',
+                                style: GoogleFonts.inter(
+                                    color: _P.textMuted, fontSize: 12)),
                           ],
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
+                  TextField(
+                    controller: searchCtrl,
+                    onChanged: (_) => setSheetState(() {}),
+                    style: GoogleFonts.inter(color: _P.text),
+                    decoration: InputDecoration(
+                      hintText: 'Поиск упражнений',
+                      hintStyle: GoogleFonts.inter(color: _P.textMuted),
+                      prefixIcon: const Icon(Icons.search_rounded,
+                          color: _P.textMuted, size: 20),
+                      filled: true,
+                      fillColor: _P.bg,
+                      contentPadding:
+                      const EdgeInsets.symmetric(vertical: 14),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   Expanded(
-                    child: ListView.builder(
+                    child: filtered.isEmpty
+                        ? Center(
+                        child: Text('Ничего не найдено',
+                            style: GoogleFonts.inter(
+                                color: _P.textMuted)))
+                        : ListView.separated(
                       physics: const BouncingScrollPhysics(),
-                      itemCount: provider.exercises.length,
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) =>
+                      const SizedBox(height: 8),
                       itemBuilder: (context, index) {
-                        final exercise = provider.exercises[index];
+                        final exercise = filtered[index];
                         final added = quickDay.exercises.any(
-                              (item) => item.exerciseId == exercise.id,
-                        );
-                        final exerciseColor =
+                                (item) =>
+                            item.exerciseId == exercise.id);
+                        final accent =
                         exercise.muscleGroups.isNotEmpty
                             ? exercise.muscleGroups.first.color
-                            : _IOS.gray;
+                            : _P.greenDeep;
+                        final hasImage =
+                            exercise.imageUrl != null &&
+                                exercise.imageUrl!.isNotEmpty;
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
-                            color: _surface2,
+                            color: _P.bg,
                             borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                                color: _P.divider, width: 0.6),
                           ),
                           child: ListTile(
                             contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12),
+                            const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 4),
                             leading: Container(
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: exerciseColor.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(11),
+                                color: accent.withOpacity(0.12),
+                                borderRadius:
+                                BorderRadius.circular(11),
                               ),
-                              child: Center(
-                                child: Text(
+                              clipBehavior: Clip.antiAlias,
+                              child: hasImage
+                                  ? _buildThumbImage(
+                                  exercise.imageUrl,
                                   exercise.exerciseType.emoji,
-                                  style: const TextStyle(fontSize: 18),
-                                ),
+                                  40)
+                                  : Center(
+                                child: Text(
+                                    exercise
+                                        .exerciseType.emoji,
+                                    style: const TextStyle(
+                                        fontSize: 18)),
                               ),
                             ),
-                            title: Text(
-                              exercise.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: _text,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                            title: Text(exercise.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                    color: _P.text,
+                                    fontWeight: FontWeight.w500)),
                             trailing: GestureDetector(
                               onTap: () {
+                                HapticFeedback.selectionClick();
                                 setSheetState(() {
                                   if (added) {
                                     quickDay.exercises.removeWhere(
-                                          (item) =>
-                                      item.exerciseId == exercise.id,
-                                    );
+                                            (item) =>
+                                        item.exerciseId ==
+                                            exercise.id);
                                   } else {
                                     quickDay.exercises.add(
-                                      WorkoutExercise(
-                                        id:
-                                        'quick_ex_${quickDay.exercises.length}',
-                                        exerciseId: exercise.id,
-                                        order: quickDay.exercises.length,
-                                        sets: [
-                                          ExerciseSet(
-                                            setNumber: 1,
-                                            reps: 10,
-                                            weight: 0,
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                        WorkoutExercise(
+                                          id:
+                                          'quick_ex_${quickDay.exercises.length}',
+                                          exerciseId: exercise.id,
+                                          order:
+                                          quickDay.exercises.length,
+                                          sets: [
+                                            ExerciseSet(
+                                                setNumber: 1,
+                                                reps: 10,
+                                                weight: 0)
+                                          ],
+                                        ));
                                   }
                                 });
                               },
@@ -3496,18 +2183,18 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                                 height: 34,
                                 decoration: BoxDecoration(
                                   color: added
-                                      ? _IOS.red.withOpacity(0.14)
-                                      : _Power.volt.withOpacity(0.14),
+                                      ? _P.peachSoft
+                                      : _P.greenSoft,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  added
-                                      ? Icons.remove_rounded
-                                      : Icons.add_rounded,
-                                  color:
-                                  added ? _IOS.red : _Power.volt,
-                                  size: 20,
-                                ),
+                                    added
+                                        ? Icons.remove_rounded
+                                        : Icons.add_rounded,
+                                    color: added
+                                        ? _P.peachDeep
+                                        : _P.greenDeep,
+                                    size: 20),
                               ),
                             ),
                           ),
@@ -3515,7 +2202,7 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                       },
                     ),
                   ),
-                  if (quickDay.exercises.isNotEmpty)
+                  if (canStart)
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: SizedBox(
@@ -3531,29 +2218,23 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                                     ChangeNotifierProvider.value(
                                       value: provider,
                                       child: WorkoutExecutionScreen(
-                                        day: quickDay,
-                                        isDark: widget.isDark,
-                                      ),
+                                          day: quickDay, isDark: false),
                                     ),
                               ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _Power.volt,
+                            backgroundColor: _P.greenDeep,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                                borderRadius: BorderRadius.circular(14)),
                           ),
                           child: Text(
-                            'НАЧАТЬ • ${quickDay.exercises.length} УПР.',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
+                              'НАЧАТЬ · ${quickDay.exercises.length} УПР.',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.8)),
                         ),
                       ),
                     ),
@@ -3566,499 +2247,135 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     );
   }
 
-  // =====================================================================
-  // PROGRESS CARDS (без изменений)
-  // =====================================================================
+  // ═════════════════════════════════════════════════════════
+  //  WEIGHT & PROFILE DIALOGS
+  // ═════════════════════════════════════════════════════════
+  Future<void> _showEditWeightDialog(UserFitnessProfile? profile) async {
+    final currentWeight = _savedWeight > 0
+        ? _savedWeight
+        : (profile?.currentWeight ?? 78.5);
+    final controller =
+    TextEditingController(text: currentWeight.toStringAsFixed(1));
 
-  Widget _buildProgressCards(Map<String, dynamic> stats) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildProgressCard(
-              '🔥',
-              '${stats['currentStreak'] ?? 0}',
-              'ДНЕЙ СЕРИЯ',
-              _Power.volt,
-                  () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProgressScreen(isDark: widget.isDark),
-                  ),
-                );
-              },
-            ),
+    final result = await showModalBottomSheet<double>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding:
+        EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildProgressCard(
-              '🏋️',
-              '${stats['totalWorkouts'] ?? 0}',
-              'ТРЕНИРОВОК',
-              _Power.ice,
-                  () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => WorkoutLogScreen(isDark: widget.isDark),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildProgressCard(
-              '⚡',
-              '${stats['workoutsThisWeek'] ?? 0}',
-              'ЗА НЕДЕЛЮ',
-              _Power.plasma,
-                  () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProgressScreen(isDark: widget.isDark),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressCard(
-      String emoji,
-      String value,
-      String label,
-      Color color,
-      VoidCallback onTap,
-      ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: color.withOpacity(0.18),
-            width: 0.8,
-          ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(13),
-                boxShadow: _Power.softGlow(color, strength: 0.15),
-              ),
-              child: Center(
-                child: Text(
-                  emoji,
-                  style: const TextStyle(fontSize: 20),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: _P.divider,
+                          borderRadius: BorderRadius.circular(2))),
                 ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              style: TextStyle(
-                color: _text,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1,
-                height: 1,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: _muted,
-                fontSize: 8,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // =====================================================================
-  // TEMPLATES (без изменений)
-  // =====================================================================
-
-  Widget _buildTemplatesGrid(FitnessProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.18,
-        ),
-        itemCount: math.min(4, provider.templates.length),
-        itemBuilder: (context, index) {
-          final template = provider.templates[index];
-
-          return GestureDetector(
-            onTap: () async {
-              HapticFeedback.mediumImpact();
-              try {
-                final program =
-                await provider.createProgramFromTemplate(template.id);
-                if (!context.mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChangeNotifierProvider.value(
-                      value: provider,
-                      child: ProgramViewScreen(
-                        program: program,
-                        isDark: widget.isDark,
-                      ),
+                const SizedBox(height: 20),
+                Text('ВАШ ВЕС',
+                    style: GoogleFonts.inter(
+                        color: _P.greenDeep,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.8)),
+                const SizedBox(height: 4),
+                Text('Вес тела',
+                    style: GoogleFonts.inter(
+                        color: _P.text,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.6)),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: controller,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                  autofocus: true,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      color: _P.text),
+                  decoration: InputDecoration(
+                    suffixText: 'кг',
+                    suffixStyle: GoogleFonts.inter(
+                        color: _P.textMuted,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600),
+                    filled: true,
+                    fillColor: _P.bg,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
                     ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 18),
                   ),
-                );
-              } catch (e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(e.toString()),
-                    backgroundColor: _IOS.red,
-                  ),
-                );
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: _surface,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: _Power.volt.withOpacity(0.18),
-                  width: 0.8,
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: _Power.volt.withOpacity(0.14),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.bolt_rounded,
-                          color: _Power.volt,
-                          size: 20,
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.arrow_outward_rounded,
-                        color: _muted,
-                        size: 16,
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    template.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final v = double.tryParse(
+                          controller.text.replaceAll(',', '.'));
+                      if (v == null || v <= 0 || v > 500) {
+                        HapticFeedback.mediumImpact();
+                        return;
+                      }
+                      Navigator.pop(ctx, v);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _P.greenDeep,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    template.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: _subText,
-                      fontSize: 11,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // =====================================================================
-  // EXTRA (без изменений)
-  // =====================================================================
-
-  Widget _buildExtraGrid(FitnessProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.32,
-        children: [
-          _buildExtraCard(
-            icon: Icons.flag_rounded,
-            title: 'Мои цели',
-            subtitle: '${provider.activeTargets.length} активных',
-            color: _Power.volt,
-            onTap: () => _openTargets(provider),
-          ),
-          _buildExtraCard(
-            icon: Icons.photo_camera_rounded,
-            title: 'Фотоотчёты',
-            subtitle: '${provider.photos.length} фото',
-            color: _Power.plasma,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: provider,
-                    child: PhotoComparisonScreen(isDark: widget.isDark),
+                    child: Text('СОХРАНИТЬ',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.0)),
                   ),
                 ),
-              );
-            },
-          ),
-          _buildWellbeingCard(provider),
-          _buildExtraCard(
-            icon: Icons.history_rounded,
-            title: 'История программ',
-            subtitle:
-            '${provider.sessions.where((s) => s.status != ProgramSessionStatus.active).length} завершено',
-            color: _IOS.purple,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: provider,
-                    child: CompletedProgramsScreen(isDark: widget.isDark),
-                  ),
-                ),
-              );
-            },
-          ),
-          _buildExtraCard(
-            icon: Icons.trending_up_rounded,
-            title: 'Детальный прогресс',
-            subtitle: 'По упражнениям',
-            color: _Power.lime,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: provider,
-                    child: ProgressScreen(isDark: widget.isDark),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExtraCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: color.withOpacity(0.16),
-            width: 0.8,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(13),
-                boxShadow: _Power.softGlow(color, strength: 0.15),
-              ),
-              child: Icon(icon, color: color, size: 22),
+              ],
             ),
-            const Spacer(),
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: _text,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: _subText, fontSize: 11),
-            ),
-          ],
+          ),
         ),
       ),
     );
+
+    if (result != null && mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('profile_weight', result);
+      if (!mounted) return;
+      setState(() => _savedWeight = result);
+      HapticFeedback.lightImpact();
+    }
   }
 
-  Widget _buildWellbeingCard(FitnessProvider provider) {
-    final wellbeing = provider.getTodayWellbeing();
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChangeNotifierProvider.value(
-              value: provider,
-              child: WellbeingScreen(isDark: widget.isDark),
-            ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _Power.lime.withOpacity(0.16),
-            width: 0.8,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: _Power.lime.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(13),
-                boxShadow: _Power.softGlow(_Power.lime, strength: 0.15),
-              ),
-              child: const Icon(
-                Icons.mood_rounded,
-                color: _Power.lime,
-                size: 22,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'Самочувствие',
-              style: TextStyle(
-                color: _text,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
-              ),
-            ),
-            const SizedBox(height: 5),
-            if (wellbeing != null)
-              Row(
-                children: [
-                  _buildWellbeingValue('⚡', '${wellbeing.energyLevel}'),
-                  const SizedBox(width: 8),
-                  _buildWellbeingValue('😴', '${wellbeing.sleepQuality}'),
-                  const SizedBox(width: 8),
-                  _buildWellbeingValue('🎯', '${wellbeing.motivationLevel}'),
-                ],
-              )
-            else
-              Text(
-                'Записать сегодня',
-                style: TextStyle(color: _subText, fontSize: 11),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWellbeingValue(String emoji, String value) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(emoji, style: const TextStyle(fontSize: 11)),
-        const SizedBox(width: 3),
-        Text(
-          value,
-          style: const TextStyle(
-            color: _Power.lime,
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // =====================================================================
-  // PROFILE DIALOG (без изменений)
-  // =====================================================================
-
-  void _showEditProfileDialog(
-      BuildContext context,
-      FitnessProvider provider,
-      ) {
+  void _showEditProfileDialog(FitnessProvider provider) {
     final controller = TextEditingController(
-      text: _profileName.isNotEmpty
-          ? _profileName
-          : (provider.profile?.name ?? ''),
-    );
-
-    final emojis = [
+        text: _profileName.isNotEmpty
+            ? _profileName
+            : (provider.profile?.name ?? ''));
+    const emojis = [
       '💪', '🏋️', '🏃', '🧘', '🚴', '🤸', '🥊',
-      '🔥', '⚡', '🦁', '🐺', '🦅', '👑', '🎯',
+      '🔥', '⚡', '🦁', '🐺', '🦅', '👑', '🎯'
     ];
-
     String selectedEmoji = _avatarEmoji;
 
     showModalBottomSheet(
@@ -4069,17 +2386,16 @@ class _FitnessDashboardState extends State<FitnessDashboard>
         builder: (sheetContext, setSheetState) {
           return Padding(
             padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 16,
-              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-            ),
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom:
+                MediaQuery.of(sheetContext).viewInsets.bottom),
             child: Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: _surface,
-                borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(28)),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -4087,67 +2403,53 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                 children: [
                   Center(
                     child: Container(
-                      width: 36,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: _muted.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
+                        width: 38,
+                        height: 5,
+                        decoration: BoxDecoration(
+                            color: _P.divider,
+                            borderRadius: BorderRadius.circular(3))),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    'ПРОФИЛЬ',
-                    style: TextStyle(
-                      color: _Power.volt,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.2,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Атлет',
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.8,
-                    ),
-                  ),
+                  Text('ПРОФИЛЬ',
+                      style: GoogleFonts.inter(
+                          color: _P.greenDeep,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 2.0)),
+                  const SizedBox(height: 4),
+                  Text('Атлет',
+                      style: GoogleFonts.inter(
+                          color: _P.text,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.8)),
                   const SizedBox(height: 20),
                   TextField(
                     controller: controller,
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: GoogleFonts.inter(
+                        color: _P.text,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500),
                     decoration: InputDecoration(
                       hintText: 'Введите имя',
-                      hintStyle: TextStyle(color: _muted),
+                      hintStyle:
+                      GoogleFonts.inter(color: _P.textMuted),
                       filled: true,
-                      fillColor: _surface2,
+                      fillColor: _P.bg,
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
+                          horizontal: 16, vertical: 16),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    'АВАТАР',
-                    style: TextStyle(
-                      color: _muted,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.4,
-                    ),
-                  ),
+                  Text('АВАТАР',
+                      style: GoogleFonts.inter(
+                          color: _P.textMuted,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.4)),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
@@ -4163,26 +2465,17 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                           width: 46,
                           height: 46,
                           decoration: BoxDecoration(
-                            color: selected
-                                ? _Power.volt.withOpacity(0.14)
-                                : _surface2,
+                            color: selected ? _P.greenSoft : _P.bg,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: selected
-                                  ? _Power.volt
-                                  : Colors.transparent,
-                              width: 1.5,
-                            ),
-                            boxShadow: selected
-                                ? _Power.softGlow(_Power.volt, strength: 0.3)
-                                : null,
+                                color: selected
+                                    ? _P.greenDeep
+                                    : Colors.transparent,
+                                width: 1.5),
                           ),
                           child: Center(
-                            child: Text(
-                              emoji,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                          ),
+                              child: Text(emoji,
+                                  style: const TextStyle(fontSize: 24))),
                         ),
                       );
                     }).toList(),
@@ -4193,10 +2486,13 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                     child: ElevatedButton(
                       onPressed: () async {
                         final newName = controller.text.trim();
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setString('avatar_emoji', selectedEmoji);
+                        final prefs =
+                        await SharedPreferences.getInstance();
+                        await prefs.setString(
+                            'avatar_emoji', selectedEmoji);
                         if (newName.isNotEmpty) {
-                          await prefs.setString('profile_name', newName);
+                          await prefs.setString(
+                              'profile_name', newName);
                         }
                         if (!mounted) return;
                         setState(() {
@@ -4206,23 +2502,18 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                         Navigator.pop(sheetContext);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _Power.volt,
+                        backgroundColor: _P.greenDeep,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        shadowColor: _Power.volt.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: const Text(
-                        'СОХРАНИТЬ',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
+                      child: Text('СОХРАНИТЬ',
+                          style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0)),
                     ),
                   ),
                 ],
@@ -4234,52 +2525,67 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     );
   }
 
-  // =====================================================================
-  // HELPERS
-  // =====================================================================
+  List<Achievement> _getAchievements(FitnessProvider provider) {
+    final stats = provider.getStats();
+    final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
+    final total = ((stats['totalWorkouts'] ?? 0) as num).toInt();
+    final volume = ((stats['totalVolume'] ?? 0) as num).toDouble();
+    final week = ((stats['workoutsThisWeek'] ?? 0) as num).toInt();
 
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 12) return 'Доброе утро';
-    if (hour >= 12 && hour < 17) return 'Добрый день';
-    if (hour >= 17 && hour < 23) return 'Добрый вечер';
-    return 'Доброй ночи';
-  }
+    double progress(num current, num goal) =>
+        goal <= 0 ? 0 : (current / goal).clamp(0.0, 1.0).toDouble();
 
-  String _getTodayDate() {
-    final now = DateTime.now();
-    const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    const months = [
-      'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
-      'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
+    return [
+      Achievement('🏁', 'Первый шаг', 'Проведи первую тренировку', 'Тренировки',
+          _P.greenDeep, total >= 1, progress(total, 1), '1 тренировка'),
+      Achievement('💪', 'Десятка', '10 полноценных тренировок', 'Тренировки',
+          _P.skyDeep, total >= 10, progress(total, 10), '10 тренировок'),
+      Achievement('🎖️', 'Полтинник', 'Пройди отметку в 50 тренировок',
+          'Тренировки', _P.lavenderDeep, total >= 50, progress(total, 50),
+          '50 тренировок'),
+      Achievement('🔥', 'Серия 3', '3 дня тренировок подряд', 'Серии',
+          _P.peachDeep, streak >= 3, progress(streak, 3), '3 дня подряд'),
+      Achievement('🚀', 'Неделя силы', '7 дней тренировок подряд', 'Серии',
+          _P.lavenderDeep, streak >= 7, progress(streak, 7), '7 дней подряд'),
+      Achievement('🏋️', 'Тонна', 'Набери 10 000 кг тоннажа', 'Объёмы',
+          _P.peachDeep, volume >= 10000, progress(volume, 10000),
+          '10 000 кг'),
+      Achievement('⚡', 'Неделя в ударе', '3 тренировки за неделю',
+          'Тренировки', _P.peachDeep, week >= 3, progress(week, 3),
+          '3 тренировки'),
     ];
-    return '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
   }
+}
 
-  String _formatVolume(double volume) {
-    if (volume >= 1000) {
-      return '${(volume / 1000).toStringAsFixed(1)}k';
-    }
-    return volume.toStringAsFixed(0);
-  }
+// ═══════════════════════════════════════════════════════════════════
+//  DATA MODELS
+// ═══════════════════════════════════════════════════════════════════
+class Achievement {
+  final String emoji;
+  final String title;
+  final String description;
+  final String category;
+  final Color color;
+  final bool isUnlocked;
+  final double progress;
+  final String requirement;
+  const Achievement(this.emoji, this.title, this.description, this.category,
+      this.color, this.isUnlocked, this.progress, this.requirement);
+}
 
-  String _getDaysWord(int count) {
-    if (count % 10 == 1 && count % 100 != 11) return 'день';
-    if ([2, 3, 4].contains(count % 10) &&
-        ![12, 13, 14].contains(count % 100)) {
-      return 'дня';
-    }
-    return 'дней';
-  }
-
-  String _difficultyEmoji(String difficulty) {
-    switch (difficulty) {
-      case 'easy':
-        return '🟢';
-      case 'hardcore':
-        return '🔴';
-      default:
-        return '🟡';
-    }
-  }
+class _QuickItemData {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color soft;
+  final Color deep;
+  final VoidCallback onTap;
+  const _QuickItemData({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.soft,
+    required this.deep,
+    required this.onTap,
+  });
 }

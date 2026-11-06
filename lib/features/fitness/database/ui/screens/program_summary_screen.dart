@@ -1,10 +1,13 @@
 // features/fitness/ui/screens/program_summary_screen.dart
-// 🆕 v16: format-aware итоги программы (сила / кардио / бокс / статика)
+// 🎨 design refinement: tokens, pressable, layered elevation, tabular figures
 import 'dart:math';
+import 'dart:ui' show FontFeature;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:zal_life/features/fitness/models/enums.dart';
 import 'package:provider/provider.dart';
+
+import '../../../models/enums.dart';
 import '../../../models/fitness_models.dart';
 import '../../../models/helpers.dart';
 import '../../../providers/fitness_provider.dart';
@@ -29,17 +32,19 @@ class _Power {
   static const Color darkCard2 = Color(0xFF2C2C2E);
   static const Color lightBg = Color(0xFFF2F2F7);
   static const Color lightCard = Color(0xFFFFFFFF);
+  static const Color lightCard2 = Color(0xFFF9FAFB);
 
   static Color bg(bool isDark) => isDark ? darkBg : lightBg;
   static Color card(bool isDark) => isDark ? darkCard : lightCard;
-  static Color card2(bool isDark) => isDark ? darkCard2 : const Color(0xFFF9FAFB);
-  static Color textPrimary(bool isDark) => isDark ? Colors.white : Colors.black;
+  static Color card2(bool isDark) => isDark ? darkCard2 : lightCard2;
+  static Color textPrimary(bool isDark) =>
+      isDark ? Colors.white : const Color(0xFF0A0A0A);
   static Color textSecondary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.6)
-      : const Color(0xFF3C3C43).withOpacity(0.6);
+      ? Colors.white.withOpacity(0.62)
+      : const Color(0xFF3C3C43).withOpacity(0.62);
   static Color textTertiary(bool isDark) => isDark
-      ? Colors.white.withOpacity(0.3)
-      : const Color(0xFF3C3C43).withOpacity(0.3);
+      ? Colors.white.withOpacity(0.32)
+      : const Color(0xFF3C3C43).withOpacity(0.32);
   static Color separator(bool isDark) =>
       isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
 
@@ -47,8 +52,11 @@ class _Power {
     BoxShadow(color: color.withOpacity(strength), blurRadius: 16),
   ];
 
-  static List<BoxShadow> glow(Color color,
-      {double strength = 0.4, double blur = 24}) =>
+  static List<BoxShadow> glow(
+      Color color, {
+        double strength = 0.4,
+        double blur = 24,
+      }) =>
       [
         BoxShadow(
           color: color.withOpacity(strength),
@@ -56,7 +64,105 @@ class _Power {
           offset: const Offset(0, 6),
         ),
       ];
+
+  static List<BoxShadow> cardShadow(bool isDark, Color tint) => isDark
+      ? [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.45),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: Colors.black.withOpacity(0.25),
+      blurRadius: 14,
+      offset: const Offset(0, 6),
+    ),
+  ]
+      : [
+    BoxShadow(
+      color: tint.withOpacity(0.04),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: tint.withOpacity(0.06),
+      blurRadius: 16,
+      offset: const Offset(0, 6),
+    ),
+  ];
 }
+
+class _R {
+  static const xs = 8.0;
+  static const sm = 12.0;
+  static const md = 14.0;
+  static const lg = 18.0;
+  static const xl = 22.0;
+  static const xxl = 28.0;
+}
+
+class _Sp {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 20.0;
+  static const xxl = 24.0;
+}
+
+class _Num {
+  static const _feat = <FontFeature>[FontFeature.tabularFigures()];
+  static TextStyle t(TextStyle base) => base.copyWith(fontFeatures: _feat);
+}
+
+// ==================== PRESSABLE ====================
+
+class _Pressable extends StatefulWidget {
+  const _Pressable({
+    required this.child,
+    required this.onTap,
+    this.scale = 0.97,
+    this.haptic = true,
+  });
+
+  final Widget child;
+  final VoidCallback onTap;
+  final double scale;
+  final bool haptic;
+
+  @override
+  State<_Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<_Pressable> {
+  bool _pressed = false;
+
+  void _set(bool v) {
+    if (_pressed != v) setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _set(true),
+      onTapUp: (_) => _set(false),
+      onTapCancel: () => _set(false),
+      onTap: () {
+        if (widget.haptic) HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? widget.scale : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ==================== SCREEN ====================
 
 class ProgramSummaryScreen extends StatefulWidget {
   final ProgramSession session;
@@ -85,7 +191,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..forward();
-
     HapticFeedback.heavyImpact();
   }
 
@@ -96,21 +201,18 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
   }
 
   // ══════════════════════════════════════════════════════════
-  // 🆕 ХЕЛПЕРЫ МЕТРИК
+  // HELPERS
   // ══════════════════════════════════════════════════════════
 
-  /// Сумма метрик программы (с fallback на totalVolumeCompleted).
   Map<String, double> get _totalByMetric {
     final fromSession = widget.session.totalByMetricCompleted;
     if (fromSession.isNotEmpty) return fromSession;
-    // fallback для старых сессий
     if (widget.session.totalVolumeCompleted > 0) {
       return {'kg': widget.session.totalVolumeCompleted};
     }
     return {};
   }
 
-  /// Доминирующая метрика программы: km → rounds → kg → sec.
   ({String label, String value, Color color}) _dominantMetric() {
     final m = _totalByMetric;
     final km = m['km'] ?? 0;
@@ -158,7 +260,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     return (label: '—', value: '0', color: _Power.textTertiary(true));
   }
 
-  /// Формат упражнения.
   ExerciseFormat _formatFor(Exercise ex) => ex.resolveFormat();
 
   String _fmtSec(int sec) {
@@ -197,21 +298,21 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
           _buildHero(isDark, program, session, durationDays),
 
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(_Sp.lg),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _buildMainStats(
                     isDark, session, completedDays, totalDays, durationDays),
-                const SizedBox(height: 16),
+                const SizedBox(height: _Sp.lg),
                 _buildCompletionChart(
                     isDark, completedDays, skippedDays, totalDays),
-                const SizedBox(height: 16),
+                const SizedBox(height: _Sp.lg),
                 _buildExerciseProgress(isDark),
-                const SizedBox(height: 16),
+                const SizedBox(height: _Sp.lg),
                 _buildPerformanceHighlights(isDark, session),
-                const SizedBox(height: 16),
+                const SizedBox(height: _Sp.lg),
                 _buildDailyTimeline(isDark, session, program),
-                const SizedBox(height: 28),
+                const SizedBox(height: _Sp.xxl + 4),
                 _buildActionButtons(isDark, session),
                 const SizedBox(height: 40),
               ]),
@@ -223,7 +324,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
   }
 
   // =====================================================================
-  // HERO — TROPHY (без изменений)
+  // HERO
   // =====================================================================
 
   Widget _buildHero(
@@ -249,11 +350,12 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         child: Stack(
           clipBehavior: Clip.none,
           children: [
+            // Bottom accent line
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
-              height: 3,
+              height: 2,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -268,7 +370,29 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                 ),
               ),
             ),
-
+            // Warm radial glow behind trophy
+            Positioned(
+              top: 40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: IgnorePointer(
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          _Power.volt.withOpacity(0.18),
+                          _Power.volt.withOpacity(0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             SafeArea(
               bottom: false,
               child: Column(
@@ -276,12 +400,12 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                   Align(
                     alignment: Alignment.topLeft,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          Navigator.pop(context);
-                        },
+                      padding:
+                      const EdgeInsets.fromLTRB(_Sp.lg, _Sp.sm, _Sp.lg, 0),
+                      child: _Pressable(
+                        onTap: () => Navigator.pop(context),
+                        scale: 0.9,
+                        haptic: false,
                         child: Container(
                           width: 36,
                           height: 36,
@@ -302,7 +426,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: _Sp.xs),
                   AnimatedBuilder(
                     animation: _heroController,
                     builder: (ctx, child) {
@@ -378,7 +502,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: _Sp.xxl),
                   const Text(
                     'ПРОГРАММА ЗАВЕРШЕНА',
                     style: TextStyle(
@@ -388,9 +512,9 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                       letterSpacing: 2.4,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: _Sp.sm),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: _Sp.xxl),
                     child: Text(
                       program.name,
                       textAlign: TextAlign.center,
@@ -406,17 +530,17 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                   const SizedBox(height: 10),
                   Text(
                     '${_formatDate(session.startDate)} — ${_formatDate(session.endDate ?? DateTime.now())}',
-                    style: TextStyle(
+                    style: _Num.t(TextStyle(
                       color: Colors.white.withOpacity(0.5),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
-                    ),
+                    )),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: _Sp.lg),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
+                      horizontal: _R.md,
                       vertical: 7,
                     ),
                     decoration: BoxDecoration(
@@ -438,7 +562,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: _Sp.xxl + 4),
                 ],
               ),
             ),
@@ -459,9 +583,9 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     }
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 MAIN STATS — третья плитка = доминирующая метрика
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // MAIN STATS
+  // =====================================================================
 
   Widget _buildMainStats(
       bool isDark,
@@ -473,30 +597,20 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     final dominant = _dominantMetric();
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(_Sp.xl),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(_R.xl),
         border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        boxShadow: _Power.cardShadow(isDark, _Power.plasma),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _Power.plasma.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow:
-                  _Power.softGlow(_Power.plasma, strength: 0.2),
-                ),
-                child: const Icon(
-                  Icons.emoji_events_rounded,
-                  color: _Power.plasma,
-                  size: 17,
-                ),
+              _iconBadge(
+                icon: Icons.emoji_events_rounded,
+                color: _Power.plasma,
               ),
               const SizedBox(width: 10),
               Text(
@@ -510,7 +624,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: _Sp.xl),
           Row(
             children: [
               _buildMainStat(
@@ -529,7 +643,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                 color: _Power.volt,
               ),
               _mainDivider(isDark),
-              // 🆕 Доминирующая метрика (км / раунды / кг / сек)
               _buildMainStat(
                 isDark,
                 emoji: dominant.label == 'КМ'
@@ -546,21 +659,20 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
             ],
           ),
 
-          // 🆕 Все метрики (кг + км + раунды + время + удары + ккал)
           if (_totalByMetric.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: _R.md),
             Container(height: 0.5, color: _Power.separator(isDark)),
-            const SizedBox(height: 14),
+            const SizedBox(height: _R.md),
             _buildAllMetricsRow(isDark),
           ],
 
-          const SizedBox(height: 20),
+          const SizedBox(height: _Sp.xl),
           if (total > 0) ...[
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(_R.md),
               decoration: BoxDecoration(
                 color: _Power.card2(isDark),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(_R.md),
               ),
               child: Column(
                 children: [
@@ -571,25 +683,25 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                         size: 15,
                         color: _Power.volt,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: _Sp.sm),
                       Text(
                         'ВЫПОЛНЕНО $completed ИЗ $total',
-                        style: TextStyle(
+                        style: _Num.t(TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.0,
                           color: _Power.textSecondary(isDark),
-                        ),
+                        )),
                       ),
                       const Spacer(),
                       Text(
                         '${((completed / total) * 100).toInt()}%',
-                        style: const TextStyle(
+                        style: _Num.t(const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.4,
                           color: _Power.volt,
-                        ),
+                        )),
                       ),
                     ],
                   ),
@@ -601,8 +713,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                           ? (completed / total).clamp(0.0, 1.0)
                           : 0.0,
                       backgroundColor: _Power.separator(isDark),
-                      valueColor:
-                      const AlwaysStoppedAnimation(_Power.volt),
+                      valueColor: const AlwaysStoppedAnimation(_Power.volt),
                       minHeight: 6,
                     ),
                   ),
@@ -611,10 +722,10 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
             ),
           ] else
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(_R.md),
               decoration: BoxDecoration(
                 color: _Power.plasma.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(_R.md),
                 border: Border.all(
                   color: _Power.plasma.withOpacity(0.25),
                   width: 0.8,
@@ -627,7 +738,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                     color: _Power.plasma,
                     size: 18,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: _Sp.sm),
                   Expanded(
                     child: Text(
                       'Нет данных о выполнении',
@@ -646,7 +757,30 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     );
   }
 
-  /// 🆕 Строка чипов со всеми ненулевыми метриками программы.
+  Widget _iconBadge({
+    required IconData icon,
+    required Color color,
+    double size = 32,
+  }) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withOpacity(0.20),
+            color.withOpacity(0.06),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(size * 0.31),
+        boxShadow: _Power.softGlow(color, strength: 0.18),
+      ),
+      child: Icon(icon, color: color, size: size * 0.55),
+    );
+  }
+
   Widget _buildAllMetricsRow(bool isDark) {
     final m = _totalByMetric;
     final chips = <Widget>[];
@@ -669,13 +803,13 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
             const SizedBox(width: 5),
             Text(
               value,
-              style: TextStyle(
+              style: _Num.t(TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.2,
                 height: 1,
                 color: color,
-              ),
+              )),
             ),
             const SizedBox(width: 3),
             Text(
@@ -760,9 +894,16 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(13),
-              boxShadow: _Power.softGlow(color, strength: 0.15),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withOpacity(0.22),
+                  color.withOpacity(0.06),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(_R.sm),
+              boxShadow: _Power.softGlow(color, strength: 0.18),
             ),
             alignment: Alignment.center,
             child: Text(emoji, style: const TextStyle(fontSize: 20)),
@@ -770,15 +911,15 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
           const SizedBox(height: 10),
           Text(
             value,
-            style: TextStyle(
+            style: _Num.t(TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.9,
               height: 1,
               color: _Power.textPrimary(isDark),
-            ),
+            )),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: _Sp.xs),
           Text(
             label,
             style: TextStyle(
@@ -794,7 +935,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
   }
 
   // =====================================================================
-  // DONUT CHART (без изменений)
+  // COMPLETION CHART
   // =====================================================================
 
   Widget _buildCompletionChart(
@@ -806,31 +947,19 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     final rest = total - completed - skipped;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(_Sp.xl),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(_R.xl),
         border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        boxShadow: _Power.cardShadow(isDark, _Power.ice),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _Power.ice.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: _Power.softGlow(_Power.ice, strength: 0.15),
-                ),
-                child: const Icon(
-                  Icons.pie_chart_rounded,
-                  color: _Power.ice,
-                  size: 17,
-                ),
-              ),
+              _iconBadge(icon: Icons.pie_chart_rounded, color: _Power.ice),
               const SizedBox(width: 10),
               Text(
                 'РАСПРЕДЕЛЕНИЕ ДНЕЙ',
@@ -843,7 +972,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: _Sp.xl),
           Row(
             children: [
               SizedBox(
@@ -869,13 +998,13 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                       children: [
                         Text(
                           '$completed',
-                          style: TextStyle(
+                          style: _Num.t(TextStyle(
                             fontSize: 34,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -1.4,
                             height: 1,
                             color: _Power.textPrimary(isDark),
-                          ),
+                          )),
                         ),
                         const SizedBox(height: 3),
                         Text(
@@ -892,7 +1021,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: _Sp.xl),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -904,7 +1033,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                       '$completed',
                       total,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: _R.md),
                     _buildLegendRow(
                       isDark,
                       _Power.red,
@@ -912,7 +1041,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                       '$skipped',
                       total,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: _R.md),
                     _buildLegendRow(
                       isDark,
                       isDark
@@ -941,8 +1070,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
       ) {
     final intVal = int.tryParse(value) ?? 0;
     final percent = total > 0 ? (intVal / total * 100).toInt() : 0;
-    final progressValue =
-    total > 0 ? (intVal / total).clamp(0.0, 1.0) : 0.0;
+    final progressValue = total > 0 ? (intVal / total).clamp(0.0, 1.0) : 0.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -958,7 +1086,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                 boxShadow: _Power.softGlow(color, strength: 0.4),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: _Sp.sm),
             Expanded(
               child: Text(
                 label,
@@ -972,22 +1100,22 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
             ),
             Text(
               value,
-              style: TextStyle(
+              style: _Num.t(TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.3,
                 height: 1,
                 color: _Power.textPrimary(isDark),
-              ),
+              )),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: _Sp.xs),
             Text(
               '($percent%)',
-              style: TextStyle(
+              style: _Num.t(TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: _Power.textTertiary(isDark),
-              ),
+              )),
             ),
           ],
         ),
@@ -1005,9 +1133,9 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 EXERCISE PROGRESS — format-aware
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // EXERCISE PROGRESS
+  // =====================================================================
 
   Widget _buildExerciseProgress(bool isDark) {
     final provider = context.read<FitnessProvider>();
@@ -1015,7 +1143,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     final exerciseStats =
         (summary['exerciseStats'] as Map<String, dynamic>?) ?? {};
 
-    // 🆕 Собираем данные по упражнениям через getExerciseProgress
     final items = <_ExerciseProgressItem>[];
 
     for (final entry in exerciseStats.entries) {
@@ -1043,7 +1170,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
       return const SizedBox.shrink();
     }
 
-    // 🆕 Сортируем по «прогрессу»: сначала те, у кого положительное изменение
     items.sort((a, b) {
       final pA = a.stat.percentChange ?? 0;
       final pB = b.stat.percentChange ?? 0;
@@ -1053,32 +1179,19 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     final top = items.take(5).toList();
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(_Sp.xl),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(_R.xl),
         border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        boxShadow: _Power.cardShadow(isDark, _Power.green),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _Power.green.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow:
-                  _Power.softGlow(_Power.green, strength: 0.15),
-                ),
-                child: const Icon(
-                  Icons.trending_up_rounded,
-                  color: _Power.green,
-                  size: 17,
-                ),
-              ),
+              _iconBadge(icon: Icons.trending_up_rounded, color: _Power.green),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -1107,14 +1220,13 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _Sp.lg),
           ...top.map((item) => _buildExerciseProgressCard(isDark, item)),
         ],
       ),
     );
   }
 
-  /// 🆕 Извлечение «было → стало» из записей — по формату.
   _ExerciseChange? _extractChangeFromRecords(
       ExerciseFormat format,
       List<ProgressRecord> records,
@@ -1135,8 +1247,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         return _ExerciseChange(
           fromValue: '${firstW.toStringAsFixed(0)} × $firstReps',
           toValue: '${lastW.toStringAsFixed(0)} × $lastReps',
-          deltaLabel:
-          '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(1)} кг',
+          deltaLabel: '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(1)} кг',
           percentChange: pct,
           isPositive: delta >= 0,
           unit: 'кг',
@@ -1146,17 +1257,13 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
       case ExerciseFormat.intervals:
         final firstD = first.bestDistance ?? 0;
         final lastD = last.bestDistance ?? 0;
-        if (firstD == 0 && lastD == 0) {
-          // fallback: показываем суммарно время
-          return null;
-        }
+        if (firstD == 0 && lastD == 0) return null;
         final delta = lastD - firstD;
         final pct = firstD > 0 ? (delta / firstD * 100) : null;
         return _ExerciseChange(
           fromValue: firstD > 0 ? _fmtDistance(firstD) : '—',
           toValue: lastD > 0 ? _fmtDistance(lastD) : '—',
-          deltaLabel:
-          '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(2)} км',
+          deltaLabel: '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(2)} км',
           percentChange: pct,
           isPositive: delta >= 0,
           unit: 'км',
@@ -1170,8 +1277,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         return _ExerciseChange(
           fromValue: firstR > 0 ? '${firstR.toInt()} р.' : '—',
           toValue: lastR > 0 ? '${lastR.toInt()} р.' : '—',
-          deltaLabel:
-          '${delta >= 0 ? '+' : ''}${delta.toInt()} р.',
+          deltaLabel: '${delta >= 0 ? '+' : ''}${delta.toInt()} р.',
           percentChange: pct,
           isPositive: delta >= 0,
           unit: 'раунд',
@@ -1185,8 +1291,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         return _ExerciseChange(
           fromValue: firstH > 0 ? _fmtSec(firstH.toInt()) : '—',
           toValue: lastH > 0 ? _fmtSec(lastH.toInt()) : '—',
-          deltaLabel:
-          '${delta >= 0 ? '+' : ''}${_fmtSec(delta.abs().toInt())}',
+          deltaLabel: '${delta >= 0 ? '+' : ''}${_fmtSec(delta.abs().toInt())}',
           percentChange: pct,
           isPositive: delta >= 0,
           unit: 'сек',
@@ -1201,8 +1306,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         return _ExerciseChange(
           fromValue: firstD > 0 ? _fmtSec(firstD.toInt()) : '—',
           toValue: lastD > 0 ? _fmtSec(lastD.toInt()) : '—',
-          deltaLabel:
-          '${delta >= 0 ? '+' : ''}${_fmtSec(delta.abs().toInt())}',
+          deltaLabel: '${delta >= 0 ? '+' : ''}${_fmtSec(delta.abs().toInt())}',
           percentChange: pct,
           isPositive: delta >= 0,
           unit: 'сек',
@@ -1224,11 +1328,12 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         : _Power.volt;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: _R.md),
+      padding: const EdgeInsets.all(_R.md),
       decoration: BoxDecoration(
         color: _Power.card2(isDark),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(_R.lg - 2),
+        boxShadow: _Power.cardShadow(isDark, accent),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1239,9 +1344,16 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(11),
-                  boxShadow: _Power.softGlow(accent, strength: 0.15),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      accent.withOpacity(0.22),
+                      accent.withOpacity(0.06),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(_R.sm - 1),
+                  boxShadow: _Power.softGlow(accent, strength: 0.18),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -1289,11 +1401,11 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                         const SizedBox(width: 6),
                         Text(
                           '${item.workoutsCount} ${_getWorkoutsWord(item.workoutsCount)}',
-                          style: TextStyle(
+                          style: _Num.t(TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: _Power.textTertiary(isDark),
-                          ),
+                          )),
                         ),
                       ],
                     ),
@@ -1303,7 +1415,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
               if (stat.percentChange != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
+                    horizontal: _Sp.sm,
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
@@ -1324,25 +1436,25 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                       const SizedBox(width: 3),
                       Text(
                         '${stat.percentChange! >= 0 ? "+" : ""}${stat.percentChange!.toStringAsFixed(0)}%',
-                        style: TextStyle(
+                        style: _Num.t(TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.2,
                           height: 1,
                           color: isPositive ? _Power.green : _Power.red,
-                        ),
+                        )),
                       ),
                     ],
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: _R.md),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: _Power.card(isDark),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(_R.sm),
             ),
             child: Row(
               children: [
@@ -1352,29 +1464,29 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                   stat.fromValue,
                   _Power.textSecondary(isDark),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: _Sp.sm),
                 Icon(
                   Icons.arrow_forward_rounded,
                   size: 14,
                   color: _Power.textTertiary(isDark),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: _Sp.sm),
                 _buildChangeChip(
                   isDark,
                   'СТАЛО',
                   stat.toValue,
                   isPositive ? _Power.green : _Power.red,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: _Sp.sm),
                 Text(
                   stat.deltaLabel,
-                  style: TextStyle(
+                  style: _Num.t(TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.4,
                     height: 1,
                     color: isPositive ? _Power.green : _Power.red,
-                  ),
+                  )),
                 ),
               ],
             ),
@@ -1392,7 +1504,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
       ) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: _Sp.sm),
         decoration: BoxDecoration(
           color: color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(9),
@@ -1409,18 +1521,18 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                 color: color,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: _Sp.xs),
             Text(
               value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: _Num.t(TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.3,
                 height: 1,
                 color: _Power.textPrimary(isDark),
-              ),
+              )),
             ),
           ],
         ),
@@ -1428,9 +1540,9 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 PERFORMANCE HIGHLIGHTS — achievements по типу
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // PERFORMANCE HIGHLIGHTS
+  // =====================================================================
 
   Widget _buildPerformanceHighlights(
       bool isDark,
@@ -1444,7 +1556,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     final rounds = m['rounds'] ?? 0;
     final sec = m['sec'] ?? 0;
 
-    // ─── Серия ───
     if (session.longestStreak >= 3) {
       achievements.add(_Achievement(
         emoji: '🔥',
@@ -1453,8 +1564,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         color: _Power.volt,
       ));
     }
-
-    // ─── Силовые (кг) ───
     if (kg >= 10000) {
       achievements.add(_Achievement(
         emoji: '💪',
@@ -1471,8 +1580,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         color: _Power.magma,
       ));
     }
-
-    // ─── Кардио (км) ───
     if (km >= 10) {
       achievements.add(_Achievement(
         emoji: '🏃',
@@ -1489,8 +1596,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         color: _Power.lime,
       ));
     }
-
-    // ─── Бокс (раунды) ───
     if (rounds >= 50) {
       achievements.add(_Achievement(
         emoji: '🥊',
@@ -1507,8 +1612,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         color: _Power.magma,
       ));
     }
-
-    // ─── Статика (сек) ───
     if (sec >= 1800) {
       achievements.add(_Achievement(
         emoji: '🧘',
@@ -1525,8 +1628,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         color: _Power.ice,
       ));
     }
-
-    // ─── Универсальные ───
     if (session.averageRpe >= 7) {
       achievements.add(_Achievement(
         emoji: '⚡',
@@ -1535,7 +1636,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         color: _Power.plasma,
       ));
     }
-
     if (session.totalWorkoutsSkipped == 0 &&
         session.totalWorkoutsCompleted > 0) {
       achievements.add(_Achievement(
@@ -1545,7 +1645,6 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         color: _Power.green,
       ));
     }
-
     if (session.durationDays <= 30 &&
         session.totalWorkoutsCompleted >= 15) {
       achievements.add(_Achievement(
@@ -1567,32 +1666,19 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(_Sp.xl),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(_R.xl),
         border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        boxShadow: _Power.cardShadow(isDark, _Power.plasma),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _Power.plasma.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow:
-                  _Power.softGlow(_Power.plasma, strength: 0.15),
-                ),
-                child: const Icon(
-                  Icons.stars_rounded,
-                  color: _Power.plasma,
-                  size: 17,
-                ),
-              ),
+              _iconBadge(icon: Icons.stars_rounded, color: _Power.plasma),
               const SizedBox(width: 10),
               Text(
                 'ДОСТИЖЕНИЯ',
@@ -1605,13 +1691,13 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _Sp.lg),
           ...achievements.map((a) => Container(
             margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(_R.md),
             decoration: BoxDecoration(
               color: a.color.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(_R.lg - 2),
               border: Border.all(
                 color: a.color.withOpacity(0.25),
                 width: 0.8,
@@ -1624,10 +1710,16 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: a.color.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(13),
-                    boxShadow:
-                    _Power.softGlow(a.color, strength: 0.25),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        a.color.withOpacity(0.28),
+                        a.color.withOpacity(0.08),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(_R.sm),
+                    boxShadow: _Power.softGlow(a.color, strength: 0.25),
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -1635,7 +1727,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                     style: const TextStyle(fontSize: 22),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: _R.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1676,7 +1768,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
   }
 
   // =====================================================================
-  // TIMELINE GRID (без изменений)
+  // DAILY TIMELINE
   // =====================================================================
 
   Widget _buildDailyTimeline(
@@ -1685,31 +1777,19 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
       WorkoutProgram program,
       ) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(_Sp.xl),
       decoration: BoxDecoration(
         color: _Power.card(isDark),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(_R.xl),
         border: Border.all(color: _Power.separator(isDark), width: 0.5),
+        boxShadow: _Power.cardShadow(isDark, _Power.ice),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _Power.ice.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: _Power.softGlow(_Power.ice, strength: 0.15),
-                ),
-                child: const Icon(
-                  Icons.calendar_month_rounded,
-                  color: _Power.ice,
-                  size: 17,
-                ),
-              ),
+              _iconBadge(icon: Icons.calendar_month_rounded, color: _Power.ice),
               const SizedBox(width: 10),
               Text(
                 'КАЛЕНДАРЬ ПРОГРАММЫ',
@@ -1722,7 +1802,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _Sp.lg),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -1780,13 +1860,13 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
                     const SizedBox(height: 2),
                     Text(
                       '${index + 1}',
-                      style: TextStyle(
+                      style: _Num.t(TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.2,
                         height: 1,
                         color: _Power.textPrimary(isDark),
-                      ),
+                      )),
                     ),
                   ],
                 ),
@@ -1799,7 +1879,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
   }
 
   // =====================================================================
-  // ACTIONS (без изменений)
+  // ACTIONS
   // =====================================================================
 
   Widget _buildActionButtons(bool isDark, ProgramSession session) {
@@ -1808,31 +1888,33 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         SizedBox(
           width: double.infinity,
           height: 54,
-          child: ElevatedButton(
-            onPressed: () => _shareResult(session),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _Power.ice,
-              foregroundColor: Colors.black,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+          child: _Pressable(
+            onTap: () => _shareResult(session),
+            scale: 0.97,
+            haptic: false,
+            child: Container(
+              decoration: BoxDecoration(
+                color: _Power.ice,
+                borderRadius: BorderRadius.circular(_R.md),
+                boxShadow: _Power.softGlow(_Power.ice, strength: 0.4),
               ),
-              shadowColor: _Power.ice.withOpacity(0.5),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.share_rounded, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'ПОДЕЛИТЬСЯ',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
+              alignment: Alignment.center,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.share_rounded, size: 20, color: Colors.black),
+                  SizedBox(width: _Sp.sm),
+                  Text(
+                    'ПОДЕЛИТЬСЯ',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1840,46 +1922,50 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
         SizedBox(
           width: double.infinity,
           height: 54,
-          child: ElevatedButton(
-            onPressed: () {
+          child: _Pressable(
+            onTap: () {
               HapticFeedback.mediumImpact();
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _Power.volt,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+            scale: 0.97,
+            haptic: false,
+            child: Container(
+              decoration: BoxDecoration(
+                color: _Power.volt,
+                borderRadius: BorderRadius.circular(_R.md),
+                boxShadow: _Power.softGlow(_Power.volt, strength: 0.4),
               ),
-              shadowColor: _Power.volt.withOpacity(0.5),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add_rounded, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'НОВАЯ ПРОГРАММА',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
+              alignment: Alignment.center,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_rounded, size: 20, color: Colors.white),
+                  SizedBox(width: _Sp.sm),
+                  Text(
+                    'НОВАЯ ПРОГРАММА',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
         const SizedBox(height: 10),
-        GestureDetector(
+        _Pressable(
           onTap: () {
             HapticFeedback.selectionClick();
             Navigator.of(context).popUntil((route) => route.isFirst);
           },
+          scale: 0.96,
+          haptic: false,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: _R.md),
             alignment: Alignment.center,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1907,9 +1993,9 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  // 🆕 SHARE — мультиметрика в тексте
-  // ══════════════════════════════════════════════════════════
+  // =====================================================================
+  // SHARE
+  // =====================================================================
 
   void _shareResult(ProgramSession session) {
     final program = widget.program;
@@ -1921,8 +2007,7 @@ class _ProgramSummaryScreenState extends State<ProgramSummaryScreen>
 
     final metricLines = <String>[];
     if (kg > 0) {
-      metricLines.add(
-          '🏋️ Тоннаж: ${(kg / 1000).toStringAsFixed(1)}k кг');
+      metricLines.add('🏋️ Тоннаж: ${(kg / 1000).toStringAsFixed(1)}k кг');
     }
     if (km > 0) {
       metricLines.add('📏 Дистанция: ${km.toStringAsFixed(1)} км');
@@ -1952,11 +2037,10 @@ ${metricLines.join('\n')}
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: const [
-            Icon(Icons.check_circle_rounded,
-                color: Colors.white, size: 20),
-            SizedBox(width: 12),
+        content: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            SizedBox(width: _Sp.md),
             Expanded(
               child: Text(
                 'Результат скопирован!',
@@ -1968,7 +2052,7 @@ ${metricLines.join('\n')}
         backgroundColor: _Power.green,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(_R.md),
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -1999,9 +2083,8 @@ ${metricLines.join('\n')}
   }
 }
 
-// ==================== ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ ====================
+// ==================== HELPER CLASSES ====================
 
-/// 🆕 Прогресс упражнения в рамках программы (было → стало).
 class _ExerciseProgressItem {
   final Exercise exercise;
   final ExerciseFormat format;
@@ -2016,7 +2099,6 @@ class _ExerciseProgressItem {
   });
 }
 
-/// 🆕 Изменение «было → стало» по формату.
 class _ExerciseChange {
   final String fromValue;
   final String toValue;
@@ -2035,7 +2117,7 @@ class _ExerciseChange {
   });
 }
 
-// ==================== CUSTOM PAINTER (без изменений) ====================
+// ==================== CUSTOM PAINTER ====================
 
 class _DonutChartPainter extends CustomPainter {
   final List<_ChartSegment> segments;
@@ -2075,8 +2157,7 @@ class _DonutChartPainter extends CustomPainter {
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
 
         canvas.drawArc(
-          Rect.fromCircle(
-              center: center, radius: radius - strokeWidth / 2),
+          Rect.fromCircle(center: center, radius: radius - strokeWidth / 2),
           startAngle,
           sweepAngle,
           false,
@@ -2085,8 +2166,7 @@ class _DonutChartPainter extends CustomPainter {
       }
 
       canvas.drawArc(
-        Rect.fromCircle(
-            center: center, radius: radius - strokeWidth / 2),
+        Rect.fromCircle(center: center, radius: radius - strokeWidth / 2),
         startAngle,
         sweepAngle,
         false,
