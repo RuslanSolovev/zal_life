@@ -17,7 +17,7 @@ import '../../../providers/fitness_provider.dart';
 import '../widgets/timer_widget.dart';
 
 // ═══════════════════════════════════════════════════════════════════
-//  PREMIUM DESIGN SYSTEM
+//  PREMIUM DESIGN SYSTEM — compact
 // ═══════════════════════════════════════════════════════════════════
 class _P {
   static const bg = Color(0xFFF6F7F9);
@@ -48,13 +48,30 @@ class _P {
 }
 
 class _T {
-  static TextStyle title1 = GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.8, color: _P.text);
-  static TextStyle title2 = GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: -0.6, color: _P.text);
-  static TextStyle headline = GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: _P.text);
-  static TextStyle body = GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: _P.textMuted);
-  static TextStyle caption = GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400, color: _P.textMuted);
-  static TextStyle overline = GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: _P.textMuted);
-  static TextStyle number = GoogleFonts.inter(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()]);
+  static TextStyle title1 = GoogleFonts.inter(
+      fontSize: 22,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.7,
+      color: _P.text);
+  static TextStyle title2 = GoogleFonts.inter(
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.5,
+      color: _P.text);
+  static TextStyle headline = GoogleFonts.inter(
+      fontSize: 15, fontWeight: FontWeight.w600, color: _P.text);
+  static TextStyle body = GoogleFonts.inter(
+      fontSize: 13, fontWeight: FontWeight.w400, color: _P.textMuted);
+  static TextStyle caption = GoogleFonts.inter(
+      fontSize: 11, fontWeight: FontWeight.w400, color: _P.textMuted);
+  static TextStyle overline = GoogleFonts.inter(
+      fontSize: 9,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 1.1,
+      color: _P.textMuted);
+  static TextStyle number = GoogleFonts.inter(
+      fontWeight: FontWeight.w600,
+      fontFeatures: const [FontFeature.tabularFigures()]);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -64,48 +81,74 @@ enum _ExCategory { strength, bodyweight, hold, timedSets, cardio, combat }
 
 _ExCategory _detectCategory(Exercise ex, ExerciseFormat format) {
   switch (format) {
-    case ExerciseFormat.hold: return _ExCategory.hold;
-    case ExerciseFormat.timedSets: return _ExCategory.timedSets;
-    case ExerciseFormat.rounds: return _ExCategory.combat;
+    case ExerciseFormat.hold:
+      return _ExCategory.hold;
+    case ExerciseFormat.timedSets:
+      return _ExCategory.timedSets;
+    case ExerciseFormat.rounds:
+      return _ExCategory.combat;
     case ExerciseFormat.continuous:
-    case ExerciseFormat.intervals: return _ExCategory.cardio;
+    case ExerciseFormat.intervals:
+      return _ExCategory.cardio;
     case ExerciseFormat.setsReps:
-      if (ex.exerciseType == ExerciseType.bodyweight || ex.exerciseType == ExerciseType.yoga) return _ExCategory.bodyweight;
+      if (ex.exerciseType == ExerciseType.bodyweight ||
+          ex.exerciseType == ExerciseType.yoga) {
+        return _ExCategory.bodyweight;
+      }
       return _ExCategory.strength;
-    case ExerciseFormat.freeform: return _ExCategory.timedSets;
+    case ExerciseFormat.freeform:
+      return _ExCategory.timedSets;
   }
 }
 
 Color _accentFor(_ExCategory c) {
   switch (c) {
-    case _ExCategory.strength: return _P.peachDeep;
-    case _ExCategory.bodyweight: return _P.greenDeep;
-    case _ExCategory.hold: return _P.yellowDeep;
-    case _ExCategory.timedSets: return _P.lavenderDeep;
-    case _ExCategory.cardio: return _P.skyDeep;
-    case _ExCategory.combat: return _P.pinkDeep;
+    case _ExCategory.strength:
+      return _P.peachDeep;
+    case _ExCategory.bodyweight:
+      return _P.greenDeep;
+    case _ExCategory.hold:
+      return _P.yellowDeep;
+    case _ExCategory.timedSets:
+      return _P.lavenderDeep;
+    case _ExCategory.cardio:
+      return _P.skyDeep;
+    case _ExCategory.combat:
+      return _P.pinkDeep;
   }
 }
 
 Color _softFor(_ExCategory c) {
   switch (c) {
-    case _ExCategory.strength: return _P.peachSoft;
-    case _ExCategory.bodyweight: return _P.greenSoft;
-    case _ExCategory.hold: return _P.yellowSoft;
-    case _ExCategory.timedSets: return _P.lavenderSoft;
-    case _ExCategory.cardio: return _P.skySoft;
-    case _ExCategory.combat: return _P.pinkSoft;
+    case _ExCategory.strength:
+      return _P.peachSoft;
+    case _ExCategory.bodyweight:
+      return _P.greenSoft;
+    case _ExCategory.hold:
+      return _P.yellowSoft;
+    case _ExCategory.timedSets:
+      return _P.lavenderSoft;
+    case _ExCategory.cardio:
+      return _P.skySoft;
+    case _ExCategory.combat:
+      return _P.pinkSoft;
   }
 }
 
 String _categoryLabel(_ExCategory c) {
   switch (c) {
-    case _ExCategory.strength: return 'Сила';
-    case _ExCategory.bodyweight: return 'Свой вес';
-    case _ExCategory.hold: return 'Статика';
-    case _ExCategory.timedSets: return 'На время';
-    case _ExCategory.cardio: return 'Кардио';
-    case _ExCategory.combat: return 'Раунды';
+    case _ExCategory.strength:
+      return 'Сила';
+    case _ExCategory.bodyweight:
+      return 'Свой вес';
+    case _ExCategory.hold:
+      return 'Статика';
+    case _ExCategory.timedSets:
+      return 'На время';
+    case _ExCategory.cardio:
+      return 'Кардио';
+    case _ExCategory.combat:
+      return 'Раунды';
   }
 }
 
@@ -125,7 +168,7 @@ class _ExImage extends StatelessWidget {
   const _ExImage({
     this.url,
     required this.size,
-    this.radius = 14,
+    this.radius = 12,
     this.bg,
     this.border,
     this.fallbackEmoji,
@@ -138,49 +181,45 @@ class _ExImage extends StatelessWidget {
     final hasImage = url != null && url!.isNotEmpty;
 
     final Widget fallback = fallbackIcon != null
-        ? Icon(fallbackIcon, size: size * 0.42, color: fallbackColor ?? _P.textMuted)
-        : Text(fallbackEmoji ?? '🏋️', style: TextStyle(fontSize: size * 0.42));
+        ? Icon(fallbackIcon,
+        size: size * 0.42, color: fallbackColor ?? _P.textMuted)
+        : Text(fallbackEmoji ?? '🏋️',
+        style: TextStyle(fontSize: size * 0.42));
 
     Widget content = fallback;
     if (hasImage) {
       if (url!.startsWith('assets/')) {
-        content = Image.asset(
-          url!,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => fallback,
-        );
+        content = Image.asset(url!,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => fallback);
       } else if (url!.startsWith('http')) {
         content = CachedNetworkImage(
-          imageUrl: url!,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          placeholder: (_, __) => Container(color: bg ?? _P.bg),
-          errorWidget: (_, __, ___) => fallback,
-        );
+            imageUrl: url!,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            placeholder: (_, __) => Container(color: bg ?? _P.bg),
+            errorWidget: (_, __, ___) => fallback);
       } else {
-        content = Image.file(
-          File(url!),
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => fallback,
-        );
+        content = Image.file(File(url!),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => fallback);
       }
     }
 
-    // локалка — чтобы Dart сузил тип
     final b = border;
 
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: bg ?? _P.bg,               // ← Color (не nullable)
+        color: bg ?? _P.bg,
         borderRadius: BorderRadius.circular(radius),
-        border: b != null ? Border.all(color: b) : null,  // ← b уже Color
+        border: b != null ? Border.all(color: b) : null,
       ),
       clipBehavior: Clip.antiAlias,
       alignment: Alignment.center,
@@ -189,7 +228,6 @@ class _ExImage extends StatelessWidget {
   }
 }
 
-/// Полноразмерная обложка упражнения с градиентом и фолбэком.
 class _ExCover extends StatelessWidget {
   final String? url;
   final double? height;
@@ -212,27 +250,23 @@ class _ExCover extends StatelessWidget {
       img = Container(
         color: _P.greenSoft,
         alignment: Alignment.center,
-        child: Text(fallbackEmoji ?? '🏋️', style: const TextStyle(fontSize: 64)),
+        child: Text(fallbackEmoji ?? '🏋️',
+            style: const TextStyle(fontSize: 44)),
       );
     } else if (url!.startsWith('assets/')) {
-      img = Image.asset(
-        url!,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(color: _P.greenSoft),
-      );
+      img = Image.asset(url!,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(color: _P.greenSoft));
     } else if (url!.startsWith('http')) {
       img = CachedNetworkImage(
-        imageUrl: url!,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: _P.bg),
-        errorWidget: (_, __, ___) => Container(color: _P.greenSoft),
-      );
+          imageUrl: url!,
+          fit: BoxFit.cover,
+          placeholder: (_, __) => Container(color: _P.bg),
+          errorWidget: (_, __, ___) => Container(color: _P.greenSoft));
     } else {
-      img = Image.file(
-        File(url!),
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(color: _P.greenSoft),
-      );
+      img = Image.file(File(url!),
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(color: _P.greenSoft));
     }
 
     return ClipRRect(
@@ -248,10 +282,12 @@ class _ExCover extends StatelessWidget {
 class WorkoutExecutionScreen extends StatefulWidget {
   final WorkoutDay day;
   final bool isDark;
-  const WorkoutExecutionScreen({super.key, required this.day, this.isDark = false});
+  const WorkoutExecutionScreen(
+      {super.key, required this.day, this.isDark = false});
 
   @override
-  State<WorkoutExecutionScreen> createState() => _WorkoutExecutionScreenState();
+  State<WorkoutExecutionScreen> createState() =>
+      _WorkoutExecutionScreenState();
 }
 
 class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
@@ -321,7 +357,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             (e) => e.id == we.exerciseId,
         orElse: () => Exercise(id: '', name: ''),
       );
-      final format = FitnessHelpers.resolveFormat(we, exData.id.isEmpty ? null : exData);
+      final format =
+      FitnessHelpers.resolveFormat(we, exData.id.isEmpty ? null : exData);
       return _detectCategory(exData, format);
     } catch (_) {
       return _ExCategory.strength;
@@ -334,7 +371,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     switch (cat) {
       case _ExCategory.strength:
         final w = s.weight;
-        final wStr = w == w.roundToDouble() ? w.toStringAsFixed(0) : w.toStringAsFixed(1);
+        final wStr =
+        w == w.roundToDouble() ? w.toStringAsFixed(0) : w.toStringAsFixed(1);
         return '${s.reps} × $wStr кг';
       case _ExCategory.bodyweight:
         return '${s.reps} повт.';
@@ -361,21 +399,27 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           _steps.add(_WorkoutStep(exerciseIndex: e, setIndex: 0, circuitNumber: 0));
         } else {
           for (int s = 0; s < _config[e].sets.length; s++) {
-            _steps.add(_WorkoutStep(exerciseIndex: e, setIndex: s, circuitNumber: 0));
+            _steps.add(
+                _WorkoutStep(exerciseIndex: e, setIndex: s, circuitNumber: 0));
           }
         }
       }
     } else {
-      final maxSets = _config.fold<int>(0, (m, c) => c.sets.length > m ? c.sets.length : m);
+      final maxSets =
+      _config.fold<int>(0, (m, c) => c.sets.length > m ? c.sets.length : m);
       final circuits = _totalCircuits.clamp(1, math.max(1, maxSets)).toInt();
       _totalCircuits = circuits;
       for (int circuit = 0; circuit < circuits; circuit++) {
         for (int e = 0; e < _config.length; e++) {
           final cat = _catOf(e);
           if (cat == _ExCategory.combat) {
-            _steps.add(_WorkoutStep(exerciseIndex: e, setIndex: 0, circuitNumber: circuit + 1));
+            _steps.add(_WorkoutStep(
+                exerciseIndex: e, setIndex: 0, circuitNumber: circuit + 1));
           } else if (circuit < _config[e].sets.length) {
-            _steps.add(_WorkoutStep(exerciseIndex: e, setIndex: circuit, circuitNumber: circuit + 1));
+            _steps.add(_WorkoutStep(
+                exerciseIndex: e,
+                setIndex: circuit,
+                circuitNumber: circuit + 1));
           }
         }
       }
@@ -383,15 +427,16 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   _WorkoutStep? get _currentStep {
-    if (_currentStepIndex < 0 || _currentStepIndex >= _steps.length) return null;
+    if (_currentStepIndex < 0 || _currentStepIndex >= _steps.length) {
+      return null;
+    }
     return _steps[_currentStepIndex];
   }
 
-  // Backward-compatible alias
   Widget _buildExImage(
       String? url, {
         required double size,
-        double radius = 14,
+        double radius = 12,
         Color? bg,
         Color? border,
         String? fallbackEmoji,
@@ -414,7 +459,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<FitnessProvider>();
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 350),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       child: KeyedSubtree(key: ValueKey(_phase), child: _buildPhase(provider)),
@@ -423,21 +468,31 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
   Widget _buildPhase(FitnessProvider provider) {
     switch (_phase) {
-      case WorkoutPhase.setup: return _buildSetupScreen(provider);
-      case WorkoutPhase.active: return _buildActiveScreen(provider);
-      case WorkoutPhase.rest: return _buildRestScreen(provider);
-      case WorkoutPhase.completed: return _buildCompletedScreen();
+      case WorkoutPhase.setup:
+        return _buildSetupScreen(provider);
+      case WorkoutPhase.active:
+        return _buildActiveScreen(provider);
+      case WorkoutPhase.rest:
+        return _buildRestScreen(provider);
+      case WorkoutPhase.completed:
+        return _buildCompletedScreen();
     }
   }
 
   bool _isSetConfiguredByCategory(SetConfig s, _ExCategory cat) {
     switch (cat) {
-      case _ExCategory.strength: return s.reps > 0 && s.weight > 0;
-      case _ExCategory.bodyweight: return s.reps > 0;
-      case _ExCategory.hold: return (s.holdSeconds ?? 0) > 0;
-      case _ExCategory.timedSets: return s.duration > 0;
-      case _ExCategory.cardio: return (s.distance ?? 0) > 0 || s.duration > 0;
-      case _ExCategory.combat: return (s.rounds ?? 0) > 0 && (s.roundDuration ?? 0) > 0;
+      case _ExCategory.strength:
+        return s.reps > 0 && s.weight > 0;
+      case _ExCategory.bodyweight:
+        return s.reps > 0;
+      case _ExCategory.hold:
+        return (s.holdSeconds ?? 0) > 0;
+      case _ExCategory.timedSets:
+        return s.duration > 0;
+      case _ExCategory.cardio:
+        return (s.distance ?? 0) > 0 || s.duration > 0;
+      case _ExCategory.combat:
+        return (s.rounds ?? 0) > 0 && (s.roundDuration ?? 0) > 0;
     }
   }
 
@@ -457,33 +512,42 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
         backgroundColor: _P.bg,
         elevation: 0,
         centerTitle: true,
+        toolbarHeight: 56,
         leading: IconButton(
           icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: const Icon(Icons.chevron_left_rounded, color: _P.text, size: 20),
+            padding: const EdgeInsets.all(7),
+            decoration: const BoxDecoration(
+                color: Colors.white, shape: BoxShape.circle),
+            child:
+            const Icon(Icons.chevron_left_rounded, color: _P.text, size: 18),
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Настройка', style: _T.headline.copyWith(fontSize: 18, fontWeight: FontWeight.w700)),
+        title: Text('Настройка',
+            style: _T.headline.copyWith(
+                fontSize: 16, fontWeight: FontWeight.w700)),
         actions: [
           if (_config.length > 1)
             Padding(
-              padding: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.only(right: 12),
               child: Row(
                 children: [
                   Text('Круг', style: _T.caption),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Transform.scale(
-                    scale: 0.8,
+                    scale: 0.7,
                     child: Switch(
                       value: _isCircuitMode,
                       onChanged: (v) {
                         setState(() {
                           _isCircuitMode = v;
                           if (v) {
-                            final maxSets = _config.fold<int>(0, (m, c) => c.sets.length > m ? c.sets.length : m);
-                            _totalCircuits = math.max(1, math.min(10, maxSets));
+                            final maxSets = _config.fold<int>(
+                                0,
+                                    (m, c) =>
+                                c.sets.length > m ? c.sets.length : m);
+                            _totalCircuits =
+                                math.max(1, math.min(10, maxSets));
                           }
                         });
                       },
@@ -501,9 +565,10 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(child: _buildSetupHero(provider)),
-          if (_isCircuitMode) SliverToBoxAdapter(child: _buildCircuitSettingsCard()),
+          if (_isCircuitMode)
+            SliverToBoxAdapter(child: _buildCircuitSettingsCard()),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -518,7 +583,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
       bottomSheet: _buildStartButton(provider),
@@ -530,16 +595,20 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     int configuredSets = 0;
     for (int i = 0; i < _config.length; i++) {
       final cat = _catOf(i);
-      configuredSets += _config[i].sets.where((x) => _isSetConfiguredByCategory(x, cat)).length;
+      configuredSets += _config[i]
+          .sets
+          .where((x) => _isSetConfiguredByCategory(x, cat))
+          .length;
     }
-    final readyExercises = _config.where((c) => _isExerciseConfigured(c, provider)).length;
+    final readyExercises =
+        _config.where((c) => _isExerciseConfigured(c, provider)).length;
     final progress = totalSets > 0 ? configuredSets / totalSets : 0.0;
     final allReady = _config.isNotEmpty && readyExercises == _config.length;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Container(
-        padding: const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -548,14 +617,14 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                 ? [const Color(0xFFE4F0E8), _P.greenSoft, const Color(0xFFF4F8F5)]
                 : [Colors.white, _P.greenSoft, const Color(0xFFF4F8F5)],
           ),
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white, width: 1),
           boxShadow: [
             BoxShadow(
-              color: _P.greenDeep.withOpacity(0.08),
-              blurRadius: 24,
+              color: _P.greenDeep.withOpacity(0.06),
+              blurRadius: 16,
               spreadRadius: -4,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -565,63 +634,66 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Ring с прогрессом
                 SizedBox(
-                  width: 78,
-                  height: 78,
+                  width: 58,
+                  height: 58,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
                       SizedBox(
-                        width: 78,
-                        height: 78,
+                        width: 58,
+                        height: 58,
                         child: CircularProgressIndicator(
                           value: 1,
-                          strokeWidth: 6,
-                          valueColor: AlwaysStoppedAnimation(_P.greenDeep.withOpacity(0.12)),
+                          strokeWidth: 5,
+                          valueColor: AlwaysStoppedAnimation(
+                              _P.greenDeep.withOpacity(0.12)),
                         ),
                       ),
                       SizedBox(
-                        width: 78,
-                        height: 78,
+                        width: 58,
+                        height: 58,
                         child: CircularProgressIndicator(
                           value: progress,
-                          strokeWidth: 6,
+                          strokeWidth: 5,
                           strokeCap: StrokeCap.round,
-                          valueColor: const AlwaysStoppedAnimation(_P.greenDeep),
+                          valueColor:
+                          const AlwaysStoppedAnimation(_P.greenDeep),
                         ),
                       ),
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            '$readyExercises',
-                            style: _T.number.copyWith(fontSize: 26, color: _P.greenText, letterSpacing: -1, height: 1),
-                          ),
-                          Text(
-                            '/ ${_config.length}',
-                            style: _T.caption.copyWith(fontSize: 10, color: _P.greenText),
-                          ),
+                          Text('$readyExercises',
+                              style: _T.number.copyWith(
+                                  fontSize: 20,
+                                  color: _P.greenText,
+                                  letterSpacing: -0.6,
+                                  height: 1)),
+                          Text('/ ${_config.length}',
+                              style: _T.caption
+                                  .copyWith(fontSize: 9, color: _P.greenText)),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 18),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         allReady ? 'ВСЁ ГОТОВО' : 'ПОДГОТОВКА',
-                        style: _T.overline.copyWith(color: _P.greenText, fontSize: 9, letterSpacing: 1.6),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        allReady ? 'Можно начинать' : 'Заполни подходы',
-                        style: _T.title2.copyWith(fontSize: 20, color: _P.text),
+                        style: _T.overline
+                            .copyWith(color: _P.greenText, letterSpacing: 1.4),
                       ),
                       const SizedBox(height: 4),
+                      Text(
+                        allReady ? 'Можно начинать' : 'Заполни подходы',
+                        style: _T.title2.copyWith(fontSize: 17, color: _P.text),
+                      ),
+                      const SizedBox(height: 2),
                       Text(
                         '$configuredSets из $totalSets подходов',
                         style: _T.caption.copyWith(color: _P.greenText),
@@ -631,14 +703,15 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             Row(
               children: List.generate(_config.length, (i) {
                 final isDone = i < readyExercises;
                 return Expanded(
                   child: Container(
-                    height: 4,
-                    margin: EdgeInsets.only(right: i < _config.length - 1 ? 4 : 0),
+                    height: 3,
+                    margin:
+                    EdgeInsets.only(right: i < _config.length - 1 ? 3 : 0),
                     decoration: BoxDecoration(
                       color: isDone ? _P.greenDeep : _P.border,
                       borderRadius: BorderRadius.circular(2),
@@ -654,16 +727,17 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   Widget _buildCircuitSettingsCard() {
-    final maxSets = _config.fold<int>(0, (m, c) => c.sets.length > m ? c.sets.length : m);
+    final maxSets =
+    _config.fold<int>(0, (m, c) => c.sets.length > m ? c.sets.length : m);
     final clampedMax = math.max(1, maxSets);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _P.yellowSoft,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: _P.yellowDeep.withOpacity(0.3)),
         ),
         child: Column(
@@ -671,39 +745,57 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.refresh_rounded, color: _P.yellowDeep, size: 20),
-                const SizedBox(width: 8),
-                Text('КРУГОВАЯ ТРЕНИРОВКА', style: _T.overline.copyWith(color: _P.yellowDeep)),
+                const Icon(Icons.refresh_rounded,
+                    color: _P.yellowDeep, size: 16),
+                const SizedBox(width: 6),
+                Text('КРУГОВАЯ ТРЕНИРОВКА',
+                    style: _T.overline.copyWith(color: _P.yellowDeep)),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Text('Количество кругов', style: _T.body),
                 const Spacer(),
                 Container(
-                  height: 44,
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                  height: 36,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10)),
                   child: Row(
                     children: [
                       InkWell(
-                        onTap: _totalCircuits > 1 ? () => setState(() => _totalCircuits--) : null,
+                        onTap: _totalCircuits > 1
+                            ? () => setState(() => _totalCircuits--)
+                            : null,
                         child: SizedBox(
-                          width: 48,
-                          height: 44,
-                          child: Icon(Icons.remove, size: 20, color: _totalCircuits > 1 ? _P.text : _P.textMuted),
+                          width: 40,
+                          height: 36,
+                          child: Icon(Icons.remove,
+                              size: 16,
+                              color: _totalCircuits > 1
+                                  ? _P.text
+                                  : _P.textMuted),
                         ),
                       ),
                       SizedBox(
-                        width: 40,
-                        child: Center(child: Text('$_totalCircuits', style: _T.headline)),
+                        width: 32,
+                        child: Center(
+                            child: Text('$_totalCircuits',
+                                style: _T.headline)),
                       ),
                       InkWell(
-                        onTap: _totalCircuits < clampedMax ? () => setState(() => _totalCircuits++) : null,
+                        onTap: _totalCircuits < clampedMax
+                            ? () => setState(() => _totalCircuits++)
+                            : null,
                         child: SizedBox(
-                          width: 48,
-                          height: 44,
-                          child: Icon(Icons.add, size: 20, color: _totalCircuits < clampedMax ? _P.greenDeep : _P.textMuted),
+                          width: 40,
+                          height: 36,
+                          child: Icon(Icons.add,
+                              size: 16,
+                              color: _totalCircuits < clampedMax
+                                  ? _P.greenDeep
+                                  : _P.textMuted),
                         ),
                       ),
                     ],
@@ -717,7 +809,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     );
   }
 
-  Widget _buildExerciseCard(int exIndex, ConfiguredExercise config, Exercise exData, FitnessProvider provider) {
+  Widget _buildExerciseCard(int exIndex, ConfiguredExercise config,
+      Exercise exData, FitnessProvider provider) {
     final cat = _catOf(exIndex);
     final accent = _accentFor(cat);
     final soft = _softFor(cat);
@@ -725,13 +818,20 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     final hasImage = exData.imageUrl != null && exData.imageUrl!.isNotEmpty;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isReady ? _P.greenDeep.withOpacity(0.3) : _P.divider, width: isReady ? 1.5 : 1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+            color: isReady ? _P.greenDeep.withOpacity(0.3) : _P.divider,
+            width: isReady ? 1.4 : 1),
         boxShadow: [
-          BoxShadow(color: _P.text.withOpacity(0.02), blurRadius: 12, spreadRadius: -2, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: _P.text.withOpacity(0.02),
+            blurRadius: 10,
+            spreadRadius: -2,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       clipBehavior: Clip.antiAlias,
@@ -742,8 +842,9 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           highlightColor: Colors.transparent,
         ),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          tilePadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
           initiallyExpanded: !isReady && exIndex == 0,
           iconColor: _P.textMuted,
           collapsedIconColor: _P.textMuted,
@@ -751,8 +852,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             children: [
               _ExImage(
                 url: exData.imageUrl,
-                size: 52,
-                radius: 16,
+                size: 42,
+                radius: 12,
                 bg: soft,
                 fallbackEmoji: exData.exerciseType.emoji,
               ),
@@ -761,14 +862,15 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                   bottom: -2,
                   right: -2,
                   child: Container(
-                    width: 18,
-                    height: 18,
+                    width: 16,
+                    height: 16,
                     decoration: BoxDecoration(
                       color: _P.greenDeep,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: Colors.white, width: 1.8),
                     ),
-                    child: const Icon(Icons.check_rounded, color: Colors.white, size: 10),
+                    child: const Icon(Icons.check_rounded,
+                        color: Colors.white, size: 9),
                   ),
                 ),
             ],
@@ -776,20 +878,27 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(exData.name, style: _T.headline),
-              const SizedBox(height: 4),
+              Text(exData.name,
+                  style: _T.headline.copyWith(fontSize: 14),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 3),
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(6)),
-                    child: Text(_categoryLabel(cat), style: _T.overline.copyWith(color: accent, fontSize: 9)),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: soft, borderRadius: BorderRadius.circular(5)),
+                    child: Text(_categoryLabel(cat),
+                        style:
+                        _T.overline.copyWith(color: accent, fontSize: 8)),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       _summaryTextForCategory(config, cat),
-                      style: _T.caption,
+                      style: _T.caption.copyWith(fontSize: 10),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -800,18 +909,21 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           children: [
             if (hasImage)
               Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   child: SizedBox(
-                    height: 140,
+                    height: 100,
                     width: double.infinity,
-                    child: _ExCover(url: exData.imageUrl, height: 140, fallbackEmoji: exData.exerciseType.emoji),
+                    child: _ExCover(
+                        url: exData.imageUrl,
+                        height: 100,
+                        fallbackEmoji: exData.exerciseType.emoji),
                   ),
                 ),
               ),
             ..._buildCategoryInputs(exIndex, config, cat),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             _buildAddSetButton(accent, () => _addSetForCategory(exIndex, cat)),
           ],
         ),
@@ -823,32 +935,48 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(color: accent.withOpacity(0.08), borderRadius: BorderRadius.circular(16)),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+            color: accent.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_rounded, size: 18, color: accent),
-            const SizedBox(width: 8),
-            Text('ДОБАВИТЬ ПОДХОД', style: _T.caption.copyWith(color: accent, fontWeight: FontWeight.w600)),
+            Icon(Icons.add_rounded, size: 15, color: accent),
+            const SizedBox(width: 6),
+            Text('ДОБАВИТЬ ПОДХОД',
+                style: _T.caption.copyWith(
+                    color: accent, fontWeight: FontWeight.w600, fontSize: 10)),
           ],
         ),
       ),
     );
   }
 
-  List<Widget> _buildCategoryInputs(int exIndex, ConfiguredExercise config, _ExCategory cat) {
+  List<Widget> _buildCategoryInputs(
+      int exIndex, ConfiguredExercise config, _ExCategory cat) {
     final sets = config.sets;
 
     Widget headerRow;
     if (cat == _ExCategory.strength) {
       headerRow = Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.only(bottom: 6),
         child: Row(
           children: const [
-            SizedBox(width: 32, child: Text('ПОДХОД', style: TextStyle(fontSize: 10, color: _P.textMuted))),
-            Expanded(child: Center(child: Text('Вес (кг)', style: TextStyle(fontSize: 10, color: _P.textMuted)))),
-            Expanded(child: Center(child: Text('Повторы', style: TextStyle(fontSize: 10, color: _P.textMuted)))),
+            SizedBox(
+                width: 28,
+                child: Text('ПОДХОД',
+                    style: TextStyle(fontSize: 9, color: _P.textMuted))),
+            Expanded(
+                child: Center(
+                    child: Text('Вес (кг)',
+                        style: TextStyle(
+                            fontSize: 9, color: _P.textMuted)))),
+            Expanded(
+                child: Center(
+                    child: Text('Повторы',
+                        style: TextStyle(
+                            fontSize: 9, color: _P.textMuted)))),
           ],
         ),
       );
@@ -867,47 +995,94 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
         switch (cat) {
           case _ExCategory.strength:
-            left = _FigmaStepper(value: s.weight, step: 2.5, isDecimal: true, quickPicks: const [40, 60, 80, 100], onChanged: (v) => setState(() => s.weight = v));
-            right = _FigmaStepper(value: s.reps.toDouble(), step: 1, isDecimal: false, quickPicks: const [8, 10, 12, 15], onChanged: (v) => setState(() => s.reps = v.round()));
+            left = _FigmaStepper(
+                value: s.weight,
+                step: 2.5,
+                isDecimal: true,
+                quickPicks: const [40, 60, 80, 100],
+                onChanged: (v) => setState(() => s.weight = v));
+            right = _FigmaStepper(
+                value: s.reps.toDouble(),
+                step: 1,
+                isDecimal: false,
+                quickPicks: const [8, 10, 12, 15],
+                onChanged: (v) => setState(() => s.reps = v.round()));
             break;
           case _ExCategory.bodyweight:
-            left = _FigmaStepper(value: s.reps.toDouble(), step: 1, isDecimal: false, quickPicks: const [10, 15, 20, 25], onChanged: (v) => setState(() => s.reps = v.round()));
+            left = _FigmaStepper(
+                value: s.reps.toDouble(),
+                step: 1,
+                isDecimal: false,
+                quickPicks: const [10, 15, 20, 25],
+                onChanged: (v) => setState(() => s.reps = v.round()));
             right = null;
             break;
           case _ExCategory.hold:
-            left = _FigmaStepper(value: (s.holdSeconds ?? 0).toDouble(), step: 5, isDecimal: false, formatValue: (v) => '${v.round()}с', quickPicks: const [30, 45, 60, 90], onChanged: (v) => setState(() => s.holdSeconds = v.round()));
+            left = _FigmaStepper(
+                value: (s.holdSeconds ?? 0).toDouble(),
+                step: 5,
+                isDecimal: false,
+                formatValue: (v) => '${v.round()}с',
+                quickPicks: const [30, 45, 60, 90],
+                onChanged: (v) =>
+                    setState(() => s.holdSeconds = v.round()));
             right = null;
             break;
           case _ExCategory.timedSets:
-            left = _FigmaStepper(value: s.duration.toDouble(), step: 15, isDecimal: false, formatValue: (v) => '${v.round()}с', quickPicks: const [30, 45, 60, 90], onChanged: (v) => setState(() => s.duration = v.round()));
-            right = _FigmaStepper(value: s.reps.toDouble(), step: 1, isDecimal: false, quickPicks: const [10, 15, 20, 25], onChanged: (v) => setState(() => s.reps = v.round()));
+            left = _FigmaStepper(
+                value: s.duration.toDouble(),
+                step: 15,
+                isDecimal: false,
+                formatValue: (v) => '${v.round()}с',
+                quickPicks: const [30, 45, 60, 90],
+                onChanged: (v) => setState(() => s.duration = v.round()));
+            right = _FigmaStepper(
+                value: s.reps.toDouble(),
+                step: 1,
+                isDecimal: false,
+                quickPicks: const [10, 15, 20, 25],
+                onChanged: (v) => setState(() => s.reps = v.round()));
             break;
           case _ExCategory.cardio:
-            left = _FigmaStepper(value: (s.distance ?? 0), step: 0.1, isDecimal: true, formatValue: (v) => '${v.toStringAsFixed(1)}км', quickPicks: const [1, 3, 5, 10], onChanged: (v) => setState(() => s.distance = v));
-            right = _FigmaStepper(value: s.duration.toDouble(), step: 60, isDecimal: false, formatValue: (v) => '${v.round()}с', quickPicks: const [600, 900, 1800, 2700], onChanged: (v) => setState(() => s.duration = v.round()));
+            left = _FigmaStepper(
+                value: (s.distance ?? 0),
+                step: 0.1,
+                isDecimal: true,
+                formatValue: (v) => '${v.toStringAsFixed(1)}км',
+                quickPicks: const [1, 3, 5, 10],
+                onChanged: (v) => setState(() => s.distance = v));
+            right = _FigmaStepper(
+                value: s.duration.toDouble(),
+                step: 60,
+                isDecimal: false,
+                formatValue: (v) => '${v.round()}с',
+                quickPicks: const [600, 900, 1800, 2700],
+                onChanged: (v) => setState(() => s.duration = v.round()));
             break;
           case _ExCategory.combat:
             return _combatSetupBlock(s, _P.pinkDeep);
         }
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 32,
+                width: 28,
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text('${(i + 1).toString().padLeft(2, '0')}', style: _T.caption),
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text('${(i + 1).toString().padLeft(2, '0')}',
+                      style: _T.caption.copyWith(fontSize: 10)),
                 ),
               ),
               Expanded(child: left),
               if (right != null) ...[
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(child: right),
-              ] else if (cat != _ExCategory.bodyweight && cat != _ExCategory.hold) ...[
-                const SizedBox(width: 10),
+              ] else if (cat != _ExCategory.bodyweight &&
+                  cat != _ExCategory.hold) ...[
+                const SizedBox(width: 8),
                 const Expanded(child: SizedBox()),
               ],
             ],
@@ -919,61 +1094,78 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
   Widget _combatSetupBlock(SetConfig s, Color accent) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _P.bg, borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+          color: _P.bg, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
           Row(
             children: [
-              const Text('🥊', style: TextStyle(fontSize: 14)),
-              const SizedBox(width: 8),
+              const Text('🥊', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 6),
               Text('РАУНДЫ', style: _T.overline.copyWith(color: accent)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _settingRow('Раундов', '${s.rounds ?? 5}', accent,
-              onDec: () => setState(() => s.rounds = ((s.rounds ?? 5) - 1).clamp(1, 30)),
-              onInc: () => setState(() => s.rounds = ((s.rounds ?? 5) + 1).clamp(1, 30))),
-          const SizedBox(height: 8),
-          _settingRow('Длит. раунда', _formatSeconds(s.roundDuration ?? 180), accent,
-              onDec: () => setState(() => s.roundDuration = ((s.roundDuration ?? 180) - 15).clamp(15, 900)),
-              onInc: () => setState(() => s.roundDuration = ((s.roundDuration ?? 180) + 15).clamp(15, 900))),
-          const SizedBox(height: 8),
-          _settingRow('Отдых между раундами', _formatSeconds(s.restBetweenRounds ?? 60), accent,
-              onDec: () => setState(() => s.restBetweenRounds = ((s.restBetweenRounds ?? 60) - 15).clamp(0, 600)),
-              onInc: () => setState(() => s.restBetweenRounds = ((s.restBetweenRounds ?? 60) + 15).clamp(0, 600))),
+              onDec: () => setState(
+                      () => s.rounds = ((s.rounds ?? 5) - 1).clamp(1, 30)),
+              onInc: () => setState(
+                      () => s.rounds = ((s.rounds ?? 5) + 1).clamp(1, 30))),
+          const SizedBox(height: 6),
+          _settingRow('Длит. раунда', _formatSeconds(s.roundDuration ?? 180),
+              accent,
+              onDec: () => setState(() => s.roundDuration =
+                  ((s.roundDuration ?? 180) - 15).clamp(15, 900)),
+              onInc: () => setState(() => s.roundDuration =
+                  ((s.roundDuration ?? 180) + 15).clamp(15, 900))),
+          const SizedBox(height: 6),
+          _settingRow(
+              'Отдых между раундами', _formatSeconds(s.restBetweenRounds ?? 60),
+              accent,
+              onDec: () => setState(() => s.restBetweenRounds =
+                  ((s.restBetweenRounds ?? 60) - 15).clamp(0, 600)),
+              onInc: () => setState(() => s.restBetweenRounds =
+                  ((s.restBetweenRounds ?? 60) + 15).clamp(0, 600))),
         ],
       ),
     );
   }
 
-  Widget _settingRow(String label, String value, Color accent, {required VoidCallback onDec, required VoidCallback onInc}) {
+  Widget _settingRow(String label, String value, Color accent,
+      {required VoidCallback onDec, required VoidCallback onInc}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(10)),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: _T.body)),
-          Text(value, style: _T.number.copyWith(fontSize: 14, color: accent)),
-          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: _T.body.copyWith(fontSize: 12))),
+          Text(value,
+              style: _T.number.copyWith(fontSize: 13, color: accent)),
+          const SizedBox(width: 10),
           GestureDetector(
             onTap: onDec,
             child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(color: accent.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-              child: Icon(Icons.remove, color: accent, size: 16),
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                  color: accent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(7)),
+              child: Icon(Icons.remove, color: accent, size: 14),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           GestureDetector(
             onTap: onInc,
             child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(color: accent.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-              child: Icon(Icons.add, color: accent, size: 16),
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                  color: accent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(7)),
+              child: Icon(Icons.add, color: accent, size: 14),
             ),
           ),
         ],
@@ -987,13 +1179,33 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
       final last = config.sets.isNotEmpty ? config.sets.last : null;
       SetConfig newSet;
       switch (cat) {
-        case _ExCategory.strength: newSet = SetConfig(reps: last?.reps ?? 10, weight: last?.weight ?? 0); break;
-        case _ExCategory.bodyweight: newSet = SetConfig(reps: last?.reps ?? 10); break;
-        case _ExCategory.hold: newSet = SetConfig(reps: 0, holdSeconds: last?.holdSeconds ?? 30); break;
-        case _ExCategory.timedSets: newSet = SetConfig(reps: last?.reps ?? 10, duration: last?.duration ?? 60); break;
-        case _ExCategory.cardio: newSet = SetConfig(reps: 0, duration: last?.duration ?? 60, distance: last?.distance ?? 0); break;
+        case _ExCategory.strength:
+          newSet =
+              SetConfig(reps: last?.reps ?? 10, weight: last?.weight ?? 0);
+          break;
+        case _ExCategory.bodyweight:
+          newSet = SetConfig(reps: last?.reps ?? 10);
+          break;
+        case _ExCategory.hold:
+          newSet =
+              SetConfig(reps: 0, holdSeconds: last?.holdSeconds ?? 30);
+          break;
+        case _ExCategory.timedSets:
+          newSet =
+              SetConfig(reps: last?.reps ?? 10, duration: last?.duration ?? 60);
+          break;
+        case _ExCategory.cardio:
+          newSet = SetConfig(
+              reps: 0,
+              duration: last?.duration ?? 60,
+              distance: last?.distance ?? 0);
+          break;
         case _ExCategory.combat:
-          newSet = SetConfig(reps: 0, rounds: last?.rounds ?? 5, roundDuration: last?.roundDuration ?? 180, restBetweenRounds: last?.restBetweenRounds ?? 60);
+          newSet = SetConfig(
+              reps: 0,
+              rounds: last?.rounds ?? 5,
+              roundDuration: last?.roundDuration ?? 180,
+              restBetweenRounds: last?.restBetweenRounds ?? 60);
           break;
       }
       config.sets.add(newSet);
@@ -1001,14 +1213,16 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   Widget _buildStartButton(FitnessProvider provider) {
-    final allReady = _config.isNotEmpty && _config.every((c) => _isExerciseConfigured(c, provider));
+    final allReady = _config.isNotEmpty &&
+        _config.every((c) => _isExerciseConfigured(c, provider));
 
     return Container(
       color: _P.bg,
-      padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+          16, 10, 16, 10 + MediaQuery.of(context).padding.bottom),
       child: SizedBox(
         width: double.infinity,
-        height: 56,
+        height: 50,
         child: ElevatedButton(
           onPressed: !allReady
               ? null
@@ -1029,11 +1243,13 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             backgroundColor: allReady ? _P.greenDeep : _P.border,
             foregroundColor: Colors.white,
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           child: Text(
             allReady ? 'Начать тренировку' : 'Заполните все поля',
-            style: _T.headline.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+            style: _T.headline
+                .copyWith(color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -1049,17 +1265,22 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     final cat = _catOf(step.exerciseIndex);
 
     switch (cat) {
-      case _ExCategory.cardio: return _buildCardioExecution(provider, step);
-      case _ExCategory.combat: return _buildCombatExecution(provider, step);
-      case _ExCategory.hold: return _buildHoldExecution(provider, step);
-      case _ExCategory.timedSets: return _buildTimedSetsExecution(provider, step);
+      case _ExCategory.cardio:
+        return _buildCardioExecution(provider, step);
+      case _ExCategory.combat:
+        return _buildCombatExecution(provider, step);
+      case _ExCategory.hold:
+        return _buildHoldExecution(provider, step);
+      case _ExCategory.timedSets:
+        return _buildTimedSetsExecution(provider, step);
       case _ExCategory.strength:
       case _ExCategory.bodyweight:
         return _buildStrengthActiveScreen(provider, step, cat);
     }
   }
 
-  Widget _buildStrengthActiveScreen(FitnessProvider provider, _WorkoutStep step, _ExCategory cat) {
+  Widget _buildStrengthActiveScreen(
+      FitnessProvider provider, _WorkoutStep step, _ExCategory cat) {
     final currentConfig = _config[step.exerciseIndex];
     final exData = provider.exercises.firstWhere(
           (e) => e.id == currentConfig.exercise.exerciseId,
@@ -1077,11 +1298,13 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             _buildExercisesStrip(provider, step),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Flexible(flex: 3, child: _buildHeroSetRing(step, currentConfig)),
+                    Flexible(
+                        flex: 3,
+                        child: _buildHeroSetRing(step, currentConfig)),
                     Flexible(
                       flex: 2,
                       child: Row(
@@ -1089,13 +1312,13 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                         children: [
                           _ExImage(
                             url: exData.imageUrl,
-                            size: 64,
-                            radius: 18,
+                            size: 52,
+                            radius: 14,
                             bg: _P.greenSoft,
                             border: _P.greenDeep.withOpacity(0.20),
                             fallbackEmoji: exData.exerciseType.emoji,
                           ),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 12),
                           Flexible(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1103,19 +1326,24 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                               children: [
                                 Text(
                                   exData.name,
-                                  style: _T.title1,
+                                  style: _T.title1.copyWith(fontSize: 20),
                                   textAlign: TextAlign.start,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 6),
                                 if (exData.muscleGroups.isNotEmpty)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(color: _P.greenSoft, borderRadius: BorderRadius.circular(20)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                        color: _P.greenSoft,
+                                        borderRadius:
+                                        BorderRadius.circular(16)),
                                     child: Text(
                                       '${_categoryLabel(cat)} · ${exData.muscleGroups.first.displayName}',
-                                      style: _T.overline.copyWith(color: _P.greenText, fontSize: 10),
+                                      style: _T.overline.copyWith(
+                                          color: _P.greenText, fontSize: 9),
                                     ),
                                   ),
                               ],
@@ -1130,9 +1358,11 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.timer_outlined, size: 14, color: _P.textMuted),
-                          const SizedBox(width: 6),
-                          Text('${_formatSeconds(_restSeconds)} отдых после подхода', style: _T.caption),
+                          const Icon(Icons.timer_outlined,
+                              size: 13, color: _P.textMuted),
+                          const SizedBox(width: 5),
+                          Text('${_formatSeconds(_restSeconds)} отдых после подхода',
+                              style: _T.caption.copyWith(fontSize: 11)),
                         ],
                       ),
                     ),
@@ -1159,14 +1389,15 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           SizedBox.expand(
             child: CircularProgressIndicator(
               value: 1,
-              strokeWidth: 8,
-              valueColor: AlwaysStoppedAnimation(_P.border.withOpacity(0.5)),
+              strokeWidth: 7,
+              valueColor:
+              AlwaysStoppedAnimation(_P.border.withOpacity(0.5)),
             ),
           ),
           SizedBox.expand(
             child: CircularProgressIndicator(
               value: currentSet / totalSets,
-              strokeWidth: 8,
+              strokeWidth: 7,
               strokeCap: StrokeCap.round,
               valueColor: const AlwaysStoppedAnimation(_P.greenDeep),
             ),
@@ -1179,13 +1410,17 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
               FittedBox(
                 child: Text(
                   '$currentSet/$totalSets',
-                  style: _T.number.copyWith(fontSize: 64, letterSpacing: -2, color: _P.text),
+                  style: _T.number.copyWith(
+                      fontSize: 52,
+                      letterSpacing: -2,
+                      color: _P.text),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
-                'Подход $currentSet из $totalSets',
-                style: _T.caption.copyWith(color: _P.greenText, fontWeight: FontWeight.w500),
+                'из $totalSets',
+                style: _T.caption
+                    .copyWith(color: _P.greenText, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -1198,20 +1433,36 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     String v1, l1, u1, v2, l2, u2;
     switch (cat) {
       case _ExCategory.strength:
-        v1 = set.weight.toStringAsFixed(0); l1 = 'Вес'; u1 = 'кг';
-        v2 = '${set.reps}'; l2 = 'Повторы'; u2 = 'раз';
+        v1 = set.weight.toStringAsFixed(0);
+        l1 = 'Вес';
+        u1 = 'кг';
+        v2 = '${set.reps}';
+        l2 = 'Повторы';
+        u2 = 'раз';
         break;
       case _ExCategory.bodyweight:
-        v1 = '${set.reps}'; l1 = 'Повторы'; u1 = 'раз';
-        v2 = ''; l2 = ''; u2 = '';
+        v1 = '${set.reps}';
+        l1 = 'Повторы';
+        u1 = 'раз';
+        v2 = '';
+        l2 = '';
+        u2 = '';
         break;
       case _ExCategory.hold:
-        v1 = _formatSeconds(set.holdSeconds ?? 0); l1 = 'Удержание'; u1 = '';
-        v2 = ''; l2 = ''; u2 = '';
+        v1 = _formatSeconds(set.holdSeconds ?? 0);
+        l1 = 'Удержание';
+        u1 = '';
+        v2 = '';
+        l2 = '';
+        u2 = '';
         break;
       case _ExCategory.timedSets:
-        v1 = _formatSeconds(set.duration); l1 = 'Время'; u1 = '';
-        v2 = '${set.reps}'; l2 = 'Повторы'; u2 = 'раз';
+        v1 = _formatSeconds(set.duration);
+        l1 = 'Время';
+        u1 = '';
+        v2 = '${set.reps}';
+        l2 = 'Повторы';
+        u2 = 'раз';
         break;
       default:
         return const SizedBox.shrink();
@@ -1219,21 +1470,26 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
     return Row(
       children: [
-        Expanded(child: _buildMetricCard(v1, u1, l1, _P.greenSoft, _P.greenText, Icons.fitness_center_rounded)),
+        Expanded(
+            child: _buildMetricCard(v1, u1, l1, _P.greenSoft, _P.greenText,
+                Icons.fitness_center_rounded)),
         if (v2.isNotEmpty) ...[
-          const SizedBox(width: 12),
-          Expanded(child: _buildMetricCard(v2, u2, l2, _P.lavenderSoft, _P.lavenderDeep, Icons.repeat_rounded)),
+          const SizedBox(width: 10),
+          Expanded(
+              child: _buildMetricCard(v2, u2, l2, _P.lavenderSoft,
+                  _P.lavenderDeep, Icons.repeat_rounded)),
         ],
       ],
     );
   }
 
-  Widget _buildMetricCard(String value, String unit, String label, Color bg, Color iconColor, IconData icon) {
+  Widget _buildMetricCard(String value, String unit, String label, Color bg,
+      Color iconColor, IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _P.divider),
       ),
       child: Column(
@@ -1243,25 +1499,28 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
-                child: Icon(icon, size: 14, color: iconColor),
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                    color: bg, borderRadius: BorderRadius.circular(7)),
+                child: Icon(icon, size: 12, color: iconColor),
               ),
-              const SizedBox(width: 8),
-              Text(label, style: _T.caption),
+              const SizedBox(width: 6),
+              Text(label, style: _T.caption.copyWith(fontSize: 10)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Text(value, style: _T.number.copyWith(fontSize: 48, color: _P.text)),
+                Text(value,
+                    style: _T.number
+                        .copyWith(fontSize: 36, color: _P.text)),
                 if (unit.isNotEmpty) ...[
-                  const SizedBox(width: 4),
-                  Text(unit, style: _T.caption),
+                  const SizedBox(width: 3),
+                  Text(unit, style: _T.caption.copyWith(fontSize: 10)),
                 ],
               ],
             ),
@@ -1273,32 +1532,35 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
   Widget _buildActiveTopBar(_WorkoutStep step) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 6),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => _showExitDialog(context),
             child: Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(color: _P.divider),
               ),
-              child: const Icon(Icons.close_rounded, color: _P.text, size: 20),
+              child: const Icon(Icons.close_rounded, color: _P.text, size: 18),
             ),
           ),
           const Spacer(),
-          Text('Шаг ${_currentStepIndex + 1} из ${_steps.length}', style: _T.headline),
+          Text('Шаг ${_currentStepIndex + 1} из ${_steps.length}',
+              style: _T.headline.copyWith(fontSize: 14)),
           const Spacer(),
           GestureDetector(
             onTap: _skipExercise,
             child: Container(
               width: 40,
-              height: 40,
+              height: 36,
               alignment: Alignment.center,
-              child: Text('Пропуск', style: _T.headline.copyWith(color: _P.textMuted)),
+              child: Text('Пропуск',
+                  style: _T.headline
+                      .copyWith(color: _P.textMuted, fontSize: 12)),
             ),
           ),
         ],
@@ -1306,17 +1568,20 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     );
   }
 
-  Widget _buildExercisesStrip(FitnessProvider provider, _WorkoutStep current) {
+  Widget _buildExercisesStrip(
+      FitnessProvider provider, _WorkoutStep current) {
     final uniqueIndices = <int>[];
     for (final s in _steps) {
-      if (!uniqueIndices.contains(s.exerciseIndex)) uniqueIndices.add(s.exerciseIndex);
+      if (!uniqueIndices.contains(s.exerciseIndex)) {
+        uniqueIndices.add(s.exerciseIndex);
+      }
     }
 
     return SizedBox(
-      height: 72,
+      height: 60,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: uniqueIndices.length,
         itemBuilder: (context, i) {
           final exIdx = uniqueIndices[i];
@@ -1327,24 +1592,24 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           final isCurrent = exIdx == current.exerciseIndex;
 
           return Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 10),
             child: Container(
-              width: 64,
-              height: 64,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
                 color: isCurrent ? _P.greenSoft : Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isCurrent ? _P.greenDeep : _P.border,
-                  width: isCurrent ? 2.5 : 1,
+                  width: isCurrent ? 2.2 : 1,
                 ),
               ),
               clipBehavior: Clip.antiAlias,
               alignment: Alignment.center,
               child: _ExImage(
                 url: exData.imageUrl,
-                size: 64,
-                radius: 32,
+                size: 52,
+                radius: 26,
                 bg: Colors.transparent,
                 fallbackEmoji: exData.exerciseType.emoji,
               ),
@@ -1355,44 +1620,51 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     );
   }
 
-  Widget _buildActiveBottomButtons(_WorkoutStep step, ExerciseFormat format, _ExCategory cat) {
+  Widget _buildActiveBottomButtons(
+      _WorkoutStep step, ExerciseFormat format, _ExCategory cat) {
     return Container(
-      padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+          20, 10, 20, 10 + MediaQuery.of(context).padding.bottom),
       child: Row(
         children: [
           Expanded(
             child: SizedBox(
-              height: 56,
+              height: 50,
               child: OutlinedButton(
                 onPressed: _skipSet,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _P.text,
                   side: const BorderSide(color: _P.divider),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
-                child: Text('Пропустить', style: _T.headline),
+                child:
+                Text('Пропустить', style: _T.headline.copyWith(fontSize: 13)),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             flex: 2,
             child: SizedBox(
-              height: 56,
+              height: 50,
               child: ElevatedButton(
                 onPressed: () => _showSetCompletionSheet(format, cat),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _P.greenDeep,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.check_rounded, size: 20),
-                    const SizedBox(width: 8),
-                    Text('Готово', style: _T.headline.copyWith(color: Colors.white)),
+                    const Icon(Icons.check_rounded, size: 18),
+                    const SizedBox(width: 6),
+                    Text('Готово',
+                        style: _T.headline
+                            .copyWith(color: Colors.white, fontSize: 13)),
                   ],
                 ),
               ),
@@ -1496,7 +1768,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     );
   }
 
-  Widget _buildTimedSetsExecution(FitnessProvider provider, _WorkoutStep step) {
+  Widget _buildTimedSetsExecution(
+      FitnessProvider provider, _WorkoutStep step) {
     final ex = provider.exercises.firstWhere(
           (e) => e.id == _config[step.exerciseIndex].exercise.exerciseId,
       orElse: () => Exercise(id: '', name: ''),
@@ -1527,7 +1800,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     );
   }
 
-  Future<void> _showSetCompletionSheet(ExerciseFormat format, _ExCategory cat) async {
+  Future<void> _showSetCompletionSheet(
+      ExerciseFormat format, _ExCategory cat) async {
     final step = _currentStep;
     if (step == null) return;
     final config = _config[step.exerciseIndex];
@@ -1601,9 +1875,9 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
     final totalExercises = grouped.length;
     final totalSets = _totalCompletedSets();
-    final duration = DateTime.now().difference(_startTime ?? DateTime.now()).inMinutes;
+    final duration =
+        DateTime.now().difference(_startTime ?? DateTime.now()).inMinutes;
 
-    // Общий объём
     double totalVolume = 0;
     for (final entry in grouped.entries) {
       final list = entry.value;
@@ -1617,50 +1891,55 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 20),
-              // Celebration
+              const SizedBox(height: 16),
               Center(
                 child: Container(
-                  width: 110,
-                  height: 110,
+                  width: 84,
+                  height: 84,
                   decoration: BoxDecoration(
                     color: _P.greenSoft,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: _P.greenDeep.withOpacity(0.25),
-                        blurRadius: 50,
+                        color: _P.greenDeep.withOpacity(0.22),
+                        blurRadius: 40,
                         spreadRadius: -8,
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.check_rounded, color: _P.greenDeep, size: 52),
+                  child: const Icon(Icons.check_rounded,
+                      color: _P.greenDeep, size: 42),
                 ),
               ),
-              const SizedBox(height: 24),
-              Text('Тренировка завершена', style: _T.title1, textAlign: TextAlign.center),
-              const SizedBox(height: 8),
+              const SizedBox(height: 18),
+              Text('Тренировка завершена',
+                  style: _T.title1.copyWith(fontSize: 22),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: 6),
               Text(
                 'Чуть сильнее. Чуть ближе к цели.',
                 style: _T.body,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 22),
 
-              // Hero stats (gradient card)
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFFE4F0E8), Color(0xFFF4F8F5), Color(0xFFEEEBF7)],
+                    colors: [
+                      Color(0xFFE4F0E8),
+                      Color(0xFFF4F8F5),
+                      Color(0xFFEEEBF7)
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: Colors.white, width: 1),
                 ),
                 child: Row(
@@ -1675,37 +1954,42 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
               ),
 
               if (totalVolume > 0) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: _P.peachSoft,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.fitness_center_rounded, color: _P.peachDeep, size: 18),
-                      const SizedBox(width: 10),
-                      Text('Общий объём', style: _T.caption.copyWith(color: _P.text)),
+                      const Icon(Icons.fitness_center_rounded,
+                          color: _P.peachDeep, size: 16),
+                      const SizedBox(width: 8),
+                      Text('Общий объём',
+                          style: _T.caption.copyWith(color: _P.text)),
                       const Spacer(),
                       Text(
                         '${_formatVolume(totalVolume)} кг',
-                        style: _T.number.copyWith(fontSize: 16, color: _P.peachDeep),
+                        style: _T.number
+                            .copyWith(fontSize: 15, color: _P.peachDeep),
                       ),
                     ],
                   ),
                 ),
               ],
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 22),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Ваша тренировка', style: _T.headline),
+                  Text('Ваша тренировка',
+                      style: _T.headline.copyWith(fontSize: 14)),
                   Text('${grouped.length} упр.', style: _T.caption),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
               ...grouped.entries.map((entry) {
                 final exercise = entry.key;
@@ -1713,11 +1997,11 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                 if (sets.isEmpty) return const SizedBox.shrink();
 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(14),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: _P.divider),
                   ),
                   child: Row(
@@ -1725,36 +2009,37 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                     children: [
                       _ExImage(
                         url: exercise.imageUrl,
-                        size: 48,
-                        radius: 14,
+                        size: 40,
+                        radius: 10,
                         bg: _P.greenSoft,
                         fallbackEmoji: exercise.exerciseType.emoji,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               exercise.name,
-                              style: _T.headline.copyWith(fontSize: 14),
+                              style: _T.headline.copyWith(fontSize: 13),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 5),
                             Wrap(
-                              spacing: 5,
-                              runSpacing: 5,
+                              spacing: 4,
+                              runSpacing: 4,
                               children: sets.map((s) {
                                 return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: _P.bg,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
                                     s.displaySummary,
-                                    style: _T.caption.copyWith(fontSize: 10),
+                                    style: _T.caption.copyWith(fontSize: 9),
                                   ),
                                 );
                               }).toList(),
@@ -1763,39 +2048,43 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                         ),
                       ),
                       const Padding(
-                        padding: EdgeInsets.only(left: 6),
-                        child: Icon(Icons.check_rounded, color: _P.greenDeep, size: 18),
+                        padding: EdgeInsets.only(left: 4),
+                        child: Icon(Icons.check_rounded,
+                            color: _P.greenDeep, size: 16),
                       ),
                     ],
                   ),
                 );
               }),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.info_outline, size: 14, color: _P.textMuted),
-                  const SizedBox(width: 6),
+                  const Icon(Icons.info_outline, size: 12, color: _P.textMuted),
+                  const SizedBox(width: 5),
                   Text('Тренировка сохранена', style: _T.caption),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _P.greenDeep,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text('На главную', style: _T.headline.copyWith(color: Colors.white)),
+                  child: Text('На главную',
+                      style:
+                      _T.headline.copyWith(color: Colors.white, fontSize: 14)),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -1810,16 +2099,17 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           Text(
             value,
             style: _T.number.copyWith(
-              fontSize: 26,
+              fontSize: 22,
               color: _P.text,
-              letterSpacing: -0.8,
+              letterSpacing: -0.7,
               height: 1,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           Text(
             label,
-            style: _T.overline.copyWith(fontSize: 8, color: accent, letterSpacing: 1.4),
+            style: _T.overline.copyWith(
+                fontSize: 8, color: accent, letterSpacing: 1.2),
           ),
         ],
       ),
@@ -1827,7 +2117,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   Widget _heroStatDivider() {
-    return Container(width: 1, height: 34, color: _P.divider);
+    return Container(width: 1, height: 28, color: _P.divider);
   }
 
   String _formatVolume(double v) {
@@ -1852,12 +2142,13 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
       isDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          padding:
+          EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
             child: SingleChildScrollView(
               child: Column(
@@ -1866,22 +2157,28 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                 children: [
                   Center(
                     child: Container(
-                      width: 40,
-                      height: 5,
-                      decoration: BoxDecoration(color: _P.border, borderRadius: BorderRadius.circular(3)),
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: _P.border,
+                          borderRadius: BorderRadius.circular(2)),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Text('ПЕРЕД ТРЕНИРОВКОЙ', style: _T.overline),
-                  const SizedBox(height: 4),
-                  Text('Как настроение?', style: _T.title2),
-                  const SizedBox(height: 24),
-                  _buildMoodSliderRow('⚡', 'Энергия', energy, (v) => setSheetState(() => energy = v)),
-                  const SizedBox(height: 12),
-                  _buildMoodSliderRow('😴', 'Сон', sleep, (v) => setSheetState(() => sleep = v)),
-                  const SizedBox(height: 12),
-                  _buildMoodSliderRow('🎯', 'Мотивация', motivation, (v) => setSheetState(() => motivation = v)),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 3),
+                  Text('Как настроение?',
+                      style: _T.title2.copyWith(fontSize: 18)),
+                  const SizedBox(height: 20),
+                  _buildMoodSliderRow(
+                      '⚡', 'Энергия', energy, (v) => setSheetState(() => energy = v)),
+                  const SizedBox(height: 10),
+                  _buildMoodSliderRow(
+                      '😴', 'Сон', sleep, (v) => setSheetState(() => sleep = v)),
+                  const SizedBox(height: 10),
+                  _buildMoodSliderRow('🎯', 'Мотивация', motivation,
+                          (v) => setSheetState(() => motivation = v)),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: notesController,
                     maxLines: 2,
@@ -1890,48 +2187,57 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                       hintStyle: _T.caption,
                       filled: true,
                       fillColor: _P.bg,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   GestureDetector(
                     onTap: () async {
-                      final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-                      if (image != null) setSheetState(() => selectedPhoto = File(image.path));
+                      final XFile? image = await _imagePicker.pickImage(
+                          source: ImageSource.gallery, imageQuality: 80);
+                      if (image != null) {
+                        setSheetState(() => selectedPhoto = File(image.path));
+                      }
                     },
                     child: Container(
-                      height: 100,
+                      height: 90,
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: _P.bg,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: _P.divider),
                       ),
                       child: selectedPhoto != null
                           ? ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(selectedPhoto!, fit: BoxFit.cover),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.file(selectedPhoto!,
+                            fit: BoxFit.cover),
                       )
                           : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.add_a_photo_rounded, color: _P.textMuted, size: 28),
-                          const SizedBox(height: 8),
+                          const Icon(Icons.add_a_photo_rounded,
+                              color: _P.textMuted, size: 24),
+                          const SizedBox(height: 6),
                           Text('Добавить фото', style: _T.caption),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 50,
                     child: ElevatedButton(
                       onPressed: () {
                         _moodEnergy = energy.toInt();
                         _moodSleep = sleep.toInt();
                         _moodMotivation = motivation.toInt();
-                        _moodNotes = notesController.text.isNotEmpty ? notesController.text : null;
+                        _moodNotes = notesController.text.isNotEmpty
+                            ? notesController.text
+                            : null;
                         _workoutPhotoPath = selectedPhoto?.path;
                         Navigator.pop(ctx);
                       },
@@ -1939,9 +2245,12 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                         backgroundColor: _P.greenDeep,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: Text('НАЧАТЬ', style: _T.headline.copyWith(color: Colors.white)),
+                      child: Text('НАЧАТЬ',
+                          style: _T.headline
+                              .copyWith(color: Colors.white, fontSize: 14)),
                     ),
                   ),
                 ],
@@ -1953,24 +2262,34 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     );
   }
 
-  Widget _buildMoodSliderRow(String emoji, String label, double value, Function(double) onChanged) {
+  Widget _buildMoodSliderRow(
+      String emoji, String label, double value, Function(double) onChanged) {
     return Row(
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 20)),
-        const SizedBox(width: 12),
-        SizedBox(width: 80, child: Text(label, style: _T.body)),
+        Text(emoji, style: const TextStyle(fontSize: 18)),
+        const SizedBox(width: 10),
+        SizedBox(
+            width: 72, child: Text(label, style: _T.body.copyWith(fontSize: 12))),
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: _P.greenDeep,
               inactiveTrackColor: _P.greenSoft,
               thumbColor: _P.greenDeep,
-              trackHeight: 4,
+              trackHeight: 3,
+              thumbShape:
+              const RoundSliderThumbShape(enabledThumbRadius: 7),
             ),
-            child: Slider(value: value, min: 1, max: 10, divisions: 9, onChanged: onChanged),
+            child: Slider(
+                value: value,
+                min: 1,
+                max: 10,
+                divisions: 9,
+                onChanged: onChanged),
           ),
         ),
-        Text('${value.toInt()}', style: _T.headline),
+        Text('${value.toInt()}',
+            style: _T.headline.copyWith(fontSize: 13)),
       ],
     );
   }
@@ -2048,12 +2367,17 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     return total;
   }
 
-  ExerciseFormat _formatToSaveForCategory(_ExCategory cat, ExerciseFormat fallback) {
+  ExerciseFormat _formatToSaveForCategory(
+      _ExCategory cat, ExerciseFormat fallback) {
     switch (cat) {
-      case _ExCategory.cardio: return ExerciseFormat.continuous;
-      case _ExCategory.combat: return ExerciseFormat.rounds;
-      case _ExCategory.hold: return ExerciseFormat.hold;
-      case _ExCategory.timedSets: return ExerciseFormat.timedSets;
+      case _ExCategory.cardio:
+        return ExerciseFormat.continuous;
+      case _ExCategory.combat:
+        return ExerciseFormat.rounds;
+      case _ExCategory.hold:
+        return ExerciseFormat.hold;
+      case _ExCategory.timedSets:
+        return ExerciseFormat.timedSets;
       case _ExCategory.strength:
       case _ExCategory.bodyweight:
         return ExerciseFormat.setsReps;
@@ -2061,7 +2385,11 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   Future<void> _finishWorkout() async {
-    if (_isFinishing || _phase == WorkoutPhase.completed || _savedLogId != null) return;
+    if (_isFinishing ||
+        _phase == WorkoutPhase.completed ||
+        _savedLogId != null) {
+      return;
+    }
     if (_completedData.isEmpty) {
       setState(() => _phase = WorkoutPhase.completed);
       return;
@@ -2108,7 +2436,9 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             weight: actual.weight,
             rpe: actual.rpe == 0 ? null : actual.rpe,
             isWarmup: actual.isWarmup,
-            status: completedSets.any((cs) => cs.setIndex == i) ? SetStatus.completed : SetStatus.skipped,
+            status: completedSets.any((cs) => cs.setIndex == i)
+                ? SetStatus.completed
+                : SetStatus.skipped,
             duration: actual.duration > 0 ? actual.duration : null,
             distance: actual.distance,
             pace: actual.pace,
@@ -2122,7 +2452,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             punches: actual.punches,
             holdSeconds: actual.holdSeconds,
             tempo: actual.tempo,
-            intensity: actual.intensity > 0 ? actual.intensity.toDouble() : null,
+            intensity:
+            actual.intensity > 0 ? actual.intensity.toDouble() : null,
           ));
         }
 
@@ -2183,14 +2514,20 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Прервать тренировку?', style: _T.title2.copyWith(fontSize: 18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Прервать тренировку?',
+            style: _T.title2.copyWith(fontSize: 16)),
         content: Text('Прогресс не будет сохранён', style: _T.body),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Продолжить', style: _T.headline)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('Продолжить',
+                  style: _T.headline.copyWith(fontSize: 13))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Прервать', style: _T.headline.copyWith(color: _P.pinkDeep)),
+            child: Text('Прервать',
+                style: _T.headline
+                    .copyWith(color: _P.pinkDeep, fontSize: 13)),
           ),
         ],
       ),
@@ -2289,24 +2626,42 @@ class SetConfig {
 
   double? metricValue(ExerciseMetric m) {
     switch (m) {
-      case ExerciseMetric.reps: return reps > 0 ? reps.toDouble() : null;
-      case ExerciseMetric.weight: return weight > 0 ? weight : null;
-      case ExerciseMetric.rpe: return rpe;
-      case ExerciseMetric.restSeconds: return restSeconds?.toDouble();
-      case ExerciseMetric.duration: return duration > 0 ? duration.toDouble() : null;
-      case ExerciseMetric.distance: return distance;
-      case ExerciseMetric.pace: return pace;
-      case ExerciseMetric.heartRate: return heartRate?.toDouble();
-      case ExerciseMetric.calories: return calories?.toDouble();
-      case ExerciseMetric.incline: return incline;
-      case ExerciseMetric.resistance: return resistance;
-      case ExerciseMetric.rounds: return rounds?.toDouble();
-      case ExerciseMetric.roundDuration: return roundDuration?.toDouble();
-      case ExerciseMetric.restBetweenRounds: return restBetweenRounds?.toDouble();
-      case ExerciseMetric.punches: return punches?.toDouble();
-      case ExerciseMetric.holdSeconds: return holdSeconds?.toDouble();
-      case ExerciseMetric.tempo: return null;
-      case ExerciseMetric.intensity: return intensity.toDouble();
+      case ExerciseMetric.reps:
+        return reps > 0 ? reps.toDouble() : null;
+      case ExerciseMetric.weight:
+        return weight > 0 ? weight : null;
+      case ExerciseMetric.rpe:
+        return rpe;
+      case ExerciseMetric.restSeconds:
+        return restSeconds?.toDouble();
+      case ExerciseMetric.duration:
+        return duration > 0 ? duration.toDouble() : null;
+      case ExerciseMetric.distance:
+        return distance;
+      case ExerciseMetric.pace:
+        return pace;
+      case ExerciseMetric.heartRate:
+        return heartRate?.toDouble();
+      case ExerciseMetric.calories:
+        return calories?.toDouble();
+      case ExerciseMetric.incline:
+        return incline;
+      case ExerciseMetric.resistance:
+        return resistance;
+      case ExerciseMetric.rounds:
+        return rounds?.toDouble();
+      case ExerciseMetric.roundDuration:
+        return roundDuration?.toDouble();
+      case ExerciseMetric.restBetweenRounds:
+        return restBetweenRounds?.toDouble();
+      case ExerciseMetric.punches:
+        return punches?.toDouble();
+      case ExerciseMetric.holdSeconds:
+        return holdSeconds?.toDouble();
+      case ExerciseMetric.tempo:
+        return null;
+      case ExerciseMetric.intensity:
+        return intensity.toDouble();
     }
   }
 
@@ -2386,7 +2741,9 @@ class CompletedSetData {
 
   String get displaySummary {
     if (format == null) {
-      return weight > 0 ? '${weight.toStringAsFixed(0)}кг x $reps' : '$reps';
+      return weight > 0
+          ? '${weight.toStringAsFixed(0)}кг x $reps'
+          : '$reps';
     }
     return FitnessHelpers.formatSetForDisplay(
       ExerciseSet(
@@ -2486,17 +2843,19 @@ class _FigmaStepperState extends State<_FigmaStepper> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          height: 44,
-          decoration: BoxDecoration(color: _P.bg, borderRadius: BorderRadius.circular(10)),
+          height: 38,
+          decoration: BoxDecoration(
+              color: _P.bg, borderRadius: BorderRadius.circular(9)),
           child: Row(
             children: [
               GestureDetector(
                 onTap: () => _bump(-1),
                 child: Container(
-                  width: 40,
-                  height: 44,
+                  width: 34,
+                  height: 38,
                   alignment: Alignment.center,
-                  child: const Icon(Icons.remove, size: 16, color: _P.textMuted),
+                  child: const Icon(Icons.remove,
+                      size: 14, color: _P.textMuted),
                 ),
               ),
               Expanded(
@@ -2504,8 +2863,9 @@ class _FigmaStepperState extends State<_FigmaStepper> {
                   controller: _ctrl,
                   focusNode: _focus,
                   textAlign: TextAlign.center,
-                  keyboardType: TextInputType.numberWithOptions(decimal: widget.isDecimal),
-                  style: _T.number.copyWith(fontSize: 15, color: _P.text),
+                  keyboardType:
+                  TextInputType.numberWithOptions(decimal: widget.isDecimal),
+                  style: _T.number.copyWith(fontSize: 14, color: _P.text),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -2519,17 +2879,19 @@ class _FigmaStepperState extends State<_FigmaStepper> {
                     final parsed = widget.isDecimal
                         ? double.tryParse(v.replaceAll(',', '.'))
                         : int.tryParse(v)?.toDouble();
-                    if (parsed != null) widget.onChanged(parsed.clamp(0.0, 9999.0));
+                    if (parsed != null) {
+                      widget.onChanged(parsed.clamp(0.0, 9999.0));
+                    }
                   },
                 ),
               ),
               GestureDetector(
                 onTap: () => _bump(1),
                 child: Container(
-                  width: 40,
-                  height: 44,
+                  width: 34,
+                  height: 38,
                   alignment: Alignment.center,
-                  child: const Icon(Icons.add, size: 16, color: _P.greenDeep),
+                  child: const Icon(Icons.add, size: 14, color: _P.greenDeep),
                 ),
               ),
             ],
@@ -2537,10 +2899,10 @@ class _FigmaStepperState extends State<_FigmaStepper> {
         ),
         if (widget.quickPicks != null && widget.quickPicks!.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: 5),
             child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
+              spacing: 5,
+              runSpacing: 5,
               children: widget.quickPicks!.map((p) {
                 final nv = p.toDouble();
                 return GestureDetector(
@@ -2550,9 +2912,14 @@ class _FigmaStepperState extends State<_FigmaStepper> {
                     _ctrl.text = _fmt(nv);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: _P.bg, borderRadius: BorderRadius.circular(6)),
-                    child: Text(_fmt(nv), style: _T.caption.copyWith(fontSize: 10, color: _P.text)),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                        color: _P.bg,
+                        borderRadius: BorderRadius.circular(5)),
+                    child: Text(_fmt(nv),
+                        style:
+                        _T.caption.copyWith(fontSize: 9, color: _P.text)),
                   ),
                 );
               }).toList(),
@@ -2656,12 +3023,18 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
 
   List<ExerciseMetric> _metricsToShow() {
     switch (widget.category) {
-      case _ExCategory.strength: return [ExerciseMetric.weight, ExerciseMetric.reps];
-      case _ExCategory.bodyweight: return [ExerciseMetric.reps];
-      case _ExCategory.hold: return [ExerciseMetric.holdSeconds];
-      case _ExCategory.timedSets: return [ExerciseMetric.duration, ExerciseMetric.reps];
-      case _ExCategory.cardio: return [ExerciseMetric.distance, ExerciseMetric.duration];
-      case _ExCategory.combat: return [ExerciseMetric.rounds, ExerciseMetric.roundDuration];
+      case _ExCategory.strength:
+        return [ExerciseMetric.weight, ExerciseMetric.reps];
+      case _ExCategory.bodyweight:
+        return [ExerciseMetric.reps];
+      case _ExCategory.hold:
+        return [ExerciseMetric.holdSeconds];
+      case _ExCategory.timedSets:
+        return [ExerciseMetric.duration, ExerciseMetric.reps];
+      case _ExCategory.cardio:
+        return [ExerciseMetric.distance, ExerciseMetric.duration];
+      case _ExCategory.combat:
+        return [ExerciseMetric.rounds, ExerciseMetric.roundDuration];
     }
   }
 
@@ -2679,14 +3052,14 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
 
     return Container(
       padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 16,
-        bottom: MediaQuery.of(context).padding.bottom + 24,
+        left: 20,
+        right: 20,
+        top: 12,
+        bottom: MediaQuery.of(context).padding.bottom + 20,
       ),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         top: false,
@@ -2694,22 +3067,25 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(color: _P.border, borderRadius: BorderRadius.circular(3)),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: _P.border, borderRadius: BorderRadius.circular(2)),
             ),
-            const SizedBox(height: 24),
-            Text('ПОДХОД ВЫПОЛНЕН?', style: _T.overline.copyWith(color: accent)),
-            const SizedBox(height: 8),
-            Text(_categoryLabel(widget.category), style: _T.title2),
-            const SizedBox(height: 24),
-            ..._metricsToShow().map((m) => _buildNumericField(m, accent)),
             const SizedBox(height: 20),
+            Text('ПОДХОД ВЫПОЛНЕН?',
+                style: _T.overline.copyWith(color: accent)),
+            const SizedBox(height: 6),
+            Text(_categoryLabel(widget.category),
+                style: _T.title2.copyWith(fontSize: 17)),
+            const SizedBox(height: 20),
+            ..._metricsToShow().map((m) => _buildNumericField(m, accent)),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: 50,
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(
                         context,
@@ -2724,17 +3100,19 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: _P.text,
                         side: const BorderSide(color: _P.divider),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: Text('ПОВТОРИТЬ', style: _T.headline),
+                      child: Text('ПОВТОРИТЬ',
+                          style: _T.headline.copyWith(fontSize: 12)),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   flex: 2,
                   child: SizedBox(
-                    height: 56,
+                    height: 50,
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(
                         context,
@@ -2744,7 +3122,8 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
                           weight: _actual.weight,
                           isWarmup: _actual.isWarmup,
                           format: widget.format,
-                          duration: _actual.duration > 0 ? _actual.duration : null,
+                          duration:
+                          _actual.duration > 0 ? _actual.duration : null,
                           intensity: _actual.intensity.toDouble(),
                           distance: _actual.distance,
                           pace: _actual.pace,
@@ -2764,9 +3143,12 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
                         backgroundColor: _P.greenDeep,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: Text('ВЫПОЛНЕНО', style: _T.headline.copyWith(color: Colors.white)),
+                      child: Text('ВЫПОЛНЕНО',
+                          style: _T.headline
+                              .copyWith(color: Colors.white, fontSize: 12)),
                     ),
                   ),
                 ),
@@ -2785,13 +3167,16 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
     final value = _actual.metricValue(m) ?? 0;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Expanded(child: Text(m.displayName.toUpperCase(), style: _T.overline)),
+          Expanded(
+              child: Text(m.displayName.toUpperCase(),
+                  style: _T.overline.copyWith(fontSize: 10))),
           Container(
-            height: 48,
-            decoration: BoxDecoration(color: _P.bg, borderRadius: BorderRadius.circular(12)),
+            height: 42,
+            decoration: BoxDecoration(
+                color: _P.bg, borderRadius: BorderRadius.circular(10)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -2801,15 +3186,19 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
                     _updateMetric(m, nv);
                     controller?.text = nv > 0 ? _fmt(nv, m) : '';
                   },
-                  child: const SizedBox(width: 40, height: 48, child: Icon(Icons.remove_rounded, size: 18)),
+                  child: const SizedBox(
+                      width: 36,
+                      height: 42,
+                      child: Icon(Icons.remove_rounded, size: 16)),
                 ),
                 SizedBox(
-                  width: 60,
+                  width: 56,
                   child: TextField(
                     controller: controller,
-                    keyboardType: TextInputType.numberWithOptions(decimal: m.isDecimal),
+                    keyboardType:
+                    TextInputType.numberWithOptions(decimal: m.isDecimal),
                     textAlign: TextAlign.center,
-                    style: _T.headline,
+                    style: _T.headline.copyWith(fontSize: 14),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       isDense: true,
@@ -2823,7 +3212,9 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
                       final parsed = m.isDecimal
                           ? double.tryParse(v.replaceAll(',', '.'))
                           : int.tryParse(v)?.toDouble();
-                      if (parsed != null) _updateMetric(m, parsed.clamp(0, max).toDouble());
+                      if (parsed != null) {
+                        _updateMetric(m, parsed.clamp(0, max).toDouble());
+                      }
                     },
                   ),
                 ),
@@ -2834,9 +3225,9 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
                     controller?.text = _fmt(nv, m);
                   },
                   child: SizedBox(
-                    width: 40,
-                    height: 48,
-                    child: Icon(Icons.add_rounded, size: 18, color: accent),
+                    width: 36,
+                    height: 42,
+                    child: Icon(Icons.add_rounded, size: 16, color: accent),
                   ),
                 ),
               ],
@@ -2850,52 +3241,85 @@ class _SetCompletionSheetState extends State<_SetCompletionSheet> {
   void _updateMetric(ExerciseMetric m, double v) {
     setState(() {
       switch (m) {
-        case ExerciseMetric.reps: _actual.reps = v.toInt(); break;
-        case ExerciseMetric.weight: _actual.weight = v; break;
-        case ExerciseMetric.duration: _actual.duration = v.toInt(); break;
-        case ExerciseMetric.distance: _actual.distance = v; break;
-        case ExerciseMetric.rounds: _actual.rounds = v.toInt(); break;
-        case ExerciseMetric.roundDuration: _actual.roundDuration = v.toInt(); break;
-        case ExerciseMetric.holdSeconds: _actual.holdSeconds = v.toInt(); break;
-        default: break;
+        case ExerciseMetric.reps:
+          _actual.reps = v.toInt();
+          break;
+        case ExerciseMetric.weight:
+          _actual.weight = v;
+          break;
+        case ExerciseMetric.duration:
+          _actual.duration = v.toInt();
+          break;
+        case ExerciseMetric.distance:
+          _actual.distance = v;
+          break;
+        case ExerciseMetric.rounds:
+          _actual.rounds = v.toInt();
+          break;
+        case ExerciseMetric.roundDuration:
+          _actual.roundDuration = v.toInt();
+          break;
+        case ExerciseMetric.holdSeconds:
+          _actual.holdSeconds = v.toInt();
+          break;
+        default:
+          break;
       }
     });
   }
 
   String _fmt(double v, ExerciseMetric m) {
-    if (m.isDecimal) return v.toStringAsFixed(m == ExerciseMetric.distance ? 2 : 1);
+    if (m.isDecimal) {
+      return v.toStringAsFixed(m == ExerciseMetric.distance ? 2 : 1);
+    }
     return v.toStringAsFixed(0);
   }
 
   double _stepForMetric(ExerciseMetric m) {
     switch (m) {
-      case ExerciseMetric.reps: return 1;
-      case ExerciseMetric.weight: return 2.5;
-      case ExerciseMetric.duration: return 15;
-      case ExerciseMetric.distance: return 0.1;
-      case ExerciseMetric.rounds: return 1;
-      case ExerciseMetric.roundDuration: return 30;
-      case ExerciseMetric.holdSeconds: return 15;
-      default: return 1;
+      case ExerciseMetric.reps:
+        return 1;
+      case ExerciseMetric.weight:
+        return 2.5;
+      case ExerciseMetric.duration:
+        return 15;
+      case ExerciseMetric.distance:
+        return 0.1;
+      case ExerciseMetric.rounds:
+        return 1;
+      case ExerciseMetric.roundDuration:
+        return 30;
+      case ExerciseMetric.holdSeconds:
+        return 15;
+      default:
+        return 1;
     }
   }
 
   double _maxForMetric(ExerciseMetric m) {
     switch (m) {
-      case ExerciseMetric.reps: return 200;
-      case ExerciseMetric.weight: return 500;
-      case ExerciseMetric.duration: return 3600;
-      case ExerciseMetric.distance: return 100;
-      case ExerciseMetric.rounds: return 50;
-      case ExerciseMetric.roundDuration: return 900;
-      case ExerciseMetric.holdSeconds: return 600;
-      default: return 10;
+      case ExerciseMetric.reps:
+        return 200;
+      case ExerciseMetric.weight:
+        return 500;
+      case ExerciseMetric.duration:
+        return 3600;
+      case ExerciseMetric.distance:
+        return 100;
+      case ExerciseMetric.rounds:
+        return 50;
+      case ExerciseMetric.roundDuration:
+        return 900;
+      case ExerciseMetric.holdSeconds:
+        return 600;
+      default:
+        return 10;
     }
   }
 }
 
 // ══════════════════════════════════════════════════════════
-// REST TIMER SCREEN — elegant with next-exercise cover
+// REST TIMER SCREEN
 // ══════════════════════════════════════════════════════════
 class _RestTimerScreen extends StatefulWidget {
   final int seconds;
@@ -2970,75 +3394,86 @@ class _RestTimerScreenState extends State<_RestTimerScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
                     onTap: widget.onExit,
                     child: Container(
-                      width: 40,
-                      height: 40,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(color: _P.divider),
                       ),
-                      child: const Icon(Icons.close_rounded, color: _P.text, size: 20),
+                      child: const Icon(Icons.close_rounded,
+                          color: _P.text, size: 18),
                     ),
                   ),
-                  Text('Время отдыха', style: _T.headline),
-                  const Icon(Icons.volume_up_outlined, color: _P.textMuted, size: 24),
+                  Text('Время отдыха',
+                      style: _T.headline.copyWith(fontSize: 15)),
+                  const Icon(Icons.volume_up_outlined,
+                      color: _P.textMuted, size: 22),
                 ],
               ),
             ),
 
             const Spacer(),
 
-            Text('Сделай вдох.', style: _T.title1, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text('Отдых между подходами.', style: _T.body, textAlign: TextAlign.center),
-            const SizedBox(height: 32),
+            Text('Сделай вдох.',
+                style: _T.title1.copyWith(fontSize: 22),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 6),
+            Text('Отдых между подходами.',
+                style: _T.body, textAlign: TextAlign.center),
+            const SizedBox(height: 24),
 
-            // Timer ring
             SizedBox(
-              width: 240,
-              height: 240,
+              width: 200,
+              height: 200,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    width: 220,
-                    height: 220,
+                    width: 184,
+                    height: 184,
                     child: CircularProgressIndicator(
                       value: 1,
-                      strokeWidth: 6,
-                      valueColor: AlwaysStoppedAnimation(_P.lavenderSoft),
+                      strokeWidth: 5,
+                      valueColor:
+                      AlwaysStoppedAnimation(_P.lavenderSoft),
                     ),
                   ),
                   SizedBox(
-                    width: 220,
-                    height: 220,
+                    width: 184,
+                    height: 184,
                     child: CircularProgressIndicator(
                       value: progress,
-                      strokeWidth: 6,
+                      strokeWidth: 5,
                       strokeCap: StrokeCap.round,
-                      valueColor: const AlwaysStoppedAnimation(_P.lavenderDeep),
+                      valueColor:
+                      const AlwaysStoppedAnimation(_P.lavenderDeep),
                     ),
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('ВОССТАНОВЛЕНИЕ', style: _T.overline),
-                      const SizedBox(height: 6),
-                      Text(
-                        _fmt(_remaining),
-                        style: _T.number.copyWith(fontSize: 56, letterSpacing: -2, color: _P.text),
-                      ),
                       const SizedBox(height: 4),
                       Text(
+                        _fmt(_remaining),
+                        style: _T.number.copyWith(
+                            fontSize: 44,
+                            letterSpacing: -1.5,
+                            color: _P.text),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
                         'из ${_fmt(widget.seconds)}',
-                        style: _T.caption.copyWith(color: _P.lavenderDeep),
+                        style: _T.caption
+                            .copyWith(color: _P.lavenderDeep),
                       ),
                     ],
                   ),
@@ -3046,12 +3481,12 @@ class _RestTimerScreenState extends State<_RestTimerScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.waves_rounded, color: _P.textMuted, size: 18),
-                const SizedBox(width: 8),
+                Icon(Icons.waves_rounded, color: _P.textMuted, size: 16),
+                const SizedBox(width: 6),
                 Text(
                   'Дыши ровно · восстанавливай силы',
                   style: _T.caption,
@@ -3061,21 +3496,20 @@ class _RestTimerScreenState extends State<_RestTimerScreen> {
 
             const Spacer(),
 
-            // Next exercise card with image
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: _P.divider),
                   boxShadow: [
                     BoxShadow(
-                      color: _P.greenDeep.withOpacity(0.06),
-                      blurRadius: 20,
+                      color: _P.greenDeep.withOpacity(0.05),
+                      blurRadius: 16,
                       spreadRadius: -4,
-                      offset: const Offset(0, 8),
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
@@ -3086,32 +3520,36 @@ class _RestTimerScreenState extends State<_RestTimerScreen> {
                       children: [
                         Text('ДАЛЕЕ', style: _T.overline),
                         const Spacer(),
-                        Icon(Icons.arrow_forward_rounded, size: 14, color: _P.textMuted),
+                        Icon(Icons.arrow_forward_rounded,
+                            size: 12, color: _P.textMuted),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         _ExImage(
                           url: widget.nextExerciseImageUrl,
-                          size: 64,
-                          radius: 16,
+                          size: 52,
+                          radius: 13,
                           bg: _P.greenSoft,
                           fallbackEmoji: widget.nextExerciseEmoji,
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 widget.nextExerciseName,
-                                style: _T.headline.copyWith(fontSize: 15),
+                                style:
+                                _T.headline.copyWith(fontSize: 14),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 4),
-                              Text('Готовься', style: _T.caption.copyWith(color: _P.greenText)),
+                              const SizedBox(height: 3),
+                              Text('Готовься',
+                                  style: _T.caption
+                                      .copyWith(color: _P.greenText)),
                             ],
                           ),
                         ),
@@ -3122,26 +3560,28 @@ class _RestTimerScreenState extends State<_RestTimerScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             Padding(
               padding: EdgeInsets.fromLTRB(
-                24,
+                20,
                 0,
-                24,
-                20 + MediaQuery.of(context).padding.bottom,
+                20,
+                16 + MediaQuery.of(context).padding.bottom,
               ),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 50,
                 child: OutlinedButton(
                   onPressed: widget.onSkip,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _P.text,
                     side: const BorderSide(color: _P.border),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text('Пропустить отдых', style: _T.headline),
+                  child: Text('Пропустить отдых',
+                      style: _T.headline.copyWith(fontSize: 14)),
                 ),
               ),
             ),
@@ -3189,7 +3629,8 @@ class _HoldTimerScreenState extends State<_HoldTimerScreen> {
   void initState() {
     super.initState();
     _watch.start();
-    _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) => setState(() {}));
+    _ticker = Timer.periodic(const Duration(milliseconds: 200),
+            (_) => setState(() {}));
   }
 
   @override
@@ -3214,19 +3655,21 @@ class _HoldTimerScreenState extends State<_HoldTimerScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: widget.onExit,
-                    child: const Icon(Icons.close_rounded, size: 24),
+                    child: const Icon(Icons.close_rounded, size: 22),
                   ),
                   const Spacer(),
-                  Text('СТАТИКА', style: _T.overline.copyWith(color: accent)),
+                  Text('СТАТИКА',
+                      style: _T.overline.copyWith(color: accent)),
                   const Spacer(),
                   GestureDetector(
                     onTap: widget.onSkip,
-                    child: Text('Пропуск', style: _T.caption.copyWith(color: _P.textMuted)),
+                    child: Text('Пропуск',
+                        style: _T.caption.copyWith(color: _P.textMuted)),
                   ),
                 ],
               ),
@@ -3234,34 +3677,41 @@ class _HoldTimerScreenState extends State<_HoldTimerScreen> {
             const Spacer(),
             _ExImage(
               url: widget.exerciseImageUrl,
-              size: 100,
-              radius: 24,
+              size: 80,
+              radius: 20,
               bg: _P.yellowSoft,
               fallbackEmoji: '🧘',
             ),
-            const SizedBox(height: 20),
-            Text(widget.exerciseName, style: _T.title2, textAlign: TextAlign.center),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            Text(widget.exerciseName,
+                style: _T.title2.copyWith(fontSize: 17),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 16),
             Text(
               _fmt(_watch.elapsed),
-              style: _T.number.copyWith(fontSize: 72, letterSpacing: -3),
+              style: _T.number
+                  .copyWith(fontSize: 56, letterSpacing: -2.5),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text('ЦЕЛЬ ${widget.plannedSeconds}с', style: _T.caption),
             const Spacer(),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 50,
                 child: ElevatedButton(
-                  onPressed: () => widget.onComplete(_watch.elapsed.inSeconds),
+                  onPressed: () =>
+                      widget.onComplete(_watch.elapsed.inSeconds),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accent,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text('ЗАПИСАТЬ', style: _T.headline.copyWith(color: Colors.white)),
+                  child: Text('ЗАПИСАТЬ',
+                      style: _T.headline
+                          .copyWith(color: Colors.white, fontSize: 14)),
                 ),
               ),
             ),
@@ -3296,7 +3746,8 @@ class _TimedSetsTimerScreen extends StatefulWidget {
   });
 
   @override
-  State<_TimedSetsTimerScreen> createState() => _TimedSetsTimerScreenState();
+  State<_TimedSetsTimerScreen> createState() =>
+      _TimedSetsTimerScreenState();
 }
 
 class _TimedSetsTimerScreenState extends State<_TimedSetsTimerScreen> {
@@ -3308,7 +3759,8 @@ class _TimedSetsTimerScreenState extends State<_TimedSetsTimerScreen> {
   void initState() {
     super.initState();
     _watch.start();
-    _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) => setState(() {}));
+    _ticker = Timer.periodic(const Duration(milliseconds: 200),
+            (_) => setState(() {}));
     _repsCtrl = TextEditingController(text: '${widget.plannedReps}');
   }
 
@@ -3335,19 +3787,21 @@ class _TimedSetsTimerScreenState extends State<_TimedSetsTimerScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: widget.onExit,
-                    child: const Icon(Icons.close_rounded, size: 24),
+                    child: const Icon(Icons.close_rounded, size: 22),
                   ),
                   const Spacer(),
-                  Text('НА ВРЕМЯ', style: _T.overline.copyWith(color: accent)),
+                  Text('НА ВРЕМЯ',
+                      style: _T.overline.copyWith(color: accent)),
                   const Spacer(),
                   GestureDetector(
                     onTap: widget.onSkip,
-                    child: Text('Пропуск', style: _T.caption.copyWith(color: _P.textMuted)),
+                    child: Text('Пропуск',
+                        style: _T.caption.copyWith(color: _P.textMuted)),
                   ),
                 ],
               ),
@@ -3355,33 +3809,37 @@ class _TimedSetsTimerScreenState extends State<_TimedSetsTimerScreen> {
             const Spacer(),
             _ExImage(
               url: widget.exerciseImageUrl,
-              size: 100,
-              radius: 24,
+              size: 80,
+              radius: 20,
               bg: _P.lavenderSoft,
               fallbackEmoji: '⏱️',
             ),
-            const SizedBox(height: 20),
-            Text(widget.exerciseName, style: _T.title2, textAlign: TextAlign.center),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            Text(widget.exerciseName,
+                style: _T.title2.copyWith(fontSize: 17),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 16),
             Text(
               _fmt(_watch.elapsed),
-              style: _T.number.copyWith(fontSize: 72, letterSpacing: -3),
+              style: _T.number
+                  .copyWith(fontSize: 56, letterSpacing: -2.5),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('ПОВТОРЫ:', style: _T.caption),
                   SizedBox(
-                    width: 60,
+                    width: 52,
                     child: TextField(
                       controller: _repsCtrl,
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
-                      style: _T.headline,
-                      decoration: const InputDecoration(border: InputBorder.none),
+                      style: _T.headline.copyWith(fontSize: 14),
+                      decoration:
+                      const InputDecoration(border: InputBorder.none),
                     ),
                   ),
                 ],
@@ -3389,10 +3847,10 @@ class _TimedSetsTimerScreenState extends State<_TimedSetsTimerScreen> {
             ),
             const Spacer(),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: () => widget.onComplete(
                     _watch.elapsed.inSeconds,
@@ -3401,9 +3859,12 @@ class _TimedSetsTimerScreenState extends State<_TimedSetsTimerScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accent,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text('ЗАПИСАТЬ', style: _T.headline.copyWith(color: Colors.white)),
+                  child: Text('ЗАПИСАТЬ',
+                      style: _T.headline
+                          .copyWith(color: Colors.white, fontSize: 14)),
                 ),
               ),
             ),
@@ -3451,7 +3912,8 @@ class _CardioTimerScreenState extends State<_CardioTimerScreen> {
     super.initState();
     _distance = widget.plannedDistance;
     _watch.start();
-    _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) => setState(() {}));
+    _ticker = Timer.periodic(const Duration(milliseconds: 200),
+            (_) => setState(() {}));
   }
 
   @override
@@ -3476,19 +3938,21 @@ class _CardioTimerScreenState extends State<_CardioTimerScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: widget.onExit,
-                    child: const Icon(Icons.close_rounded, size: 24),
+                    child: const Icon(Icons.close_rounded, size: 22),
                   ),
                   const Spacer(),
-                  Text('КАРДИО', style: _T.overline.copyWith(color: accent)),
+                  Text('КАРДИО',
+                      style: _T.overline.copyWith(color: accent)),
                   const Spacer(),
                   GestureDetector(
                     onTap: widget.onSkip,
-                    child: Text('Пропуск', style: _T.caption.copyWith(color: _P.textMuted)),
+                    child: Text('Пропуск',
+                        style: _T.caption.copyWith(color: _P.textMuted)),
                   ),
                 ],
               ),
@@ -3496,44 +3960,51 @@ class _CardioTimerScreenState extends State<_CardioTimerScreen> {
             const Spacer(),
             _ExImage(
               url: widget.exerciseImageUrl,
-              size: 100,
-              radius: 24,
+              size: 80,
+              radius: 20,
               bg: _P.skySoft,
               fallbackEmoji: '🏃',
             ),
-            const SizedBox(height: 20),
-            Text(widget.exerciseName, style: _T.title2, textAlign: TextAlign.center),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            Text(widget.exerciseName,
+                style: _T.title2.copyWith(fontSize: 17),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 16),
             Text(
               _fmt(_watch.elapsed),
-              style: _T.number.copyWith(fontSize: 72, letterSpacing: -3),
+              style: _T.number
+                  .copyWith(fontSize: 56, letterSpacing: -2.5),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text('ДИСТАНЦИЯ: ', style: _T.caption),
                 Text(
                   _distance.toStringAsFixed(2),
-                  style: _T.headline.copyWith(color: accent),
+                  style: _T.headline.copyWith(color: accent, fontSize: 14),
                 ),
                 Text(' КМ', style: _T.caption),
               ],
             ),
             const Spacer(),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 50,
                 child: ElevatedButton(
-                  onPressed: () => widget.onComplete(_distance, _watch.elapsed.inSeconds),
+                  onPressed: () =>
+                      widget.onComplete(_distance, _watch.elapsed.inSeconds),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accent,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text('ЗАПИСАТЬ', style: _T.headline.copyWith(color: Colors.white)),
+                  child: Text('ЗАПИСАТЬ',
+                      style: _T.headline
+                          .copyWith(color: Colors.white, fontSize: 14)),
                 ),
               ),
             ),
@@ -3639,12 +4110,12 @@ class _CombatTimerScreenState extends State<_CombatTimerScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: widget.onExit,
-                    child: const Icon(Icons.close_rounded, size: 24),
+                    child: const Icon(Icons.close_rounded, size: 22),
                   ),
                   const Spacer(),
                   Text(
@@ -3654,7 +4125,8 @@ class _CombatTimerScreenState extends State<_CombatTimerScreen> {
                   const Spacer(),
                   GestureDetector(
                     onTap: widget.onSkip,
-                    child: Text('Пропуск', style: _T.caption.copyWith(color: _P.textMuted)),
+                    child: Text('Пропуск',
+                        style: _T.caption.copyWith(color: _P.textMuted)),
                   ),
                 ],
               ),
@@ -3662,43 +4134,50 @@ class _CombatTimerScreenState extends State<_CombatTimerScreen> {
             const Spacer(),
             _ExImage(
               url: widget.exerciseImageUrl,
-              size: 100,
-              radius: 24,
+              size: 80,
+              radius: 20,
               bg: _P.pinkSoft,
               fallbackEmoji: '🥊',
             ),
-            const SizedBox(height: 20),
-            Text(widget.exerciseName, style: _T.title2, textAlign: TextAlign.center),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            Text(widget.exerciseName,
+                style: _T.title2.copyWith(fontSize: 17),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 16),
             Text(
               isDone ? 'ГОТОВО' : _fmt(_remaining),
-              style: _T.number.copyWith(fontSize: 72, letterSpacing: -3),
+              style: _T.number
+                  .copyWith(fontSize: 56, letterSpacing: -2.5),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             if (!isDone && _remaining == 0)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Отдых: ', style: _T.caption),
                   GestureDetector(
-                    onTap: () => setState(() => _restSeconds = (_restSeconds - 15).clamp(0, 600)),
-                    child: const Icon(Icons.remove_circle_outline, size: 20),
+                    onTap: () => setState(
+                            () => _restSeconds = (_restSeconds - 15).clamp(0, 600)),
+                    child:
+                    const Icon(Icons.remove_circle_outline, size: 18),
                   ),
-                  const SizedBox(width: 8),
-                  Text('${_restSeconds}с', style: _T.headline),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
+                  Text('${_restSeconds}с',
+                      style: _T.headline.copyWith(fontSize: 14)),
+                  const SizedBox(width: 6),
                   GestureDetector(
-                    onTap: () => setState(() => _restSeconds = (_restSeconds + 15).clamp(0, 600)),
-                    child: const Icon(Icons.add_circle_outline, size: 20),
+                    onTap: () => setState(
+                            () => _restSeconds = (_restSeconds + 15).clamp(0, 600)),
+                    child: const Icon(Icons.add_circle_outline, size: 18),
                   ),
                 ],
               ),
             const Spacer(),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: isDone
                       ? () => widget.onComplete(_completed)
@@ -3708,7 +4187,8 @@ class _CombatTimerScreenState extends State<_CombatTimerScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accent,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                   child: Text(
                     isDone
@@ -3716,7 +4196,8 @@ class _CombatTimerScreenState extends State<_CombatTimerScreen> {
                         : (_remaining == 0
                         ? 'НАЧАТЬ'
                         : (_paused ? 'ПРОДОЛЖИТЬ' : 'ПАУЗА')),
-                    style: _T.headline.copyWith(color: Colors.white),
+                    style: _T.headline
+                        .copyWith(color: Colors.white, fontSize: 14),
                   ),
                 ),
               ),
