@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 
 import '../../models/nutrition_models.dart';
 import '../../providers/nutrition_provider.dart';
+import '../../providers/wellness_provider.dart';
+import '../widgets/product_knowledge_sheet.dart';
 import 'add_food_screen.dart'; // kept — still reachable from the dashboard
 
 // ═══════════════════════════════════════════════════════════════════
@@ -68,6 +70,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   String _query = '';    // debounced — used for filtering
   String? _selectedCategory;
   bool _favoritesOnly = false;
+  bool _seasonalOnly = false; // 🌱 фильтр «В сезоне»
   FoodSortMode _sortMode = FoodSortMode.name;
   bool _reduceMotion = false;
   bool _initialLoad = true;
@@ -77,6 +80,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   String _cacheQuery = '__';
   String? _cacheCategory = '__';
   bool _cacheFavorites = false;
+  bool _cacheSeasonal = false;
   FoodSortMode _cacheSort = FoodSortMode.name;
   int _cacheProductsId = -1;
 
@@ -137,6 +141,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       _query = '';
       _selectedCategory = null;
       _favoritesOnly = false;
+      _seasonalOnly = false;
     });
   }
 
@@ -157,9 +162,13 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<NutritionProvider>();
+    // читаем wellness один раз — база статична, месяц фиксирован на сессию
+    final wellness = context.read<WellnessProvider>();
     final products = _filtered(provider);
     final categories = _categories(provider.products);
     final hasFavorites = provider.products.any((p) => p.isFavorite);
+    final hasSeasonal =
+    provider.products.any((p) => wellness.isInSeason(p));
 
     // §13 compute "already in diary" once per build
     final nowEntries = provider.getEntriesForDate(DateTime.now());
@@ -170,7 +179,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
 
     final showShimmer =
         _initialLoad && products.isEmpty && _query.isEmpty &&
-            _selectedCategory == null && !_favoritesOnly;
+            _selectedCategory == null && !_favoritesOnly && !_seasonalOnly;
 
     final sortActive = _sortMode != FoodSortMode.name;
 
@@ -201,7 +210,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(child: _buildSearchField()),
-                SliverToBoxAdapter(child: _buildFilters(categories, hasFavorites)),
+                SliverToBoxAdapter(child: _buildFilters(
+                  categories,
+                  hasFavorites: hasFavorites,
+                  hasSeasonal: hasSeasonal,
+                )),
                 SliverToBoxAdapter(
                   child: _buildSectionHeader(products.length),
                 ),
@@ -224,7 +237,8 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                         final p = products[i];
                         return KeyedSubtree(
                           key: ValueKey('row_${p.id}'),
-                          child: _staggered(i, _buildProductRow(p, inDiary)),
+                          child: _staggered(
+                              i, _buildProductRow(p, inDiary, wellness)),
                         );
                       },
                       childCount: products.length,
@@ -330,7 +344,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   // ═══════════════════════════════════════════════════════════════
   //  4. FILTER CHIPS
   // ═══════════════════════════════════════════════════════════════
-  Widget _buildFilters(List<String> categories, bool hasFavorites) {
+  Widget _buildFilters(
+      List<String> categories, {
+        required bool hasFavorites,
+        required bool hasSeasonal,
+      }) {
     return Padding(
       padding: const EdgeInsets.only(top: 14),
       child: ShaderMask(
@@ -351,12 +369,15 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
             children: [
               _filterChip(
                 label: 'Все',
-                selected: _selectedCategory == null && !_favoritesOnly,
+                selected: _selectedCategory == null &&
+                    !_favoritesOnly &&
+                    !_seasonalOnly,
                 onTap: () {
                   HapticFeedback.selectionClick();
                   setState(() {
                     _selectedCategory = null;
                     _favoritesOnly = false;
+                    _seasonalOnly = false;
                   });
                 },
               ),
@@ -370,7 +391,30 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                     HapticFeedback.selectionClick();
                     setState(() {
                       _favoritesOnly = !_favoritesOnly;
-                      if (_favoritesOnly) _selectedCategory = null;
+                      if (_favoritesOnly) {
+                        _selectedCategory = null;
+                        _seasonalOnly = false;
+                      }
+                    });
+                  },
+                ),
+              ],
+              // 🌱 Сезон — только если есть сезонные продукты
+              if (hasSeasonal) ...[
+                const SizedBox(width: 8),
+                _filterChip(
+                  label: 'Сезон',
+                  leading: Icons.eco_rounded,
+                  selected: _seasonalOnly,
+                  accent: _P.greenDeep,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _seasonalOnly = !_seasonalOnly;
+                      if (_seasonalOnly) {
+                        _favoritesOnly = false;
+                        _selectedCategory = null;
+                      }
                     });
                   },
                 ),
@@ -387,6 +431,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                       setState(() {
                         _selectedCategory = selected ? null : c;
                         _favoritesOnly = false;
+                        _seasonalOnly = false;
                       });
                     },
                   ),
@@ -405,17 +450,18 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
     required bool selected,
     required VoidCallback onTap,
     Color accent = _P.peachDeep,
+    IconData? leading,
   }) {
     return _Press(
       onTap: onTap,
       child: AnimatedContainer(
         duration: _dur(160),
-        height: 44, // §13 ≥ 44 hit target, visually padded via alignment
+        height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected
-              ? _P.peachSoft.withOpacity(accent == _P.pinkDeep ? 0.55 : 0.55)
+              ? accent.withOpacity(0.10)
               : _P.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -426,6 +472,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (leading != null) ...[
+              Icon(leading, size: 13,
+                  color: selected ? accent : _P.textMuted),
+              const SizedBox(width: 5),
+            ],
             Text(
               label,
               style: GoogleFonts.inter(
@@ -448,12 +499,16 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   //  5. SECTION HEADER
   // ═══════════════════════════════════════════════════════════════
   Widget _buildSectionHeader(int count) {
-    final filterActive =
-        _query.isNotEmpty || _selectedCategory != null || _favoritesOnly;
+    final filterActive = _query.isNotEmpty ||
+        _selectedCategory != null ||
+        _favoritesOnly ||
+        _seasonalOnly;
     final title = _query.isNotEmpty
         ? 'Результаты'
         : _favoritesOnly
         ? 'Избранное'
+        : _seasonalOnly
+        ? 'В сезоне'
         : _selectedCategory != null
         ? _catName(_selectedCategory!)
         : 'Все продукты';
@@ -470,7 +525,16 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: _T.title2),
+                    Row(
+                      children: [
+                        if (_seasonalOnly) ...[
+                          const Icon(Icons.eco_rounded,
+                              size: 16, color: _P.greenDeep),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(child: Text(title, style: _T.title2)),
+                      ],
+                    ),
                     if (filterActive) ...[
                       const SizedBox(height: 3),
                       Text(
@@ -489,7 +553,8 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                 _Press(
                   onTap: _clearAllFilters,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 4),
                     child: Text(
                       'Сбросить',
                       style: GoogleFonts.inter(
@@ -512,10 +577,12 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   // ═══════════════════════════════════════════════════════════════
   //  6. PRODUCT ROW
   // ═══════════════════════════════════════════════════════════════
-  Widget _buildProductRow(FoodProduct p, Map<String, double> inDiary) {
+  Widget _buildProductRow(
+      FoodProduct p, Map<String, double> inDiary, WellnessProvider wellness) {
     final addedGrams = inDiary[p.id] ?? 0;
     final isLight = p.calories < 100;
     final muted = p.calories <= 0;
+    final seasonal = wellness.isInSeason(p); // 🌱
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
@@ -571,6 +638,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                                 ),
                               ),
                             ),
+                            if (seasonal) ...[
+                              const SizedBox(width: 5),
+                              const Icon(Icons.eco_rounded,
+                                  size: 14, color: _P.greenDeep),
+                            ],
                             if (addedGrams > 0) ...[
                               const SizedBox(width: 6),
                               Container(
@@ -640,7 +712,9 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: -0.4,
                                 height: 1,
-                                fontFeatures: [ui.FontFeature.tabularFigures()],
+                                fontFeatures: [
+                                  ui.FontFeature.tabularFigures()
+                                ],
                               ),
                             ),
                             const SizedBox(width: 3),
@@ -711,6 +785,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       content: Text(wasFav ? 'Убрано из избранного' : 'Добавлено в избранное'),
       behavior: SnackBarBehavior.floating,
       backgroundColor: _P.text,
+      duration: const Duration(seconds: 3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       action: SnackBarAction(
         label: 'Отменить',
@@ -743,19 +818,25 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   //  10. EMPTY STATES
   // ═══════════════════════════════════════════════════════════════
   Widget _buildEmpty(NutritionProvider provider) {
-    final filterActive =
-        _query.isNotEmpty || _selectedCategory != null || _favoritesOnly;
+    final filterActive = _query.isNotEmpty ||
+        _selectedCategory != null ||
+        _favoritesOnly ||
+        _seasonalOnly;
 
-    final isFavEmpty = _favoritesOnly;
     final IconData icon;
     final String title;
     final String subtitle;
     final Color accent;
-    if (isFavEmpty) {
+    if (_favoritesOnly) {
       icon = Icons.favorite_border_rounded;
       title = 'Избранное пусто';
       subtitle = 'Нажми и удерживай продукт, чтобы добавить в избранное';
       accent = _P.pinkDeep;
+    } else if (_seasonalOnly) {
+      icon = Icons.eco_rounded;
+      title = 'Нет сезонных продуктов';
+      subtitle = 'В базе пока нет продуктов, подходящих под этот месяц';
+      accent = _P.greenDeep;
     } else if (_selectedCategory != null && _query.isEmpty) {
       icon = Icons.inventory_2_outlined;
       title = 'Ничего не найдено';
@@ -767,6 +848,8 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       subtitle = 'Попробуй другое слово или категорию';
       accent = _P.peachDeep;
     }
+
+    final isSpecialEmpty = _favoritesOnly || _seasonalOnly;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
@@ -797,7 +880,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isFavEmpty ? 'Открыть все продукты' : 'Сбросить фильтры',
+                  isSpecialEmpty ? 'Показать всё' : 'Сбросить фильтры',
                   style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 12,
@@ -806,7 +889,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                 ),
               ),
             ),
-          if (!isFavEmpty) ...[
+          if (!isSpecialEmpty) ...[
             const SizedBox(height: 10),
             _Press(
               onTap: () => _showCustomProductSheet(),
@@ -1037,6 +1120,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       builder: (_) => _ProductDetailSheet(
         product: p,
         provider: context.read<NutritionProvider>(),
+        wellness: context.read<WellnessProvider>(),
         date: DateTime.now(),
         reduceMotion: _reduceMotion,
       ),
@@ -1071,6 +1155,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       content: const Text('Продукт добавлен в базу'),
       behavior: SnackBarBehavior.floating,
       backgroundColor: _P.greenDeep,
+      duration: const Duration(seconds: 3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       action: created != null
           ? SnackBarAction(
@@ -1091,6 +1176,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         _cacheQuery == _query &&
         _cacheCategory == _selectedCategory &&
         _cacheFavorites == _favoritesOnly &&
+        _cacheSeasonal == _seasonalOnly &&
         _cacheSort == _sortMode &&
         _cacheProductsId == productsId) {
       return _cacheFiltered!;
@@ -1099,6 +1185,10 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         ? List<FoodProduct>.from(provider.products)
         : List<FoodProduct>.from(provider.searchProducts(_query));
     if (_favoritesOnly) r = r.where((p) => p.isFavorite).toList();
+    if (_seasonalOnly) {
+      final wellness = context.read<WellnessProvider>();
+      r = r.where((p) => wellness.isInSeason(p)).toList();
+    }
     if (_selectedCategory != null) {
       r = r.where((p) => p.category == _selectedCategory).toList();
     }
@@ -1120,6 +1210,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
     _cacheQuery = _query;
     _cacheCategory = _selectedCategory;
     _cacheFavorites = _favoritesOnly;
+    _cacheSeasonal = _seasonalOnly;
     _cacheSort = _sortMode;
     _cacheProductsId = productsId;
     return r;
@@ -1246,7 +1337,6 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ],
                   ),
                 ),
-                // sort button (peach-tinted when non-default)
                 _Press(
                   onTap: onSort,
                   child: Container(
@@ -1269,7 +1359,6 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // cross-fade: "Найти" (expanded) → count chip (collapsed)
                 AnimatedSwitcher(
                   duration: reduceMotion
                       ? Duration.zero
@@ -1343,11 +1432,13 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
 class _ProductDetailSheet extends StatefulWidget {
   final FoodProduct product;
   final NutritionProvider provider;
+  final WellnessProvider wellness;
   final DateTime date;
   final bool reduceMotion;
   const _ProductDetailSheet({
     required this.product,
     required this.provider,
+    required this.wellness,
     required this.date,
     required this.reduceMotion,
   });
@@ -1411,13 +1502,13 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
 
     final messenger = ScaffoldMessenger.of(context);
     final mealName = _meal.displayName.toLowerCase();
-    final productId = _current.id;
     Navigator.pop(context);
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(SnackBar(
       content: Text('Добавлено в $mealName · ${grams.round()} г'),
       behavior: SnackBarBehavior.floating,
       backgroundColor: _P.greenDeep,
+      duration: const Duration(seconds: 3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       action: newEntry != null
           ? SnackBarAction(
@@ -1430,8 +1521,6 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
       )
           : null,
     ));
-    // Reference productId to silence unused-variable in some analyzers.
-    productId;
   }
 
   @override
@@ -1440,6 +1529,8 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
     final grams = double.tryParse(_gramsCtrl.text) ?? 0;
     final liveMacros = product.forGrams(grams > 0 ? grams : 0);
     final canAdd = grams > 0;
+    // 🌱 знания о продукте (может быть null)
+    final knowledge = widget.wellness.knowledgeFor(product);
 
     return Padding(
       padding:
@@ -1486,17 +1577,50 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            product.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.5,
-                              color: _P.text,
-                              height: 1.2,
-                            ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  product.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.5,
+                                    color: _P.text,
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ),
+                              if (widget.wellness.isInSeason(product)) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: _P.greenDeep.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.eco_rounded,
+                                          size: 10, color: _P.greenDeep),
+                                      const SizedBox(width: 2),
+                                      Text('СЕЗОН',
+                                          style: GoogleFonts.inter(
+                                            color: _P.greenDeep,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 0.6,
+                                          )),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(_catName(product.category).toUpperCase(),
@@ -1533,7 +1657,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                 ),
                 const SizedBox(height: 22),
 
-                // §7 НА 100 Г — 4 macro boxes
+                // НА 100 Г — 4 macro boxes
                 Text('НА 100 Г', style: _T.overline),
                 const SizedBox(height: 10),
                 Row(
@@ -1556,7 +1680,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                 Container(height: 1, color: _P.divider),
                 const SizedBox(height: 18),
 
-                // §7 КОЛИЧЕСТВО
+                // КОЛИЧЕСТВО
                 Text('КОЛИЧЕСТВО', style: _T.overline),
                 const SizedBox(height: 10),
                 Row(
@@ -1669,8 +1793,6 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                       selected: !const [50, 100, 150, 200, 250]
                           .contains(grams.round()),
                       onTap: () {
-                        // focus by popping + reopening on the field is overkill;
-                        // opening the keyboard via FocusScope works.
                         FocusScope.of(context).requestFocus(FocusNode());
                       },
                     ),
@@ -1724,7 +1846,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                 ),
                 const SizedBox(height: 22),
 
-                // §7 ПРИЁМ ПИЩИ
+                // ПРИЁМ ПИЩИ
                 Text('ПРИЁМ ПИЩИ', style: _T.overline),
                 const SizedBox(height: 10),
                 SizedBox(
@@ -1768,6 +1890,71 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                     },
                   ),
                 ),
+
+                // 🌱 Знания о продукте — Богат, полезен, осторожно
+                if (knowledge != null) ...[
+                  const SizedBox(height: 14),
+                  _Press(
+                    onTap: () => showProductKnowledgeSheet(
+                      context,
+                      product: product,
+                      knowledge: knowledge,
+                      nutrition: widget.provider,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _P.greenDeep.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: _P.greenDeep.withOpacity(0.22)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.eco_rounded,
+                                color: _P.greenDeep, size: 16),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Богат, полезен, осторожно',
+                                  style: GoogleFonts.inter(
+                                    color: _P.greenDeep,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.1,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Витамины · польза · противопоказания',
+                                  style: GoogleFonts.inter(
+                                    color: _P.textMuted,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded,
+                              color: _P.greenDeep, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 22),
 
                 // CTA
@@ -2072,7 +2259,6 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
                 Text('Создать', style: _T.title2),
                 const SizedBox(height: 20),
 
-                // ОСНОВНОЕ
                 Text('ОСНОВНОЕ', style: _T.overline),
                 const SizedBox(height: 8),
                 Container(
@@ -2147,7 +2333,6 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
                 ),
                 const SizedBox(height: 22),
 
-                // НА 100 Г 2×2 grid
                 Text('НА 100 Г', style: _T.overline),
                 const SizedBox(height: 10),
                 Row(
@@ -2170,13 +2355,13 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: _macroField('УГЛЕВОДЫ', 'г', _P.pinkDeep, _carbCtrl),
+                      child: _macroField(
+                          'УГЛЕВОДЫ', 'г', _P.pinkDeep, _carbCtrl),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
 
-                // live preview
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 10),

@@ -9,8 +9,14 @@ import 'package:provider/provider.dart';
 import 'package:zal_life/features/nutrition/ui/screens/food_search_screen.dart';
 
 import '../../models/nutrition_models.dart';
+import '../../models/wellness_models.dart';
 import '../../providers/nutrition_provider.dart';
+import '../../providers/wellness_provider.dart';
+import '../widgets/product_knowledge_sheet.dart';
+import '../widgets/season_visuals.dart';
+import '../widgets/seasonal_strip.dart';
 import 'add_food_screen.dart';
+import 'knowledge_screen.dart';
 import 'profile_setup_screen.dart';
 
 // ═══════════════════════════════════════════════════════════════════
@@ -48,7 +54,10 @@ class _Hero {
 
 class _T {
   static final title2 = GoogleFonts.inter(
-      fontSize: 19, fontWeight: FontWeight.w600, letterSpacing: -0.5, color: _P.text);
+      fontSize: 19,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.5,
+      color: _P.text);
   static final headline = GoogleFonts.inter(
       fontSize: 15, fontWeight: FontWeight.w600, color: _P.text);
   static final body = GoogleFonts.inter(
@@ -57,11 +66,13 @@ class _T {
       fontSize: 12, fontWeight: FontWeight.w400, color: _P.textMuted);
 }
 
+const double _padH = 14;
+
 // ═══════════════════════════════════════════════════════════════════
 //  MAIN SCREEN
 // ═══════════════════════════════════════════════════════════════════
 class FuelDashboardScreen extends StatefulWidget {
-  final bool isDark; // kept for API compatibility
+  final bool isDark;
   const FuelDashboardScreen({super.key, this.isDark = true});
 
   @override
@@ -71,34 +82,22 @@ class FuelDashboardScreen extends StatefulWidget {
 class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     with TickerProviderStateMixin {
   DateTime _selectedDate = DateTime.now();
-  bool _templatesExpanded = false;
-  String _templatesSearchQuery = '';
   TemplatesSortMode _templatesSortMode = TemplatesSortMode.name;
-  bool _searchExpanded = false;
   bool _profileBannerDismissed = false;
   MealType? _expandedMeal;
   bool _didAutoExpand = false;
   bool _reduceMotion = false;
   bool _pulseStarted = false;
 
-  // Lightweight in-memory persistence (swap to SharedPreferences when the
-  // dependency is available — see tradeoffs).
   static int _lastWaterAmount = 250;
   static final Map<String, Set<String>> _dismissedRecs = {};
 
-  // Template memoization
-  List<MealTemplate>? _cachedTemplates;
-  String _cacheQuery = '';
-  TemplatesSortMode _cacheSort = TemplatesSortMode.name;
-  List<MealTemplate>? _cacheTemplatesRef;
-
   final _scrollController = ScrollController();
   final _stickyVisible = ValueNotifier<bool>(false);
-  final _actionBarVisible = ValueNotifier<bool>(true);
   final _recsPage = PageController(viewportFraction: 0.9);
 
-  late final AnimationController _entrance =
-  AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+  late final AnimationController _entrance = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 300));
   late final Animation<double> _entranceCurve =
   CurvedAnimation(parent: _entrance, curve: Curves.easeOutCubic);
   late final AnimationController _pulse =
@@ -139,7 +138,6 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _stickyVisible.dispose();
-    _actionBarVisible.dispose();
     _recsPage.dispose();
     _entrance.dispose();
     _pulse.dispose();
@@ -148,13 +146,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     super.dispose();
   }
 
-  // ── scroll driven chrome ────────────────────────────────────────
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    final p = _scrollController.position;
-    _stickyVisible.value = p.pixels > 140;
-    final nearBottom = p.maxScrollExtent > 400 && p.pixels > p.maxScrollExtent - 320;
-    _actionBarVisible.value = !nearBottom;
+    _stickyVisible.value = _scrollController.position.pixels > 140;
   }
 
   void _autoExpandCurrentMeal() {
@@ -168,8 +162,12 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     } catch (_) {}
   }
 
-  // ── style helpers ───────────────────────────────────────────────
-  TextStyle _num({double size = 14, FontWeight weight = FontWeight.w600, Color? color, double tracking = -0.4}) =>
+  TextStyle _num({
+    double size = 14,
+    FontWeight weight = FontWeight.w600,
+    Color? color,
+    double tracking = -0.4,
+  }) =>
       GoogleFonts.inter(
         fontSize: size,
         fontWeight: weight,
@@ -180,11 +178,48 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       );
 
   TextStyle get _overline => GoogleFonts.inter(
-      fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: _P.textMuted);
+      fontSize: 10,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 1.2,
+      color: _P.textMuted);
 
-  // ═══════════════════════════════════════════════════════════════
-  //  BUILD
-  // ═══════════════════════════════════════════════════════════════
+  Widget _sectionLabel(String text, IconData icon) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(_padH, 26, _padH, 10),
+        child: Row(
+          children: [
+            Icon(icon, size: 13, color: _P.textMuted),
+            const SizedBox(width: 6),
+            Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _P.text,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Container(height: 1, color: _P.divider)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  ({int diff, bool positive}) _yesterdayDiff(
+      NutritionProvider provider, DailyNutritionSummary today) {
+    try {
+      final y = DateTime.now().subtract(const Duration(days: 1));
+      final ySum = provider.getSummaryForDate(y);
+      final diff = today.calories.round() - ySum.calories.round();
+      return (diff: diff.abs(), positive: diff >= 0);
+    } catch (_) {
+      return (diff: 0, positive: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<NutritionProvider>();
@@ -200,52 +235,631 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
 
     return Scaffold(
       backgroundColor: _P.bg,
+      floatingActionButton: _buildFab(provider),
       body: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
           CustomScrollView(
             controller: _scrollController,
-            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
             slivers: [
               SliverToBoxAdapter(
-                child: _buildHero(summary, goals, hasProfile),
-              ),
+                  child: _buildHero(summary, goals, hasProfile, provider)),
               if (!hasProfile && !_profileBannerDismissed)
                 SliverToBoxAdapter(child: _buildProfileBanner()),
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+              _sectionLabel('СЕГОДНЯ', Icons.wb_sunny_outlined),
               SliverToBoxAdapter(child: _buildMacroCard(summary, goals)),
               const SliverToBoxAdapter(child: SizedBox(height: 14)),
               SliverToBoxAdapter(child: _buildWaterCard(provider, goals)),
+
               if (visibleRecs.isNotEmpty) ...[
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                _sectionLabel('СОВЕТЫ', Icons.auto_awesome_outlined),
                 SliverToBoxAdapter(
-                  child: _buildRecommendations(visibleRecs, dayKey),
-                ),
+                    child: _buildRecommendations(visibleRecs, dayKey)),
               ],
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
               SliverToBoxAdapter(
-                child: _buildMealsSection(provider, meals, summary.entriesCount),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                  child: _buildHealthSection(context)),
+
+              _sectionLabel('ДНЕВНИК', Icons.book_outlined),
               SliverToBoxAdapter(child: _buildRecent(provider)),
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              SliverToBoxAdapter(child: _buildMealsSection(
+                  provider, meals, summary.entriesCount, summary, goals)),
+
+              _sectionLabel('БЛЮДА', Icons.restaurant_menu_rounded),
               SliverToBoxAdapter(child: _buildTemplates(provider)),
-              const SliverToBoxAdapter(child: SizedBox(height: 140)),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
-          // Sticky context bar
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: _buildStickyOverlay(summary, goals),
           ),
-          // Docked action bar
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _buildActionBar(provider),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSeasonalStrip() {
+    return SeasonalStrip(
+      onViewAll: () => _openKnowledge(context, 0),
+    );
+  }
+
+  void _openKnowledge(BuildContext ctx, int tab) {
+    Navigator.push(
+      ctx,
+      MaterialPageRoute(
+        builder: (_) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(
+                value: context.read<WellnessProvider>()),
+            ChangeNotifierProvider.value(
+                value: context.read<NutritionProvider>()),
+          ],
+          child: KnowledgeScreen(initialTab: tab),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFab(NutritionProvider provider) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: _P.peachDeep.withOpacity(0.35),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: FloatingActionButton(
+        onPressed: () {
+          HapticFeedback.mediumImpact();
+          _openAddFood(context, provider);
+        },
+        backgroundColor: _P.peachDeep,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        child: const Icon(Icons.add_rounded, size: 26),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  ЗДОРОВЬЕ — тёмный контейнер
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildHealthSection(BuildContext context) {
+    final wellness = context.watch<WellnessProvider>();
+    final seasonCount = wellness.seasonalNow.length;
+    final dailyProduct = wellness.productOfDay;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_padH, 26, _padH, 0),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_Hero.bgTop, _Hero.bgBottom],
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                top: -40,
+                right: -40,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 220,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          _P.greenDeep.withOpacity(0.22),
+                          _P.greenDeep.withOpacity(0.0),
+                        ],
+                        stops: const [0.0, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Header row ──
+                    Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.10)),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.eco_rounded,
+                              color: _P.greenSoft, size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ЗДОРОВЬЕ И СЕЗОН',
+                                style: GoogleFonts.inter(
+                                  color: _P.greenSoft,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.4,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                seasonCount > 0
+                                    ? '$seasonCount продуктов в сезоне'
+                                    : 'Сезонные продукты',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  color: _Hero.textHigh,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _Press(
+                          onTap: () => _openKnowledge(context, 0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.06),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.10)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Знания',
+                                    style: GoogleFonts.inter(
+                                      color: _Hero.textHigh,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    )),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.arrow_forward_rounded,
+                                    color: Colors.white, size: 12),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+
+                    // ── Продукт дня ──
+                    if (dailyProduct != null) ...[
+                      _Press(
+                        onTap: () {
+                          final k = dailyProduct;
+                          final product =
+                          _findProductByName(context, k.displayName);
+                          showProductKnowledgeSheet(
+                            context,
+                            product: product,
+                            knowledge: k,
+                            nutrition: context.read<NutritionProvider>(),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.04),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.08)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: _P.greenDeep.withOpacity(0.14),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                      color: _P.greenDeep.withOpacity(0.30)),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(dailyProduct.emoji,
+                                    style: const TextStyle(fontSize: 22)),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets
+                                              .symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: _P.greenDeep
+                                                .withOpacity(0.15),
+                                            borderRadius:
+                                            BorderRadius.circular(100),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Text('✨',
+                                                  style: TextStyle(
+                                                      fontSize: 9)),
+                                              const SizedBox(width: 3),
+                                              Text('ПРОДУКТ ДНЯ',
+                                                  style: GoogleFonts.inter(
+                                                    color: _P.greenSoft,
+                                                    fontSize: 9,
+                                                    fontWeight:
+                                                    FontWeight.w700,
+                                                    letterSpacing: 0.8,
+                                                  )),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      dailyProduct.displayName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        color: _Hero.textHigh,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -0.3,
+                                      ),
+                                    ),
+                                    if (dailyProduct.benefits.isNotEmpty)
+                                      Text(
+                                        dailyProduct.benefits
+                                            .take(2)
+                                            .map((b) => _benefitRu(b))
+                                            .join(' · '),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.inter(
+                                          color: _Hero.textLow,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded,
+                                  color: Colors.white54, size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
+                    // ── Сезонная лента — заголовок ──
+                    Row(
+                      children: [
+                        const Icon(Icons.eco_rounded,
+                            color: _P.greenSoft, size: 13),
+                        const SizedBox(width: 6),
+                        Text(
+                          'СЕЗОН СЕЙЧАС',
+                          style: GoogleFonts.inter(
+                            color: _P.greenSoft,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        SeasonPill(
+                            month: wellness.currentMonth, dark: true),
+                        const Spacer(),
+                        _Press(
+                          onTap: () => _openKnowledge(context, 0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Все',
+                                  style: GoogleFonts.inter(
+                                    color: _Hero.textLow,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  )),
+                              const Icon(Icons.chevron_right_rounded,
+                                  color: _Hero.textLow, size: 14),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    _darkSeasonalStrip(context),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _benefitRu(HealthBenefit b) {
+    switch (b) {
+      case HealthBenefit.immunity:
+        return 'иммунитет';
+      case HealthBenefit.skin:
+        return 'кожа';
+      case HealthBenefit.heart:
+        return 'сердце';
+      case HealthBenefit.digestion:
+        return 'пищеварение';
+      case HealthBenefit.energy:
+        return 'энергия';
+      case HealthBenefit.bones:
+        return 'кости';
+      case HealthBenefit.brain:
+        return 'мозг';
+      case HealthBenefit.eyes:
+        return 'зрение';
+      case HealthBenefit.sleep:
+        return 'сон';
+      case HealthBenefit.weight:
+        return 'вес';
+    }
+  }
+
+  FoodProduct? _findProductByName(BuildContext context, String name) {
+    final provider = context.read<NutritionProvider>();
+    try {
+      return provider.products.firstWhere((p) =>
+      p.name.toLowerCase() == name.toLowerCase() ||
+          p.name.toLowerCase().contains(name.toLowerCase()));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  ТЁМНАЯ СЕЗОННАЯ ЛЕНТА — обновлённая
+  // ═══════════════════════════════════════════════════════════════
+  Widget _darkSeasonalStrip(BuildContext context) {
+    final wellness = context.watch<WellnessProvider>();
+    final nutrition = context.watch<NutritionProvider>();
+    final ending = wellness.endingThisMonth.take(6).toList();
+    final starting = wellness.startingNextMonth.take(6).toList();
+    final seasonal = wellness.seasonalNow.take(8).toList();
+    final month = wellness.currentMonth;
+
+    if (seasonal.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          'В этом месяце нет сезонных продуктов',
+          style: GoogleFonts.inter(
+            color: _Hero.textLow,
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Полоса месяцев для текущего сезона ──
+        SeasonMonthsBar(
+          months: metaForMonth(month).months,
+          currentMonth: month,
+          accent: metaForMonth(month).accent,
+          trackColor: Colors.white.withOpacity(0.08),
+          height: 4,
+          showLabels: true,
+        ),
+        const SizedBox(height: 12),
+
+        // ── Лента карточек ──
+        SizedBox(
+          height: 108,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: seasonal.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
+              final k = seasonal[i];
+              FoodProduct? product;
+              try {
+                product = nutrition.products.firstWhere((p) =>
+                p.id == k.key ||
+                    p.name.toLowerCase().contains(
+                        k.displayName.toLowerCase()));
+              } catch (_) {}
+
+              final nextMonth = month == 12 ? 1 : month + 1;
+              final isEnding = !k.seasonMonths.contains(nextMonth);
+
+              return _Press(
+                onTap: () {
+                  showProductKnowledgeSheet(
+                    context,
+                    product: product,
+                    knowledge: k,
+                    nutrition: nutrition,
+                  );
+                },
+                child: Container(
+                  width: 112,
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isEnding
+                          ? _P.peachDeep.withOpacity(0.35)
+                          : Colors.white.withOpacity(0.08),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: _P.greenDeep.withOpacity(0.14),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(k.emoji,
+                                style: const TextStyle(fontSize: 16)),
+                          ),
+                          const Spacer(),
+                          if (isEnding)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: _P.peachDeep.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'уходит',
+                                style: GoogleFonts.inter(
+                                  color: _P.peachSoft,
+                                  fontSize: 7,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Text(
+                        k.displayName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: _Hero.textHigh,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                          letterSpacing: -0.1,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      SeasonMonthsBar(
+                        months: k.seasonMonths,
+                        currentMonth: month,
+                        accent: _P.greenDeep,
+                        trackColor: Colors.white.withOpacity(0.10),
+                        height: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // ── Сноска: уходит / скоро ──
+        if (ending.isNotEmpty || starting.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (ending.isNotEmpty)
+                _seasonNote(
+                  icon: Icons.schedule_rounded,
+                  color: _P.peachDeep,
+                  label:
+                  '${ending.length} уходит: ${ending.first.displayName}',
+                ),
+              if (starting.isNotEmpty)
+                _seasonNote(
+                  icon: Icons.upcoming_rounded,
+                  color: _P.greenDeep,
+                  label:
+                  '${starting.length} скоро: ${starting.first.displayName}',
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _seasonNote({
+    required IconData icon,
+    required Color color,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: color,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -253,16 +867,19 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  1. HERO
+  //  HERO
   // ═══════════════════════════════════════════════════════════════
-  Widget _buildHero(DailyNutritionSummary s, NutritionGoals g, bool hasProfile) {
+  Widget _buildHero(DailyNutritionSummary s, NutritionGoals g, bool hasProfile,
+      NutritionProvider provider) {
     final rawPct = g.calories > 0 ? s.calories / g.calories : 0.0;
     final pct = rawPct.clamp(0.0, 1.0);
     final isOver = s.calories > g.calories;
     final remaining = g.calories - s.calories;
-    final accent = isOver ? _P.pinkDeep : (rawPct >= 0.9 ? _P.greenDeep : _Hero.accent);
+    final accent =
+    isOver ? _P.pinkDeep : (rawPct >= 0.9 ? _P.greenDeep : _Hero.accent);
     final isToday = _isSameDay(_selectedDate, DateTime.now());
     final noMeals = s.entriesCount == 0;
+    final yDiff = _yesterdayDiff(provider, s);
 
     final content = ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -279,7 +896,6 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
         ),
         child: Stack(
           children: [
-            // Looping radial pulse
             Positioned(
               top: 60,
               left: 60,
@@ -287,14 +903,18 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                 child: AnimatedBuilder(
                   animation: _pulse,
                   builder: (_, __) {
-                    final o = _reduceMotion ? 0.18 : (0.14 + 0.08 * _pulse.value);
+                    final o =
+                    _reduceMotion ? 0.18 : (0.14 + 0.08 * _pulse.value);
                     return Container(
                       width: 320,
                       height: 320,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
-                          colors: [accent.withOpacity(o), accent.withOpacity(0)],
+                          colors: [
+                            accent.withOpacity(o),
+                            accent.withOpacity(0)
+                          ],
                           stops: const [0.0, 1.0],
                         ),
                       ),
@@ -308,7 +928,6 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // header
                   Row(
                     children: [
                       _buildAvatar(hasProfile),
@@ -321,7 +940,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                 style: GoogleFonts.inter(
                                     color: _Hero.textLow, fontSize: 12)),
                             Text(
-                              isToday ? 'Сегодня' : _formatDateShort(_selectedDate),
+                              isToday
+                                  ? 'Сегодня'
+                                  : _formatDateShort(_selectedDate),
                               style: GoogleFonts.inter(
                                 color: _Hero.textHigh,
                                 fontSize: 20,
@@ -332,6 +953,35 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                           ],
                         ),
                       ),
+                      if (s.entriesCount > 0) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 9, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.04),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.09)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.restaurant_menu_rounded,
+                                  color: Colors.white, size: 12),
+                              const SizedBox(width: 5),
+                              Text('${s.entriesCount}',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    fontFeatures: const [
+                                      ui.FontFeature.tabularFigures()
+                                    ],
+                                  )),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
                       _darkPill(
                         icon: Icons.calendar_today_rounded,
                         label: isToday ? 'ДАТА' : '→',
@@ -340,12 +990,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  // ring + stats
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // left column : ring + remaining chip
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -368,7 +1015,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                             percent: pct * t,
                                             color: accent,
                                             glowColor: accent.withOpacity(0.55),
-                                            background: Colors.white.withOpacity(0.08),
+                                            background:
+                                            Colors.white.withOpacity(0.08),
                                           ),
                                         ),
                                       ),
@@ -376,7 +1024,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            noMeals ? '—' : '${(rawPct * 100).round()}%',
+                                            noMeals
+                                                ? '—'
+                                                : '${(rawPct * 100).round()}%',
                                             style: GoogleFonts.inter(
                                               color: _Hero.textHigh,
                                               fontSize: 30,
@@ -406,10 +1056,11 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                           ),
                           const SizedBox(height: 10),
                           _remainingChip(remaining, isOver, accent),
+                          const SizedBox(height: 6),
+                          _yesterdayChip(yDiff),
                         ],
                       ),
                       const SizedBox(width: 16),
-                      // right column
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -450,7 +1101,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                   child: LinearProgressIndicator(
                                     value: pct * t,
                                     minHeight: 2,
-                                    backgroundColor: Colors.white.withOpacity(0.08),
+                                    backgroundColor:
+                                    Colors.white.withOpacity(0.08),
                                     valueColor: AlwaysStoppedAnimation(accent),
                                   ),
                                 ),
@@ -462,14 +1114,13 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                     ],
                   ),
                   const SizedBox(height: 22),
-
-                  // 4 ringlets
                   Row(
                     children: [
                       _ringlet('Б', s.protein, g.protein, _P.greenDeep),
                       _ringlet('Ж', s.fat, g.fat, _P.peachDeep),
                       _ringlet('У', s.carbs, g.carbs, _P.yellowDeep),
-                      _ringlet('В', s.waterMl.toDouble(), g.waterMl.toDouble(), _P.skyDeep),
+                      _ringlet('В', s.waterMl.toDouble(),
+                          g.waterMl.toDouble(), _P.skyDeep),
                     ],
                   ),
                 ],
@@ -505,7 +1156,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isOver ? Icons.warning_amber_rounded : Icons.local_fire_department_rounded,
+            isOver
+                ? Icons.warning_amber_rounded
+                : Icons.local_fire_department_rounded,
             color: accent,
             size: 13,
           ),
@@ -526,8 +1179,59 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     );
   }
 
+  Widget _yesterdayChip(({int diff, bool positive}) d) {
+    if (d.diff == 0) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          'как вчера',
+          style: GoogleFonts.inter(
+            color: _Hero.textLow,
+            fontSize: 9,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+    final color = d.positive ? _P.greenDeep : _P.skyDeep;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            d.positive
+                ? Icons.arrow_upward_rounded
+                : Icons.arrow_downward_rounded,
+            size: 9,
+            color: color,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            '${d.diff} ккал vs вчера',
+            style: GoogleFonts.inter(
+              color: color,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              fontFeatures: const [ui.FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _ringlet(String label, double cur, double goal, Color color) {
     final pct = goal > 0 ? (cur / goal).clamp(0.0, 1.0) : 0.0;
+    final pctLabel = goal > 0 ? '${(cur / goal * 100).round()}%' : '—';
     return Expanded(
       child: Column(
         children: [
@@ -556,13 +1260,26 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
             ),
           ),
           const SizedBox(height: 1),
-          Text(label,
-              style: GoogleFonts.inter(
-                color: _Hero.textLow,
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.4,
-              )),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(label,
+                  style: GoogleFonts.inter(
+                    color: _Hero.textLow,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                  )),
+              const SizedBox(width: 3),
+              Text(pctLabel,
+                  style: GoogleFonts.inter(
+                    color: _Hero.textLow.withOpacity(0.7),
+                    fontSize: 8,
+                    fontWeight: FontWeight.w500,
+                    fontFeatures: const [ui.FontFeature.tabularFigures()],
+                  )),
+            ],
+          ),
         ],
       ),
     );
@@ -589,7 +1306,11 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     );
   }
 
-  Widget _darkPill({required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _darkPill({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return _Press(
       onTap: onTap,
       child: Container(
@@ -617,7 +1338,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  3. MACRO SEGMENTED CARD
+  //  MACRO CARD
   // ═══════════════════════════════════════════════════════════════
   Widget _buildMacroCard(DailyNutritionSummary s, NutritionGoals g) {
     final cols = [
@@ -626,7 +1347,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       _MacroCol('Углеводы', s.carbs, g.carbs, _P.yellowDeep),
     ];
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: _padH),
       child: _Press(
         onTap: () => _showGoalsEditor(context),
         child: Container(
@@ -695,17 +1416,31 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
 
   Widget _macroColumn(_MacroCol c) {
     final over = c.cur > c.goal;
+    final remaining = (c.goal - c.cur).clamp(0.0, 9999.0);
+    final pct = c.pct;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(c.label,
-              style: GoogleFonts.inter(
-                color: _P.textMuted,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              )),
+          Row(
+            children: [
+              Text(c.label,
+                  style: GoogleFonts.inter(
+                    color: _P.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  )),
+              const SizedBox(width: 4),
+              Text('${(pct * 100).round()}%',
+                  style: GoogleFonts.inter(
+                    color: over ? _P.pinkDeep : c.color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: const [ui.FontFeature.tabularFigures()],
+                  )),
+            ],
+          ),
           const SizedBox(height: 6),
           Text(
             c.cur.round().toString(),
@@ -716,102 +1451,200 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
             ),
           ),
           const SizedBox(height: 3),
-          Text('из ${c.goal.round()} г',
-              style: GoogleFonts.inter(
-                color: _P.textMuted,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              )),
+          Text(
+            over
+                ? 'на ${(c.cur - c.goal).round()} г сверх'
+                : '${remaining.round()} г до цели',
+            style: GoogleFonts.inter(
+              color: over ? _P.pinkDeep : _P.textMuted,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              fontFeatures: const [ui.FontFeature.tabularFigures()],
+            ),
+          ),
         ],
       ),
     );
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  4. WATER CARD
+  //  WATER CARD
   // ═══════════════════════════════════════════════════════════════
   Widget _buildWaterCard(NutritionProvider provider, NutritionGoals g) {
     final cur = provider.getWaterForDate(_selectedDate);
     final raw = g.waterMl > 0 ? cur / g.waterMl : 0.0;
     final pct = raw.clamp(0.0, 1.0);
+    const presets = [250, 500, 1000];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: _padH),
       child: Container(
-        height: 86,
         decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _P.divider),
+          color: _P.skySoft,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _P.skyDeep.withOpacity(0.15)),
         ),
-        child: Row(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
           children: [
-            const SizedBox(width: 14),
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: _P.skySoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.water_drop_rounded, color: _P.skyDeep, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+              child: Row(
                 children: [
-                  Text('ВОДА',
-                      style: GoogleFonts.inter(
-                        color: _P.skyDeep,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                      )),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${(cur / 1000).toStringAsFixed(1)} / ${(g.waterMl / 1000).toStringAsFixed(1)} л',
-                    style: GoogleFonts.inter(
-                      color: _P.text,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
-                      height: 1,
-                      fontFeatures: [ui.FontFeature.tabularFigures()],
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.water_drop_rounded,
+                        color: _P.skyDeep, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('ВОДА',
+                            style: GoogleFonts.inter(
+                              color: _P.skyDeep,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.2,
+                            )),
+                        const SizedBox(height: 3),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              '${(cur / 1000).toStringAsFixed(1)}',
+                              style: GoogleFonts.inter(
+                                color: _P.text,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 1,
+                                fontFeatures: const [
+                                  ui.FontFeature.tabularFigures()
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '/ ${(g.waterMl / 1000).toStringAsFixed(1)} л',
+                              style: GoogleFonts.inter(
+                                color: _P.textMuted,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                fontFeatures: const [
+                                  ui.FontFeature.tabularFigures()
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                pct >= 1.0
+                                    ? 'цель ✓'
+                                    : '${(pct * 100).round()}%',
+                                style: GoogleFonts.inter(
+                                  color: pct >= 1.0
+                                      ? _P.greenDeep
+                                      : _P.skyDeep,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  fontFeatures: const [
+                                    ui.FontFeature.tabularFigures()
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _animBars(
+                              (t) => ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: LinearProgressIndicator(
+                              value: pct * t,
+                              minHeight: 4,
+                              backgroundColor: Colors.white.withOpacity(0.6),
+                              valueColor:
+                              const AlwaysStoppedAnimation(_P.skyDeep),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  _animBars(
-                        (t) => ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
-                      child: LinearProgressIndicator(
-                        value: pct * t,
-                        minHeight: 4,
-                        backgroundColor: _P.elevated,
-                        valueColor: const AlwaysStoppedAnimation(_P.skyDeep),
+                  const SizedBox(width: 10),
+                  _Press(
+                    onTap: () => _addWaterFlow(provider, pick: false),
+                    onLongPress: () => _addWaterFlow(provider, pick: true),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border:
+                        Border.all(color: _P.skyDeep.withOpacity(0.2)),
                       ),
+                      child: const Icon(Icons.add_rounded,
+                          color: _P.skyDeep, size: 22),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: _Press(
-                onTap: () => _addWaterFlow(provider, pick: false),
-                onLongPress: () => _addWaterFlow(provider, pick: true),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: _P.skySoft,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _P.skyDeep.withOpacity(0.2)),
-                  ),
-                  child: const Icon(Icons.add_rounded, color: _P.skyDeep, size: 22),
-                ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.55),
+                border: Border(
+                    top: BorderSide(color: _P.skyDeep.withOpacity(0.10))),
+              ),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              child: Row(
+                children: presets.map((ml) {
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: _Press(
+                        onTap: () async {
+                          HapticFeedback.selectionClick();
+                          await provider.addWater(ml, date: _selectedDate);
+                        },
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: _P.skyDeep.withOpacity(0.15)),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text('+$ml',
+                              style: GoogleFonts.inter(
+                                color: _P.skyDeep,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: [
+                                  ui.FontFeature.tabularFigures()
+                                ],
+                              )),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
           ],
@@ -820,7 +1653,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     );
   }
 
-  Future<void> _addWaterFlow(NutritionProvider provider, {required bool pick}) async {
+  Future<void> _addWaterFlow(NutritionProvider provider,
+      {required bool pick}) async {
     if (!pick) {
       await provider.addWater(_lastWaterAmount, date: _selectedDate);
       return;
@@ -831,7 +1665,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
+        padding:
+        EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
           decoration: const BoxDecoration(
@@ -885,14 +1720,17 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                   controller: ctrl,
                   keyboardType: TextInputType.number,
                   style: GoogleFonts.inter(
-                      color: _P.text, fontSize: 15, fontWeight: FontWeight.w600),
+                      color: _P.text,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600),
                   decoration: InputDecoration(
                     hintText: 'Другой объём (мл)',
-                    hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
+                    hintStyle:
+                    GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
                     filled: true,
                     fillColor: _P.bg,
-                    contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 14),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none),
@@ -933,14 +1771,14 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  6. RECOMMENDATIONS CAROUSEL
+  //  RECOMMENDATIONS
   // ═══════════════════════════════════════════════════════════════
-  Widget _buildRecommendations(List<NutritionRecommendation> recs, String dayKey) {
+  Widget _buildRecommendations(
+      List<NutritionRecommendation> recs, String dayKey) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('Рекомендации'),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         SizedBox(
           height: 96,
           child: PageView.builder(
@@ -951,8 +1789,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
               final r = recs[i];
               return Padding(
                 padding: EdgeInsets.only(
-                  left: i == 0 ? 24 : 5,
-                  right: i == recs.length - 1 ? 24 : 5,
+                  left: i == 0 ? _padH : 5,
+                  right: i == recs.length - 1 ? _padH : 5,
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(12),
@@ -971,7 +1809,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
-                        child: Text(r.emoji, style: const TextStyle(fontSize: 18)),
+                        child: Text(r.emoji,
+                            style: const TextStyle(fontSize: 18)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -1002,7 +1841,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                       _Press(
                         onTap: () {
                           setState(() {
-                            (_dismissedRecs[dayKey] ??= <String>{}).add(r.title);
+                            (_dismissedRecs[dayKey] ??= <String>{})
+                                .add(r.title);
                           });
                         },
                         child: const SizedBox(
@@ -1019,15 +1859,21 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
             },
           ),
         ),
+        const SizedBox(height: 8),
       ],
     );
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  5. MEALS TIMELINE
+  //  MEALS TIMELINE
   // ═══════════════════════════════════════════════════════════════
   Widget _buildMealsSection(
-      NutritionProvider provider, Map<MealType, List<FoodDiaryEntry>> meals, int count) {
+      NutritionProvider provider,
+      Map<MealType, List<FoodDiaryEntry>> meals,
+      int count,
+      DailyNutritionSummary summary,
+      NutritionGoals goals,
+      ) {
     final currentMeal = _currentMeal();
     final rows = <Widget>[];
     for (var i = 0; i < MealType.values.length; i++) {
@@ -1047,20 +1893,102 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
         _sectionHeader('Приёмы пищи', pill: '$count'),
         const SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Stack(
+          padding: const EdgeInsets.symmetric(horizontal: _padH),
+          child: Column(
             children: [
-              Positioned(
-                left: 11,
-                top: 28,
-                bottom: 28,
-                child: Container(width: 2, color: _P.divider),
+              Stack(
+                children: [
+                  Positioned(
+                    left: 11,
+                    top: 28,
+                    bottom: 28,
+                    child: Container(width: 2, color: _P.divider),
+                  ),
+                  Column(children: rows),
+                ],
               ),
-              Column(children: rows),
+              const SizedBox(height: 12),
+              _mealsFooter(meals, summary, goals),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _mealsFooter(
+      Map<MealType, List<FoodDiaryEntry>> meals,
+      DailyNutritionSummary summary,
+      NutritionGoals goals,
+      ) {
+    final missing = <String>[];
+    for (final m in MealType.values) {
+      if ((meals[m] ?? const []).isEmpty && m != MealType.other) {
+        missing.add(m.displayName.toLowerCase());
+      }
+    }
+    final filledCount = MealType.values
+        .where((m) => (meals[m] ?? const []).isNotEmpty)
+        .length;
+    final totalMeals = MealType.values.length;
+    final over = summary.calories > goals.calories;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: _P.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _P.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                over
+                    ? Icons.warning_amber_rounded
+                    : Icons.check_circle_outline_rounded,
+                size: 13,
+                color: over ? _P.pinkDeep : _P.greenDeep,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Заполнено $filledCount из $totalMeals',
+                style: GoogleFonts.inter(
+                  color: _P.text,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [ui.FontFeature.tabularFigures()],
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${summary.calories.round()} / ${goals.calories.round()} ккал',
+                style: GoogleFonts.inter(
+                  color: over ? _P.pinkDeep : _P.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [ui.FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          if (missing.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Не заполнено: ${missing.join(', ')}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                color: _P.textMuted,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -1100,7 +2028,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
             padding: const EdgeInsets.only(bottom: 4),
             child: isEmpty
                 ? _ghostMealRow(provider, meal, accent)
-                : _mealContent(provider, meal, entries, accent),
+                : _mealContent(provider, meal, entries, accent,
+                isCurrent: isCurrent),
           ),
         ),
       ],
@@ -1129,7 +2058,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   }
 
   Widget _mealContent(NutritionProvider provider, MealType meal,
-      List<FoodDiaryEntry> entries, Color accent) {
+      List<FoodDiaryEntry> entries, Color accent, {bool isCurrent = false}) {
     final expanded = _expandedMeal == meal;
     final kcal = entries.fold<double>(0, (s, e) => s + e.calories);
     final protein = entries.fold<double>(0, (s, e) => s + e.protein);
@@ -1139,7 +2068,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     return Column(
       children: [
         _Press(
-          onTap: () => setState(() => _expandedMeal = expanded ? null : meal),
+          onTap: () =>
+              setState(() => _expandedMeal = expanded ? null : meal),
           child: SizedBox(
             height: 56,
             child: Row(
@@ -1153,7 +2083,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                     border: Border.all(color: accent.withOpacity(0.18)),
                   ),
                   alignment: Alignment.center,
-                  child: Text(_mealEmoji(meal), style: const TextStyle(fontSize: 18)),
+                  child: Text(_mealEmoji(meal),
+                      style: const TextStyle(fontSize: 18)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1175,8 +2106,27 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                 )),
                           ),
                           const SizedBox(width: 6),
-                          const Icon(Icons.check_circle_rounded,
-                              size: 13, color: _P.greenDeep),
+                          if (isCurrent)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: accent.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'сейчас',
+                                style: GoogleFonts.inter(
+                                  color: accent,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            )
+                          else
+                            const Icon(Icons.check_circle_rounded,
+                                size: 13, color: _P.greenDeep),
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -1313,14 +2263,16 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
           color: _P.pinkSoft,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(Icons.delete_outline_rounded, color: _P.pinkDeep, size: 18),
+        child: const Icon(Icons.delete_outline_rounded,
+            color: _P.pinkDeep, size: 18),
       ),
       confirmDismiss: (_) async {
         return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
             title: Text('Удалить запись?', style: _T.headline),
             content: Text(entry.productName, style: _T.caption),
             actions: [
@@ -1332,7 +2284,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text('Удалить',
                     style: _T.body.copyWith(
-                        color: _P.pinkDeep, fontWeight: FontWeight.w600)),
+                        color: _P.pinkDeep,
+                        fontWeight: FontWeight.w600)),
               ),
             ],
           ),
@@ -1352,7 +2305,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
         ),
         child: Row(
           children: [
-            Text(product?.categoryEmoji ?? '🍽️', style: const TextStyle(fontSize: 16)),
+            Text(product?.categoryEmoji ?? '🍽️',
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(width: 10),
             Expanded(
               child: Text(entry.productName,
@@ -1368,7 +2322,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
             const SizedBox(width: 6),
             Text('${entry.grams.round()} г',
                 style: GoogleFonts.inter(
-                    color: _P.textMuted, fontSize: 11, fontWeight: FontWeight.w500)),
+                    color: _P.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500)),
             const SizedBox(width: 8),
             Text('${entry.calories.round()}',
                 style: GoogleFonts.inter(
@@ -1380,14 +2336,17 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
             const SizedBox(width: 2),
             Text('ккал',
                 style: GoogleFonts.inter(
-                    color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w500)),
+                    color: _P.textMuted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ),
     );
   }
 
-  Widget _addMealButton(NutritionProvider provider, MealType meal, Color accent) {
+  Widget _addMealButton(
+      NutritionProvider provider, MealType meal, Color accent) {
     return Padding(
       padding: const EdgeInsets.only(left: 52),
       child: _Press(
@@ -1420,39 +2379,43 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  7. RECENT PRODUCTS
+  //  RECENT PRODUCTS
   // ═══════════════════════════════════════════════════════════════
   Widget _buildRecent(NutritionProvider provider) {
     final recent = provider.getRecentProducts(limit: 8);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('Быстрый ввод', trailing: _Press(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider.value(
-                  value: provider,
-                  child: const FoodSearchScreen(isDark: false),
+        _sectionHeader(
+          'Быстрый ввод',
+          trailing: _Press(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: provider,
+                    child: const FoodSearchScreen(isDark: false),
+                  ),
                 ),
-              ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-            child: Row(children: [
-              Text('Все', style: _T.caption),
-              const Icon(Icons.chevron_right_rounded, color: _P.textMuted, size: 14),
-            ]),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(children: [
+                Text('Все', style: _T.caption),
+                const Icon(Icons.chevron_right_rounded,
+                    color: _P.textMuted, size: 14),
+              ]),
+            ),
           ),
-        )),
+        ),
         const SizedBox(height: 12),
         SizedBox(
           height: 58,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: _padH),
             physics: const BouncingScrollPhysics(),
             itemCount: recent.length + 1,
             separatorBuilder: (_, __) => const SizedBox(width: 8),
@@ -1484,7 +2447,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.add_rounded, size: 16, color: _P.peachDeep),
+                const Icon(Icons.add_rounded,
+                    size: 16, color: _P.peachDeep),
                 const SizedBox(width: 4),
                 Text('Создать',
                     style: GoogleFonts.inter(
@@ -1521,7 +2485,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,
-              child: Text(p.categoryEmoji, style: const TextStyle(fontSize: 18)),
+              child: Text(p.categoryEmoji,
+                  style: const TextStyle(fontSize: 18)),
             ),
             const SizedBox(width: 8),
             Column(
@@ -1562,7 +2527,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     final end = ((i * 60) + 300).clamp(0, 600) / 600.0;
     final anim = CurvedAnimation(
       parent: _chips,
-      curve: Interval(start, end <= start ? start + 0.02 : end, curve: Curves.easeOut),
+      curve: Interval(start, end <= start ? start + 0.02 : end,
+          curve: Curves.easeOut),
     );
     return AnimatedBuilder(
       animation: anim,
@@ -1604,7 +2570,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                     borderRadius: BorderRadius.circular(14),
                   ),
                   alignment: Alignment.center,
-                  child: Text(p.categoryEmoji, style: const TextStyle(fontSize: 22)),
+                  child: Text(p.categoryEmoji,
+                      style: const TextStyle(fontSize: 22)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1616,12 +2583,80 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                           overflow: TextOverflow.ellipsis,
                           style: _T.title2),
                       const SizedBox(height: 3),
-                      Text('${p.calories.round()} ккал / 100 г', style: _T.caption),
+                      Text('${p.calories.round()} ккал / 100 г',
+                          style: _T.caption),
                     ],
                   ),
                 ),
               ]),
               const SizedBox(height: 18),
+              if (context.read<WellnessProvider>().knowledgeFor(p) != null) ...[
+                _Press(
+                  onTap: () {
+                    final k =
+                    context.read<WellnessProvider>().knowledgeFor(p);
+                    if (k == null) return;
+                    showProductKnowledgeSheet(
+                      context,
+                      product: p,
+                      knowledge: k,
+                      nutrition: provider,
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _P.greenDeep.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: _P.greenDeep.withOpacity(0.22)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.eco_rounded,
+                              color: _P.greenDeep, size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Богат, полезен, осторожно',
+                                style: GoogleFonts.inter(
+                                  color: _P.greenDeep,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.1,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Витамины · польза · противопоказания',
+                                style: GoogleFonts.inter(
+                                  color: _P.textMuted,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded,
+                            color: _P.greenDeep, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -1638,7 +2673,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                         borderRadius: BorderRadius.circular(14)),
                   ),
                   child: const Text('ДОБАВИТЬ В ДНЕВНИК',
-                      style: TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0.6)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.6)),
                 ),
               ),
             ],
@@ -1649,136 +2686,322 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  8. TEMPLATES
+  //  TEMPLATES
   // ═══════════════════════════════════════════════════════════════
   Widget _buildTemplates(NutritionProvider provider) {
     final templates = provider.templates;
     if (templates.isEmpty) return const SizedBox.shrink();
 
-    final filtered = _filteredTemplates(provider, templates);
-    const limit = 3;
-    final visible = _templatesExpanded ? filtered : filtered.take(limit).toList();
-    final hasMore = filtered.length > limit;
+    final preview = templates.take(6).toList();
+    final hasMore = templates.length > 6;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _templatesHeader(filtered.length),
-          const SizedBox(height: 12),
-          if (_searchExpanded) ...[
-            _inlineSearch(),
-            const SizedBox(height: 12),
-          ],
-          if (filtered.isEmpty)
-            _emptyTemplates()
-          else
-            ...visible.map((t) => _templateCard(provider, t)),
-          if (hasMore) ...[
-            const SizedBox(height: 4),
-            _Press(
-              onTap: () => setState(() => _templatesExpanded = !_templatesExpanded),
-              child: SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: Center(
-                  child: Text(
-                    _templatesExpanded
-                        ? 'Свернуть'
-                        : 'Показать все (${filtered.length})',
-                    style: GoogleFonts.inter(
-                      color: _P.peachDeep,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _templatesHeader(int count) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!_searchExpanded) ...[
-          Text('Готовые блюда', style: _T.title2),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: _P.peachSoft,
-              borderRadius: BorderRadius.circular(8),
+        _sectionHeader(
+          'Готовые блюда',
+          pill: '${templates.length}',
+          trailing: hasMore
+              ? _Press(
+            onTap: () => _showAllTemplatesSheet(provider),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(children: [
+                Text('Все', style: _T.caption),
+                const Icon(Icons.chevron_right_rounded,
+                    color: _P.textMuted, size: 14),
+              ]),
             ),
-            child: Text('$count',
-                style: GoogleFonts.inter(
-                  color: _P.peachDeep,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: [ui.FontFeature.tabularFigures()],
-                )),
-          ),
-        ] else
-          Expanded(
-            child: TextField(
-              autofocus: true,
-              onChanged: (v) => setState(() => _templatesSearchQuery = v),
-              style: GoogleFonts.inter(
-                  color: _P.text, fontSize: 14, fontWeight: FontWeight.w500),
-              decoration: InputDecoration(
-                hintText: 'Найти блюдо…',
-                hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        const Spacer(),
-        _iconButton(
-          icon: _searchExpanded ? Icons.close_rounded : Icons.search_rounded,
-          onTap: () => setState(() {
-            _searchExpanded = !_searchExpanded;
-            if (!_searchExpanded) _templatesSearchQuery = '';
-          }),
+          )
+              : null,
         ),
-        const SizedBox(width: 6),
-        _iconButton(
-          icon: Icons.sort_rounded,
-          onTap: _showSortSheet,
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _padH),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: preview.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 0.82,
+            ),
+            itemBuilder: (_, i) => _templateTile(provider, preview[i]),
+          ),
         ),
       ],
     );
   }
 
-  Widget _iconButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _templateTile(NutritionProvider provider, MealTemplate t) {
+    final cal = _templateCal(provider, t);
+    final pro = _templateProtein(provider, t);
+
     return _Press(
-      onTap: onTap,
+      onTap: () => _showTemplateDetails(provider, t),
       child: Container(
-        width: 44,
-        height: 44,
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: _P.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _P.divider),
         ),
-        child: Icon(icon, size: 18, color: _P.peachDeep),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: _P.peachSoft,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              alignment: Alignment.center,
+              child: const Text('🍱', style: TextStyle(fontSize: 14)),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: Text(
+                t.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  color: _P.text,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                  letterSpacing: -0.1,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${cal.round()} ккал',
+              style: GoogleFonts.inter(
+                color: _P.peachDeep,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                fontFeatures: [ui.FontFeature.tabularFigures()],
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              'Б ${pro.round()}',
+              style: GoogleFonts.inter(
+                color: _P.textMuted,
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+                fontFeatures: [ui.FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _inlineSearch() {
-    // The inline TextField is rendered inside _templatesHeader when expanded;
-    // this placeholder keeps layout spacing predictable.
-    return const SizedBox.shrink();
+  void _showAllTemplatesSheet(NutritionProvider provider) {
+    var query = '';
+    var sort = _templatesSortMode;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (sheetCtx, setSheetState) {
+            var filtered = List<MealTemplate>.from(provider.templates);
+            if (query.trim().isNotEmpty) {
+              final q = query.toLowerCase();
+              filtered = filtered
+                  .where((t) => t.name.toLowerCase().contains(q))
+                  .toList();
+            }
+            switch (sort) {
+              case TemplatesSortMode.name:
+                filtered.sort((a, b) => a.name.compareTo(b.name));
+                break;
+              case TemplatesSortMode.caloriesDesc:
+                filtered.sort((a, b) => _templateCal(provider, b)
+                    .compareTo(_templateCal(provider, a)));
+                break;
+              case TemplatesSortMode.caloriesAsc:
+                filtered.sort((a, b) => _templateCal(provider, a)
+                    .compareTo(_templateCal(provider, b)));
+                break;
+              case TemplatesSortMode.proteinDesc:
+                filtered.sort((a, b) => _templateProtein(provider, b)
+                    .compareTo(_templateProtein(provider, a)));
+                break;
+              case TemplatesSortMode.fatDesc:
+                filtered.sort((a, b) => _templateFat(provider, b)
+                    .compareTo(_templateFat(provider, a)));
+                break;
+              case TemplatesSortMode.carbsDesc:
+                filtered.sort((a, b) => _templateCarbs(provider, b)
+                    .compareTo(_templateCarbs(provider, a)));
+                break;
+            }
+
+            return Container(
+              height: MediaQuery.of(sheetCtx).size.height * 0.88,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius:
+                BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    _grabber(),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Text('Готовые блюда', style: _T.title2),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: _P.peachSoft,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text('${filtered.length}',
+                                style: GoogleFonts.inter(
+                                  color: _P.peachDeep,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  fontFeatures: [
+                                    ui.FontFeature.tabularFigures()
+                                  ],
+                                )),
+                          ),
+                          const Spacer(),
+                          _Press(
+                            onTap: () => Navigator.pop(sheetCtx),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: const BoxDecoration(
+                                color: _P.bg,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close_rounded,
+                                  size: 16, color: _P.textMuted),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: _P.bg,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: _P.divider),
+                              ),
+                              child: Row(
+                                children: [
+                                  const SizedBox(width: 12),
+                                  const Icon(Icons.search_rounded,
+                                      size: 18, color: _P.textMuted),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: TextField(
+                                      onChanged: (v) => setSheetState(
+                                              () => query = v),
+                                      style: GoogleFonts.inter(
+                                        color: _P.text,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      decoration: InputDecoration(
+                                        hintText: 'Найти блюдо…',
+                                        hintStyle: GoogleFonts.inter(
+                                            color: _P.textMuted,
+                                            fontSize: 13),
+                                        border: InputBorder.none,
+                                        isDense: true,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _Press(
+                            onTap: () => _showSortSheetForTemplates(
+                              currentSort: sort,
+                              onSelected: (v) {
+                                setSheetState(() => sort = v);
+                                setState(() => _templatesSortMode = v);
+                              },
+                            ),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: _P.bg,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: _P.divider),
+                              ),
+                              child: const Icon(Icons.tune_rounded,
+                                  size: 18, color: _P.peachDeep),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? _emptyTemplates()
+                          : GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(
+                            16, 4, 16, 16),
+                        gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                          childAspectRatio: 0.82,
+                        ),
+                        itemCount: filtered.length,
+                        itemBuilder: (_, i) {
+                          final t = filtered[i];
+                          return _templateTile(provider, t);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
-  void _showSortSheet() {
-    showModalBottomSheet<void>(
+  Future<void> _showSortSheetForTemplates({
+    required TemplatesSortMode currentSort,
+    required Function(TemplatesSortMode) onSelected,
+  }) async {
+    await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
@@ -1798,11 +3021,11 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
               Text('СОРТИРОВКА', style: _overline),
               const SizedBox(height: 8),
               ..._sortOptions.map((o) {
-                final selected = _templatesSortMode == o.mode;
+                final selected = currentSort == o.mode;
                 return _Press(
                   onTap: () {
                     Navigator.pop(ctx);
-                    setState(() => _templatesSortMode = o.mode);
+                    onSelected(o.mode);
                   },
                   child: SizedBox(
                     height: 48,
@@ -1820,8 +3043,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                             style: GoogleFonts.inter(
                               color: _P.text,
                               fontSize: 14,
-                              fontWeight:
-                              selected ? FontWeight.w600 : FontWeight.w400,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
                             )),
                       ],
                     ),
@@ -1854,137 +3078,29 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     );
   }
 
-  Widget _templateCard(NutritionProvider provider, MealTemplate t) {
-    final cal = _templateCal(provider, t);
-    final pro = _templateProtein(provider, t);
-    final fat = _templateFat(provider, t);
-    final carb = _templateCarbs(provider, t);
-
-    return _Press(
-      onTap: () => _showTemplateDetails(provider, t),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _P.divider),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(t.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        color: _P.text,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
-                      )),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      _macroDotValue(_P.greenDeep, 'Б', pro),
-                      const SizedBox(width: 10),
-                      _macroDotValue(_P.peachDeep, 'Ж', fat),
-                      const SizedBox(width: 10),
-                      _macroDotValue(_P.yellowDeep, 'У', carb),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text('${cal.round()} ккал',
-                style: GoogleFonts.inter(
-                  color: _P.text,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                  fontFeatures: [ui.FontFeature.tabularFigures()],
-                )),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _macroDotValue(Color color, String l, double v) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 5,
-          height: 5,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 4),
-        Text('$l ${v.round()}',
-            style: GoogleFonts.inter(
-              color: _P.textMuted,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              fontFeatures: [ui.FontFeature.tabularFigures()],
-            )),
-      ],
-    );
-  }
-
-  List<MealTemplate> _filteredTemplates(
-      NutritionProvider provider, List<MealTemplate> templates) {
-    if (_cachedTemplates != null &&
-        _cacheQuery == _templatesSearchQuery &&
-        _cacheSort == _templatesSortMode &&
-        identical(_cacheTemplatesRef, templates)) {
-      return _cachedTemplates!;
-    }
-    var filtered = List<MealTemplate>.from(templates);
-    if (_templatesSearchQuery.trim().isNotEmpty) {
-      final q = _templatesSearchQuery.toLowerCase();
-      filtered = filtered.where((t) => t.name.toLowerCase().contains(q)).toList();
-    }
-    switch (_templatesSortMode) {
-      case TemplatesSortMode.name:
-        filtered.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case TemplatesSortMode.caloriesDesc:
-        filtered.sort((a, b) => _templateCal(provider, b).compareTo(_templateCal(provider, a)));
-        break;
-      case TemplatesSortMode.caloriesAsc:
-        filtered.sort((a, b) => _templateCal(provider, a).compareTo(_templateCal(provider, b)));
-        break;
-      case TemplatesSortMode.proteinDesc:
-        filtered.sort((a, b) => _templateProtein(provider, b).compareTo(_templateProtein(provider, a)));
-        break;
-      case TemplatesSortMode.fatDesc:
-        filtered.sort((a, b) => _templateFat(provider, b).compareTo(_templateFat(provider, a)));
-        break;
-      case TemplatesSortMode.carbsDesc:
-        filtered.sort((a, b) => _templateCarbs(provider, b).compareTo(_templateCarbs(provider, a)));
-        break;
-    }
-    _cachedTemplates = filtered;
-    _cacheQuery = _templatesSearchQuery;
-    _cacheSort = _templatesSortMode;
-    _cacheTemplatesRef = templates;
-    return filtered;
-  }
-
-  double _templateCal(NutritionProvider p, MealTemplate t) => t.items.fold<double>(
-      0, (s, i) => s + (_findProduct(p, i.productId)?.forGrams(i.grams).calories ?? 0));
-  double _templateProtein(NutritionProvider p, MealTemplate t) => t.items.fold<double>(
-      0, (s, i) => s + (_findProduct(p, i.productId)?.forGrams(i.grams).protein ?? 0));
-  double _templateFat(NutritionProvider p, MealTemplate t) => t.items.fold<double>(
-      0, (s, i) => s + (_findProduct(p, i.productId)?.forGrams(i.grams).fat ?? 0));
-  double _templateCarbs(NutritionProvider p, MealTemplate t) => t.items.fold<double>(
-      0, (s, i) => s + (_findProduct(p, i.productId)?.forGrams(i.grams).carbs ?? 0));
+  double _templateCal(NutritionProvider p, MealTemplate t) =>
+      t.items.fold<double>(
+          0,
+              (s, i) =>
+          s + (_findProduct(p, i.productId)?.forGrams(i.grams).calories ?? 0));
+  double _templateProtein(NutritionProvider p, MealTemplate t) =>
+      t.items.fold<double>(
+          0,
+              (s, i) =>
+          s + (_findProduct(p, i.productId)?.forGrams(i.grams).protein ?? 0));
+  double _templateFat(NutritionProvider p, MealTemplate t) =>
+      t.items.fold<double>(
+          0,
+              (s, i) =>
+          s + (_findProduct(p, i.productId)?.forGrams(i.grams).fat ?? 0));
+  double _templateCarbs(NutritionProvider p, MealTemplate t) =>
+      t.items.fold<double>(
+          0,
+              (s, i) =>
+          s + (_findProduct(p, i.productId)?.forGrams(i.grams).carbs ?? 0));
 
   // ═══════════════════════════════════════════════════════════════
-  //  2. STICKY CONTEXT BAR
+  //  STICKY CONTEXT BAR
   // ═══════════════════════════════════════════════════════════════
   Widget _buildStickyOverlay(DailyNutritionSummary s, NutritionGoals g) {
     return ValueListenableBuilder<bool>(
@@ -2013,26 +3129,30 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                       child: SizedBox(
                         height: 56,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding:
+                          const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
                             children: [
-                              // left: date chip
                               _Press(
                                 onTap: _pickDate,
                                 child: Container(
                                   height: 36,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
                                   decoration: BoxDecoration(
                                     color: _P.surface,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(color: _P.divider),
                                   ),
                                   child: Row(children: [
-                                    const Icon(Icons.calendar_today_rounded,
-                                        size: 12, color: _P.textMuted),
+                                    const Icon(
+                                        Icons.calendar_today_rounded,
+                                        size: 12,
+                                        color: _P.textMuted),
                                     const SizedBox(width: 6),
                                     Text(
-                                      _isSameDay(_selectedDate, DateTime.now())
+                                      _isSameDay(
+                                          _selectedDate, DateTime.now())
                                           ? 'Сегодня'
                                           : _formatDateShort(_selectedDate),
                                       style: GoogleFonts.inter(
@@ -2044,7 +3164,6 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                   ]),
                                 ),
                               ),
-                              // center: calories
                               Expanded(
                                 child: Center(
                                   child: RichText(
@@ -2077,7 +3196,6 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                   ),
                                 ),
                               ),
-                              // right: macro dots
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -2125,148 +3243,11 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  9. DOCKED ACTION BAR
-  // ═══════════════════════════════════════════════════════════════
-  Widget _buildActionBar(NutritionProvider provider) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _actionBarVisible,
-      builder: (_, visible, __) {
-        return IgnorePointer(
-          ignoring: !visible,
-          child: AnimatedSlide(
-            offset: visible ? Offset.zero : const Offset(0, 1),
-            duration: _dur(220),
-            curve: Curves.easeOutCubic,
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _P.surface.withOpacity(0.86),
-                    border: const Border(
-                      top: BorderSide(color: _P.divider, width: 1),
-                    ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: _primaryAction(
-                              icon: Icons.add_rounded,
-                              label: 'Продукт',
-                              onTap: () => _openAddFood(context, provider),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            flex: 1,
-                            child: _ghostAction(
-                              icon: Icons.restaurant_menu_rounded,
-                              label: 'Шаблон',
-                              onTap: () {
-                                if (_scrollController.hasClients) {
-                                  _scrollController.animateTo(
-                                    _scrollController.position.maxScrollExtent,
-                                    duration: const Duration(milliseconds: 400),
-                                    curve: Curves.easeOutCubic,
-                                  );
-                                }
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            width: 56,
-                            child: _ghostAction(
-                              icon: Icons.water_drop_rounded,
-                              onTap: () => _addWaterFlow(provider, pick: true),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _primaryAction({required IconData icon, required String label, required VoidCallback onTap}) {
-    return _Press(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: _P.peachDeep,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: _P.peachDeep.withOpacity(0.28),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 18),
-            const SizedBox(width: 6),
-            Text(label,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                )),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _ghostAction({required IconData icon, String? label, required VoidCallback onTap}) {
-    return _Press(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: _P.bg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _P.divider),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: _P.text, size: 18),
-            if (label != null) ...[
-              const SizedBox(width: 6),
-              Text(label,
-                  style: GoogleFonts.inter(
-                    color: _P.text,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  )),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  13. PROFILE BANNER
+  //  PROFILE BANNER
   // ═══════════════════════════════════════════════════════════════
   Widget _buildProfileBanner() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      padding: const EdgeInsets.fromLTRB(_padH, 16, _padH, 0),
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
         decoration: BoxDecoration(
@@ -2291,7 +3272,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
             _Press(
               onTap: () => _openProfileSetup(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: _P.peachDeep,
                   borderRadius: BorderRadius.circular(8),
@@ -2309,7 +3291,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
               child: const SizedBox(
                 width: 36,
                 height: 36,
-                child: Icon(Icons.close_rounded, size: 16, color: _P.textMuted),
+                child:
+                Icon(Icons.close_rounded, size: 16, color: _P.textMuted),
               ),
             ),
           ],
@@ -2325,14 +3308,15 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     return _Reveal(
       disable: _reduceMotion,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: _padH),
         child: Row(
           children: [
             Text(title, style: _T.title2),
             if (pill != null) ...[
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: _P.peachSoft,
                   borderRadius: BorderRadius.circular(8),
@@ -2380,8 +3364,6 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       _selectedDate = picked;
       _expandedMeal = null;
       _didAutoExpand = false;
-      _searchExpanded = false;
-      _templatesSearchQuery = '';
     });
     _bars.reset();
     if (!_reduceMotion) _bars.forward();
@@ -2456,12 +3438,14 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 alignment: Alignment.center,
-                                child: const Text('🍱', style: TextStyle(fontSize: 24)),
+                                child: const Text('🍱',
+                                    style: TextStyle(fontSize: 24)),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                                   children: [
                                     Text(t.name,
                                         maxLines: 2,
@@ -2484,10 +3468,14 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                             ),
                             child: Row(
                               children: [
-                                _macroMini('${cal.round()}', 'ккал', _P.peachDeep),
-                                _macroMini(pro.toStringAsFixed(1), 'Б', _P.greenDeep),
-                                _macroMini(fat.toStringAsFixed(1), 'Ж', _P.peachDeep),
-                                _macroMini(carb.toStringAsFixed(1), 'У', _P.yellowDeep),
+                                _macroMini(
+                                    '${cal.round()}', 'ккал', _P.peachDeep),
+                                _macroMini(pro.toStringAsFixed(1), 'Б',
+                                    _P.greenDeep),
+                                _macroMini(fat.toStringAsFixed(1), 'Ж',
+                                    _P.peachDeep),
+                                _macroMini(carb.toStringAsFixed(1), 'У',
+                                    _P.yellowDeep),
                               ],
                             ),
                           ),
@@ -2507,11 +3495,13 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                               child: Row(
                                 children: [
                                   Text(p?.categoryEmoji ?? '🍽️',
-                                      style: const TextStyle(fontSize: 18)),
+                                      style:
+                                      const TextStyle(fontSize: 18)),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                       children: [
                                         Text(item.name,
                                             maxLines: 2,
@@ -2534,7 +3524,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                         color: _P.peachDeep,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
-                                        fontFeatures: [ui.FontFeature.tabularFigures()],
+                                        fontFeatures: [
+                                          ui.FontFeature.tabularFigures()
+                                        ],
                                       )),
                                 ],
                               ),
@@ -2549,21 +3541,29 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                             children: MealType.values.map((m) {
                               final selected = m == selectedMeal;
                               return _Press(
-                                onTap: () => setSheetState(() => selectedMeal = m),
+                                onTap: () => setSheetState(
+                                        () => selectedMeal = m),
                                 child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 160),
+                                  duration: _dur(160),
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 12, vertical: 10),
                                   decoration: BoxDecoration(
-                                    color: selected ? _P.peachDeep : _P.bg,
+                                    color: selected
+                                        ? _P.peachDeep
+                                        : _P.bg,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: selected ? _P.peachDeep : _P.divider,
+                                      color: selected
+                                          ? _P.peachDeep
+                                          : _P.divider,
                                     ),
                                   ),
-                                  child: Text('${m.emoji} ${m.displayName}',
+                                  child: Text(
+                                      '${m.emoji} ${m.displayName}',
                                       style: GoogleFonts.inter(
-                                        color: selected ? Colors.white : _P.text,
+                                        color: selected
+                                            ? Colors.white
+                                            : _P.text,
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                       )),
@@ -2579,15 +3579,19 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                               onPressed: () async {
                                 HapticFeedback.mediumImpact();
                                 Navigator.pop(sheetCtx);
-                                await provider.addTemplateAsMeal(t, selectedMeal,
+                                await provider.addTemplateAsMeal(
+                                    t, selectedMeal,
                                     date: _selectedDate);
                                 if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(
                                   content: Text('${t.name} добавлен'),
                                   backgroundColor: _P.greenDeep,
                                   behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 3),
                                   shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14)),
+                                      borderRadius:
+                                      BorderRadius.circular(14)),
                                 ));
                               },
                               style: ElevatedButton.styleFrom(
@@ -2595,7 +3599,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14)),
+                                    borderRadius:
+                                    BorderRadius.circular(14)),
                               ),
                               child: const Text('ДОБАВИТЬ В ДНЕВНИК',
                                   style: TextStyle(
@@ -2641,7 +3646,6 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     );
   }
 
-  // ── goals editor ──────────────────────────────────────────────
   void _showGoalsEditor(BuildContext ctx) {
     final provider = context.read<NutritionProvider>();
     final goals = provider.getGoalsForDate(_selectedDate);
@@ -2658,7 +3662,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
+        padding:
+        EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
@@ -2674,7 +3679,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                 children: [
                   Center(child: _grabber()),
                   const SizedBox(height: 20),
-                  Text('ЦЕЛИ НА ДЕНЬ', style: _overline.copyWith(color: _P.peachDeep)),
+                  Text('ЦЕЛИ НА ДЕНЬ',
+                      style: _overline.copyWith(color: _P.peachDeep)),
                   const SizedBox(height: 4),
                   Text('Настроить нормы', style: _T.title2),
                   const SizedBox(height: 20),
@@ -2698,14 +3704,19 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                           id: goals.id,
                           date: goals.date,
                           calories:
-                          double.tryParse(ctrl['cal']!.text) ?? goals.calories,
+                          double.tryParse(ctrl['cal']!.text) ??
+                              goals.calories,
                           protein:
-                          double.tryParse(ctrl['pro']!.text) ?? goals.protein,
-                          fat: double.tryParse(ctrl['fat']!.text) ?? goals.fat,
+                          double.tryParse(ctrl['pro']!.text) ??
+                              goals.protein,
+                          fat:
+                          double.tryParse(ctrl['fat']!.text) ?? goals.fat,
                           carbs:
-                          double.tryParse(ctrl['carb']!.text) ?? goals.carbs,
+                          double.tryParse(ctrl['carb']!.text) ??
+                              goals.carbs,
                           waterMl:
-                          int.tryParse(ctrl['water']!.text) ?? goals.waterMl,
+                          int.tryParse(ctrl['water']!.text) ??
+                              goals.waterMl,
                         );
                         Navigator.pop(sheetCtx);
                         await provider.updateGoals(updated);
@@ -2714,6 +3725,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                           content: const Text('Цели обновлены'),
                           backgroundColor: _P.greenDeep,
                           behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 3),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                         ));
@@ -2752,14 +3764,18 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
         labelStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 12),
         filled: true,
         fillColor: _P.bg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: _P.peachDeep.withOpacity(0.4), width: 1.2),
+          borderSide:
+          BorderSide(color: _P.peachDeep.withOpacity(0.4), width: 1.2),
         ),
       ),
     );
@@ -2777,7 +3793,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   // ═══════════════════════════════════════════════════════════════
   //  HELPERS
   // ═══════════════════════════════════════════════════════════════
-  Map<MealType, List<FoodDiaryEntry>> _groupEntriesByMeal(List<FoodDiaryEntry> entries) {
+  Map<MealType, List<FoodDiaryEntry>> _groupEntriesByMeal(
+      List<FoodDiaryEntry> entries) {
     return {
       for (final m in MealType.values)
         m: entries.where((e) => e.mealType == m).toList(),
@@ -2802,7 +3819,10 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
   String _formatDateShort(DateTime d) {
-    const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    const months = [
+      'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
+      'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'
+    ];
     return '${d.day} ${months[d.month - 1]}';
   }
 
@@ -2864,7 +3884,8 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
 
   Widget _animBars(Widget Function(double t) builder) {
     if (_reduceMotion) return builder(1.0);
-    return AnimatedBuilder(animation: _bars, builder: (_, __) => builder(_bars.value));
+    return AnimatedBuilder(
+        animation: _bars, builder: (_, __) => builder(_bars.value));
   }
 }
 
@@ -2957,8 +3978,8 @@ class _Reveal extends StatefulWidget {
 }
 
 class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-  AnimationController(vsync: this, duration: const Duration(milliseconds: 320));
+  late final AnimationController _c = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 320));
 
   @override
   void initState() {
@@ -2985,7 +4006,8 @@ class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
         final t = Curves.easeOutCubic.transform(_c.value);
         return Opacity(
           opacity: t,
-          child: Transform.translate(offset: Offset(0, (1 - t) * 6), child: child),
+          child: Transform.translate(
+              offset: Offset(0, (1 - t) * 6), child: child),
         );
       },
       child: widget.child,
@@ -3031,7 +4053,6 @@ class _HeroGaugePainter extends CustomPainter {
     final p = percent.clamp(0.0, 1.0);
     if (p <= 0) return;
 
-    // soft outer glow on the progress arc only
     canvas.drawArc(
       rect,
       start,
@@ -3064,7 +4085,9 @@ class _HeroGaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HeroGaugePainter old) =>
-      old.percent != percent || old.color != color || old.glowColor != glowColor;
+      old.percent != percent ||
+          old.color != color ||
+          old.glowColor != glowColor;
 }
 
 class _RingletPainter extends CustomPainter {
@@ -3133,7 +4156,8 @@ class _DashedBorderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke;
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)));
+      ..addRRect(RRect.fromRectAndRadius(
+          Offset.zero & size, Radius.circular(radius)));
     for (final metric in path.computeMetrics()) {
       double dist = 0;
       while (dist < metric.length) {
@@ -3150,7 +4174,13 @@ class _DashedBorderPainter extends CustomPainter {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  ENUM (preserved)
+//  ENUM
 // ═══════════════════════════════════════════════════════════════════
-enum TemplatesSortMode { name, caloriesDesc, caloriesAsc, proteinDesc, fatDesc, carbsDesc }
-
+enum TemplatesSortMode {
+  name,
+  caloriesDesc,
+  caloriesAsc,
+  proteinDesc,
+  fatDesc,
+  carbsDesc
+}

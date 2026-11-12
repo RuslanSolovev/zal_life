@@ -26,8 +26,14 @@ import 'features/fitness/models/enums.dart';
 import 'features/fitness/models/fitness_models.dart';
 import 'features/fitness/providers/fitness_provider.dart';
 
+import 'features/nutrition/models/nutrition_models.dart' show FoodProduct;
+import 'features/nutrition/models/wellness_models.dart';
 import 'features/nutrition/providers/nutrition_provider.dart';
+import 'features/nutrition/providers/wellness_provider.dart';
 import 'features/nutrition/ui/screens/fuel_dashboard_screen.dart';
+import 'features/nutrition/ui/screens/knowledge_screen.dart';
+import 'features/nutrition/ui/widgets/product_knowledge_sheet.dart';
+import 'features/nutrition/ui/widgets/season_visuals.dart';
 
 // ═══════════════════════════════════════════════════════════════════
 //  HELPERS
@@ -50,12 +56,12 @@ double _extractLogVolume(dynamic log) {
   try { final v = log.volume; if (v is num) return v.toDouble(); } catch (_) {}
   try {
     double total = 0;
-    final exercises = log.exercises;
-    if (exercises is List) {
-      for (final ex in exercises) {
-        final sets = ex.sets;
-        if (sets is List) {
-          for (final s in sets) {
+    final exList = log.exercisesLog;
+    if (exList is List) {
+      for (final ex in exList) {
+        final sList = ex.sets;
+        if (sList is List) {
+          for (final s in sList) {
             final w = s.weight;
             final r = s.reps;
             if (w is num && r is num) total += w.toDouble() * r.toDouble();
@@ -67,18 +73,34 @@ double _extractLogVolume(dynamic log) {
   } catch (_) { return 0; }
 }
 
-String _formatVolume(double volume) {
-  if (volume >= 1000) return '${(volume / 1000).toStringAsFixed(1)}k';
-  return volume.toStringAsFixed(0);
+String _groupNum(int n) {
+  final s = n.toString();
+  final buf = StringBuffer();
+  for (int i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(' ');
+    buf.write(s[i]);
+  }
+  return buf.toString();
 }
 
-String _fmtNum(int n) {
-  if (n >= 10000) return '${(n / 1000).toStringAsFixed(1).replaceAll('.0', '')}k';
-  if (n >= 1000) {
-    final s = n.toString();
-    return '${s.substring(0, s.length - 3)} ${s.substring(s.length - 3)}';
+String _formatKg(double v) {
+  if (v < 1) return '0 кг';
+  return '${_groupNum(v.round())} кг';
+}
+
+String? _formatTons(double v) {
+  if (v < 1000) return null;
+  final t = v / 1000;
+  final s = t >= 10 ? t.toStringAsFixed(0) : t.toStringAsFixed(1);
+  return '≈ ${s.replaceAll('.', ',')} т';
+}
+
+String _shortKg(double v) {
+  if (v >= 1000) {
+    final k = v / 1000;
+    return k >= 10 ? '${k.toStringAsFixed(0)}k' : '${k.toStringAsFixed(1)}k';
   }
-  return '$n';
+  return v.round().toString();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -105,8 +127,24 @@ class _Palette {
   static const divider    = Color(0xFFE5E8E1);
 }
 
+class _Hero {
+  static const bgTop    = Color(0xFF1B2027);
+  static const bgBottom = Color(0xFF161719);
+  static const accent   = Color(0xFFEF9563);
+  static const textHigh = Colors.white;
+  static const textLow  = Color(0xFFA4A6AA);
+}
+
+class _HeroAccents {
+  static const peach = Color(0xFFEF9563);
+  static const amber = Color(0xFFE8B858);
+  static const sage  = Color(0xFFA5C9AF);
+  static const pink  = Color(0xFFE899A8);
+  static const sky   = Color(0xFF7EA8C6);
+}
+
 // ═══════════════════════════════════════════════════════════════════
-//  RESPONSIVE HELPERS
+//  RESPONSIVE
 // ═══════════════════════════════════════════════════════════════════
 class _R {
   final double scale;
@@ -115,11 +153,10 @@ class _R {
 
   double s(double v) => v * scale;
   double fs(double v) => v * scale;
-  EdgeInsets padH(double base) => EdgeInsets.symmetric(horizontal: s(base));
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  UNIVERSAL IMAGE WIDGET
+//  IMAGE
 // ═══════════════════════════════════════════════════════════════════
 class _AppImg extends StatelessWidget {
   final String? path;
@@ -159,8 +196,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  late final AnimationController _pulse;
-  late final AnimationController _drift;
   late final AnimationController _entrance;
   late final AnimationController _confetti;
   late final ScrollController _scroll;
@@ -176,12 +211,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _pulse = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2600))
-      ..repeat(reverse: true);
-    _drift = AnimationController(
-        vsync: this, duration: const Duration(seconds: 28))
-      ..repeat(reverse: true);
     _entrance = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1100))
       ..forward();
@@ -204,8 +233,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _pulse.dispose();
-    _drift.dispose();
     _entrance.dispose();
     _confetti.dispose();
     _scroll.dispose();
@@ -258,6 +285,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final fitness   = context.watch<FitnessProvider>();
     final nutrition = context.watch<NutritionProvider>();
     final pedometer = context.watch<PedometerProvider>();
+    context.watch<WellnessProvider>();
 
     final now = DateTime.now();
     final thisWeek0 = _getThisWeek(fitness, now);
@@ -279,10 +307,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       body: Stack(
         children: [
           SafeArea(
+            top: false,
             bottom: false,
             child: RefreshIndicator(
-              color: _Palette.green,
-              backgroundColor: Colors.white,
+              color: _Hero.accent,
+              backgroundColor: _Hero.bgTop,
               onRefresh: () async {
                 HapticFeedback.mediumImpact();
                 setState(() {});
@@ -294,28 +323,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.00, _hero(fitness, nutrition))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.20, _focusCard(fitness))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.30, _bentoTop(fitness))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.40, _bentoMid(nutrition))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.50, _stepsCard(pedometer))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.55, _achievements(fitness))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.60, _VolumeCard(fitness: fitness))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.65, _prStrip(fitness))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.70, _rhythm(fitness))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.80, _quickDock(fitness))),
-                  SliverToBoxAdapter(
-                      child: _entranceAt(0.85, _targetsSection(fitness))),
+                  SliverToBoxAdapter(child: _hero(fitness, nutrition)),
+                  SliverToBoxAdapter(child: _entranceAt(0.20, _focusCard(fitness))),
+                  SliverToBoxAdapter(child: _entranceAt(0.30, _bentoTop(fitness))),
+                  SliverToBoxAdapter(child: _entranceAt(0.40, _bentoMid(nutrition))),
+                  SliverToBoxAdapter(child: _entranceAt(0.45, _seasonalRail(context))),
+                  SliverToBoxAdapter(child: _entranceAt(0.50, _stepsCard(pedometer))),
+                  SliverToBoxAdapter(child: _entranceAt(0.55, _achievements(fitness))),
+                  SliverToBoxAdapter(child: _entranceAt(0.60, _VolumeCard(fitness: fitness))),
+                  SliverToBoxAdapter(child: _entranceAt(0.65, _prStrip(fitness))),
+                  SliverToBoxAdapter(child: _entranceAt(0.70, _rhythm(fitness))),
+                  SliverToBoxAdapter(child: _entranceAt(0.80, _quickDock(fitness))),
+                  SliverToBoxAdapter(child: _entranceAt(0.85, _targetsSection(fitness))),
                   const SliverToBoxAdapter(child: SizedBox(height: 110)),
                 ],
               ),
@@ -359,7 +378,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ═════════════════════════════════════════════════════════
-  //  HERO — объединённая карточка (topBar + rings)
+  //  🌿 SEASONAL VINE
+  // ═════════════════════════════════════════════════════════
+  Widget _seasonalRail(BuildContext context) {
+    final r = _R(context);
+    final wellness = context.watch<WellnessProvider>();
+    final nutrition = context.watch<NutritionProvider>();
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: r.s(20)),
+      child: _SeasonVine(
+        wellness: wellness,
+        nutrition: nutrition,
+        r: r,
+        onOpenKnowledge: () => _openKnowledge(context),
+      ),
+    );
+  }
+
+  void _openKnowledge(BuildContext context) {
+    HapticFeedback.selectionClick();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(
+                value: context.read<WellnessProvider>()),
+            ChangeNotifierProvider.value(
+                value: context.read<NutritionProvider>()),
+          ],
+          child: const KnowledgeScreen(),
+        ),
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  HERO
   // ═════════════════════════════════════════════════════════
   Widget _hero(FitnessProvider fitness, NutritionProvider nutrition) {
     final r = _R(context);
@@ -388,198 +444,244 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final mm = today.minute.toString().padLeft(2, '0');
     final ringSize = r.s(300);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(r.s(20), r.s(16), r.s(20), r.s(20)),
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(32),
+        bottomRight: Radius.circular(32),
+      ),
       child: Container(
-        padding: EdgeInsets.all(r.s(20)),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, _Palette.greenSoft, _Palette.peachSoft],
+            colors: [_Hero.bgTop, _Hero.bgBottom],
           ),
-          borderRadius: BorderRadius.circular(r.s(28)),
-          border: Border.all(color: Colors.white, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: _Palette.green.withOpacity(0.06),
-              blurRadius: 22,
-              spreadRadius: -4,
-              offset: const Offset(0, 8),
-            ),
-          ],
         ),
-        child: Column(
+        child: Stack(
           children: [
-            // ── TOP: avatar + name + level + insights ──
-            Row(
-              children: [
-                _TapScale(
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    _showEditProfileDialog(fitness);
-                  },
-                  child: Container(
-                    width: r.s(46),
-                    height: r.s(46),
-                    decoration: const BoxDecoration(
-                        shape: BoxShape.circle, color: _Palette.peachSoft),
-                    alignment: Alignment.center,
-                    child: Text(_avatarEmoji,
-                        style: TextStyle(fontSize: r.fs(22))),
-                  ),
-                ),
-                SizedBox(width: r.s(12)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                          '${_greetingIcon()} ${_greeting().toUpperCase()}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                              color: _Palette.textMuted,
-                              fontSize: r.fs(10),
-                              letterSpacing: 0.5)),
-                      Text(_profileName.isNotEmpty ? _profileName : 'Атлет',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                              color: _Palette.text,
-                              fontSize: r.fs(22),
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: -0.8)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: r.s(10), vertical: r.s(7)),
+            Positioned(
+              top: 40, left: -20,
+              child: IgnorePointer(
+                child: Container(
+                  width: r.s(360),
+                  height: r.s(340),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(r.s(12)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.star_rounded,
-                          color: _Palette.green, size: r.s(14)),
-                      SizedBox(width: r.s(4)),
-                      Text('$level',
-                          style: GoogleFonts.inter(
-                              color: _Palette.green,
-                              fontSize: r.fs(12),
-                              fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
-                SizedBox(width: r.s(8)),
-                _TapScale(
-                  onTap: () => _openProgress(context),
-                  child: Container(
-                    width: r.s(40),
-                    height: r.s(40),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
-                      shape: BoxShape.circle,
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        _Hero.accent.withOpacity(0.22),
+                        _Hero.accent.withOpacity(0.0),
+                      ],
+                      stops: const [0.0, 1.0],
                     ),
-                    child: Icon(Icons.insights_rounded,
-                        color: _Palette.text, size: r.s(18)),
                   ),
                 ),
-              ],
+              ),
             ),
-            SizedBox(height: r.s(14)),
-            // ── STREAK + TIME ──
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: r.s(10), vertical: r.s(7)),
-                  decoration: BoxDecoration(
-                      color: _Palette.peachSoft,
-                      borderRadius: BorderRadius.circular(100)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('🔥', style: TextStyle(fontSize: r.fs(14))),
-                      SizedBox(width: r.s(6)),
-                      Text('$streak дней подряд',
-                          style: GoogleFonts.inter(
-                              color: _Palette.text,
-                              fontSize: r.fs(11),
-                              fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+            SafeArea(
+              bottom: false,
+              left: false,
+              right: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                    r.s(24), r.s(12), r.s(24), r.s(24)),
+                child: Column(
                   children: [
-                    Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                            color: _Palette.sage, shape: BoxShape.circle)),
-                    SizedBox(width: r.s(4)),
-                    Text('$hh:$mm',
-                        style: GoogleFonts.inter(
-                            color: _Palette.textMuted, fontSize: r.fs(10))),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: r.s(20)),
-            // ── BIG RINGS ──
-            Container(
-              padding: EdgeInsets.all(r.s(8)),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.9),
-                    Colors.white.withOpacity(0.0),
-                  ],
-                  stops: const [0.75, 1.0],
-                ),
-              ),
-              child: SizedBox(
-                width: ringSize,
-                height: ringSize,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 1500),
-                  curve: Curves.easeOutCubic,
-                  builder: (_, anim, __) => CustomPaint(
-                    size: Size(ringSize, ringSize),
-                    painter: _HeroRingsPainter(
-                      anim: anim,
-                      daysActive: daysActive,
-                      daysPassed: daysPassed,
-                      caloriesProgress: pCalories,
-                      workoutsProgress: pWorkouts,
-                      streakProgress: pStreak,
-                      time: today,
+                    Row(
+                      children: [
+                        _TapScale(
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            _showEditProfileDialog(fitness);
+                          },
+                          child: Container(
+                            width: r.s(46),
+                            height: r.s(46),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _Hero.bgBottom,
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.18),
+                                  width: 1),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(_avatarEmoji,
+                                style: TextStyle(fontSize: r.fs(22))),
+                          ),
+                        ),
+                        SizedBox(width: r.s(12)),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_greetingIcon()} ${_greeting().toUpperCase()}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: _Hero.textLow,
+                                  fontSize: r.fs(10),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              Text(
+                                _profileName.isNotEmpty
+                                    ? _profileName
+                                    : 'Атлет',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: _Hero.textHigh,
+                                  fontSize: r.fs(20),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: r.s(10), vertical: r.s(7)),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.10),
+                                width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.star_rounded,
+                                  color: _HeroAccents.peach,
+                                  size: r.s(12)),
+                              SizedBox(width: r.s(4)),
+                              Text('Ур. $level',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: r.fs(11),
+                                    fontWeight: FontWeight.w600,
+                                  )),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: r.s(8)),
+                        _TapScale(
+                          onTap: () => _openProgress(context),
+                          child: Container(
+                            width: r.s(40),
+                            height: r.s(40),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.04),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.10),
+                                  width: 1),
+                            ),
+                            child: Icon(Icons.insights_rounded,
+                                color: Colors.white, size: r.s(18)),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                    SizedBox(height: r.s(18)),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: r.s(12), vertical: r.s(8)),
+                          decoration: BoxDecoration(
+                            color: _HeroAccents.peach.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('🔥', style: TextStyle(fontSize: r.fs(13))),
+                              SizedBox(width: r.s(6)),
+                              Text('$streak дней подряд',
+                                  style: TextStyle(
+                                    color: _HeroAccents.peach,
+                                    fontSize: r.fs(11),
+                                    fontWeight: FontWeight.w600,
+                                  )),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                    color: _HeroAccents.sage,
+                                    shape: BoxShape.circle)),
+                            SizedBox(width: r.s(6)),
+                            Text('$hh:$mm',
+                                style: TextStyle(
+                                  color: _Hero.textLow,
+                                  fontSize: r.fs(12),
+                                  fontWeight: FontWeight.w500,
+                                )),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: r.s(22)),
+                    Container(
+                      padding: EdgeInsets.all(r.s(8)),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.white.withOpacity(0.04),
+                            Colors.white.withOpacity(0.0),
+                          ],
+                          stops: const [0.7, 1.0],
+                        ),
+                      ),
+                      child: SizedBox(
+                        width: ringSize,
+                        height: ringSize,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 1500),
+                          curve: Curves.easeOutCubic,
+                          builder: (_, anim, __) => CustomPaint(
+                            size: Size(ringSize, ringSize),
+                            painter: _HeroRingsPainter(
+                              anim: anim,
+                              daysActive: daysActive,
+                              daysPassed: daysPassed,
+                              caloriesProgress: pCalories,
+                              workoutsProgress: pWorkouts,
+                              streakProgress: pStreak,
+                              time: today,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: r.s(22)),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: r.s(14),
+                      runSpacing: r.s(10),
+                      children: [
+                        _heroLegendChip(_HeroAccents.peach, 'Время', '$hh:$mm', r),
+                        _heroLegendChip(_HeroAccents.amber, 'Неделя', '$thisWeek/7', r),
+                        _heroLegendChip(_HeroAccents.sage, 'Ккал', '${summary.calories.round()}', r),
+                        _heroLegendChip(_HeroAccents.pink, 'Трен.', '$thisWeek/7', r),
+                        _heroLegendChip(_HeroAccents.sky, 'Серия', '$streak д', r),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
-            SizedBox(height: r.s(20)),
-            // ── LEGEND ──
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: r.s(12),
-              runSpacing: r.s(8),
-              children: [
-                _legendItem(_Palette.green, 'Время', '$hh:$mm'),
-                _legendItem(_Palette.sage, 'Неделя', '$thisWeek/7'),
-                _legendItem(
-                    _Palette.peach, 'Ккал', '${summary.calories.round()}'),
-                _legendItem(_Palette.pink, 'Трен.', '$thisWeek/7'),
-                _legendItem(_Palette.yellow, 'Серия', '$streak д'),
-              ],
             ),
           ],
         ),
@@ -587,8 +689,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _legendItem(Color color, String title, String value) {
-    final r = _R(context);
+  Widget _heroLegendChip(Color color, String label, String value, _R r) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -596,21 +697,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             width: 6,
             height: 6,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        SizedBox(width: r.s(4)),
-        Text('$title · ',
-            style: GoogleFonts.inter(
-                color: _Palette.textMuted, fontSize: r.fs(9))),
+        SizedBox(width: r.s(5)),
+        Text(label,
+            style: TextStyle(
+              color: _Hero.textLow,
+              fontSize: r.fs(10),
+              fontWeight: FontWeight.w500,
+            )),
+        SizedBox(width: r.s(3)),
         Text(value,
-            style: GoogleFonts.inter(
-                color: _Palette.text,
-                fontSize: r.fs(10),
-                fontWeight: FontWeight.w600)),
+            style: TextStyle(
+              color: _Hero.textHigh,
+              fontSize: r.fs(11),
+              fontWeight: FontWeight.w600,
+            )),
       ],
     );
   }
 
   // ═════════════════════════════════════════════════════════
-  //  FOCUS CARD — с обложкой активной программы
+  //  FOCUS CARD
   // ═════════════════════════════════════════════════════════
   Widget _focusCard(FitnessProvider fitness) {
     final r = _R(context);
@@ -664,7 +770,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (hasCover) {
       return Padding(
-        padding: EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20)),
+        padding: EdgeInsets.fromLTRB(r.s(20), r.s(20), r.s(20), r.s(20)),
         child: _TapScale(
           onTap: onTap,
           child: Container(
@@ -797,7 +903,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20)),
+      padding: EdgeInsets.fromLTRB(r.s(20), r.s(20), r.s(20), r.s(20)),
       child: _TapScale(
         onTap: onTap,
         child: Container(
@@ -886,7 +992,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ═════════════════════════════════════════════════════════
-  //  BENTO ROW 1 (Fitness + Streak)
+  //  BENTO TOP (Fitness + Streak) — дни ярче
   // ═════════════════════════════════════════════════════════
   Widget _bentoTop(FitnessProvider fitness) {
     final r = _R(context);
@@ -1008,27 +1114,53 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           final isFuture = i > todayIdx;
                           final hasWorkout = i < weekData.length &&
                               weekData[i].workouts > 0;
+
+                          Color dotColor;
+                          Color borderColor;
+                          double dotSize = r.s(8);
+                          List<BoxShadow>? glow;
+
+                          if (hasWorkout) {
+                            dotColor = _Palette.green;
+                            borderColor = _Palette.green;
+                            glow = [
+                              BoxShadow(
+                                color: _Palette.green.withOpacity(0.35),
+                                blurRadius: r.s(6),
+                                spreadRadius: 0.5,
+                              ),
+                            ];
+                          } else if (isToday) {
+                            dotColor = _Palette.peach;
+                            borderColor = _Palette.peach;
+                            dotSize = r.s(9);
+                            glow = [
+                              BoxShadow(
+                                color: _Palette.peach.withOpacity(0.45),
+                                blurRadius: r.s(7),
+                                spreadRadius: 0.5,
+                              ),
+                            ];
+                          } else if (!isFuture) {
+                            dotColor = Colors.white;
+                            borderColor = _Palette.textMuted.withOpacity(0.5);
+                          } else {
+                            dotColor = Colors.transparent;
+                            borderColor = _Palette.textMuted.withOpacity(0.35);
+                          }
+
                           return Expanded(
                             child: Column(
                               children: [
                                 Container(
-                                  width: r.s(6),
-                                  height: r.s(6),
+                                  width: dotSize,
+                                  height: dotSize,
                                   decoration: BoxDecoration(
-                                    color: hasWorkout
-                                        ? _Palette.green
-                                        : isToday
-                                        ? _Palette.peach
-                                        : Colors.transparent,
+                                    color: dotColor,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: hasWorkout
-                                          ? _Palette.green
-                                          : isToday
-                                          ? _Palette.peach
-                                          : _Palette.divider,
-                                      width: 1,
-                                    ),
+                                        color: borderColor, width: 1.2),
+                                    boxShadow: glow,
                                   ),
                                 ),
                                 SizedBox(height: r.s(4)),
@@ -1040,9 +1172,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         : isFuture
                                         ? _Palette.textMuted
                                         : _Palette.text,
-                                    fontSize: r.fs(9),
+                                    fontSize: r.fs(10),
                                     fontWeight: isToday
-                                        ? FontWeight.w800
+                                        ? FontWeight.w900
+                                        : hasWorkout
+                                        ? FontWeight.w700
                                         : FontWeight.w500,
                                   ),
                                 ),
@@ -1134,7 +1268,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ═════════════════════════════════════════════════════════
-  //  BENTO ROW 2 (Nutrition + Water)
+  //  BENTO MID
   // ═════════════════════════════════════════════════════════
   Widget _bentoMid(NutritionProvider nutrition) {
     final r = _R(context);
@@ -1490,7 +1624,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ═════════════════════════════════════════════════════════
-  //  PR RECORDS
+  //  PR STRIP
   // ═════════════════════════════════════════════════════════
   Widget _prStrip(FitnessProvider fitness) {
     final r = _R(context);
@@ -1589,180 +1723,326 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ═════════════════════════════════════════════════════════
-  //  RHYTHM (Пульс недели)
+  //  RHYTHM
   // ═════════════════════════════════════════════════════════
   Widget _rhythm(FitnessProvider fitness) {
     final r = _R(context);
     final today = DateTime.now();
+    final todayIdx = today.weekday - 1;
+
+    final weekData = _buildWeekData(fitness, today, todayIdx);
+    final volumes = weekData.map((d) => d.volume).toList();
+    final hasAnyData = weekData.any((d) => d.workouts > 0);
+
+    final totalVol = volumes.fold<double>(0, (s, v) => s + v);
+    final activeDays = weekData.where((d) => d.workouts > 0).length;
+    final maxVol = volumes.fold<double>(0, (a, b) => math.max(a, b));
+
+    int bestIdx = -1;
+    double bestVol = 0;
+    for (int i = 0; i < volumes.length; i++) {
+      if (volumes[i] > bestVol) {
+        bestVol = volumes[i];
+        bestIdx = i;
+      }
+    }
+    const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    final bestDayName = bestIdx >= 0 ? dayNames[bestIdx] : '—';
+
     final stats = fitness.getStats();
     final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
-    final thisWeek = _getThisWeek(fitness, today);
-    final todayIndex = today.weekday - 1;
-
-    final allDays = _buildWeekData(fitness, today, todayIndex);
-    final days = allDays.sublist(0, 5);
-
-    final maxVal = math.max(
-        1.0,
-        days.fold<double>(
-            0.0, (m, d) => math.max(m, d.workouts.toDouble())));
-    final weekVol = allDays.fold<double>(0.0, (s, d) => s + d.volume);
-    final activeDays = allDays.where((d) => d.workouts > 0).length;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20)),
       child: Container(
         padding: EdgeInsets.all(r.s(20)),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.72),
+          color: Colors.white.withOpacity(0.85),
           borderRadius: BorderRadius.circular(r.s(28)),
-          border: Border.all(
-              color: Colors.white.withOpacity(0.9), width: 1),
+          border: Border.all(color: Colors.white, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: _Palette.green.withOpacity(0.06),
+              blurRadius: 20,
+              spreadRadius: -4,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.bar_chart_rounded,
-                        color: _Palette.yellow, size: r.s(18)),
-                    SizedBox(width: r.s(8)),
-                    Text('ПУЛЬС НЕДЕЛИ',
+                Icon(Icons.bar_chart_rounded,
+                    color: _Palette.green, size: r.s(18)),
+                SizedBox(width: r.s(8)),
+                Text('ПУЛЬС НЕДЕЛИ',
+                    style: GoogleFonts.inter(
+                        color: _Palette.green,
+                        fontSize: r.fs(10),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2)),
+                const Spacer(),
+                if (streak > 0)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: r.s(9), vertical: r.s(5)),
+                    decoration: BoxDecoration(
+                        color: _Palette.peachSoft,
+                        borderRadius: BorderRadius.circular(r.s(8))),
+                    child: Text('🔥 $streak',
                         style: GoogleFonts.inter(
-                            color: _Palette.yellow,
-                            fontSize: r.fs(10),
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1)),
-                  ],
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: r.s(8), vertical: r.s(4)),
-                  decoration: BoxDecoration(
-                      color: _Palette.peachSoft,
-                      borderRadius: BorderRadius.circular(r.s(8))),
-                  child: Text('🔥 $streak',
-                      style: GoogleFonts.inter(
-                          color: _Palette.peach,
-                          fontSize: r.fs(11),
-                          fontWeight: FontWeight.w600)),
-                ),
+                            color: _Palette.peach,
+                            fontSize: r.fs(11),
+                            fontWeight: FontWeight.w600)),
+                  ),
               ],
             ),
             SizedBox(height: r.s(20)),
-            SizedBox(
-              height: r.s(100),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(5, (i) {
-                  final h = days[i].workouts > 0
-                      ? (days[i].workouts / maxVal).clamp(0.2, 1.0)
-                      : 0.05;
-                  final isToday = i == todayIndex;
-                  final color = isToday ? _Palette.green : _Palette.sage;
-                  return Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: r.s(4)),
+
+            if (!hasAnyData)
+              _rhythmEmpty(r)
+            else ...[
+              SizedBox(
+                height: r.s(156),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      width: r.s(36),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: h),
-                            duration:
-                            Duration(milliseconds: 800 + i * 100),
-                            curve: Curves.easeOutCubic,
-                            builder: (_, anim, __) => Container(
-                              height: r.s(82) * anim,
-                              decoration: BoxDecoration(
-                                color: color,
-                                borderRadius: BorderRadius.circular(r.s(8)),
-                              ),
-                            ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: r.s(22)),
+                            child: Text(_shortKg(maxVol),
+                                style: GoogleFonts.inter(
+                                    color: _Palette.textMuted,
+                                    fontSize: r.fs(9),
+                                    fontWeight: FontWeight.w500)),
                           ),
-                          SizedBox(height: r.s(8)),
-                          Text(['П', 'В', 'С', 'Ч', 'П'][i],
-                              style: GoogleFonts.inter(
-                                  color: isToday
-                                      ? _Palette.green
-                                      : _Palette.textMuted,
-                                  fontSize: r.fs(10),
-                                  fontWeight: isToday
-                                      ? FontWeight.bold
-                                      : FontWeight.w500)),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: r.s(22)),
+                            child: Text(_shortKg(maxVol / 2),
+                                style: GoogleFonts.inter(
+                                    color: _Palette.textMuted,
+                                    fontSize: r.fs(9),
+                                    fontWeight: FontWeight.w500)),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: r.s(22)),
+                            child: Text('0',
+                                style: GoogleFonts.inter(
+                                    color: _Palette.textMuted,
+                                    fontSize: r.fs(9),
+                                    fontWeight: FontWeight.w500)),
+                          ),
                         ],
                       ),
                     ),
-                  );
-                }),
+                    SizedBox(width: r.s(6)),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: List.generate(7, (i) {
+                          final vol = volumes[i];
+                          final isToday = i == todayIdx;
+                          final isFuture = i > todayIdx;
+                          final hasWorkout = weekData[i].workouts > 0;
+                          final isBest = i == bestIdx && bestVol > 0;
+
+                          final hFrac = maxVol > 0
+                              ? (vol / maxVol).clamp(0.0, 1.0)
+                              : 0.0;
+
+                          final barColor = isFuture
+                              ? Colors.transparent
+                              : isToday
+                              ? _Palette.peach
+                              : isBest
+                              ? _Palette.green
+                              : hasWorkout
+                              ? _Palette.sage
+                              : _Palette.divider;
+
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: r.s(3)),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  SizedBox(
+                                    height: r.s(16),
+                                    child: vol > 0
+                                        ? FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        _shortKg(vol),
+                                        style: GoogleFonts.inter(
+                                          fontSize: r.fs(9),
+                                          fontWeight: isBest
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: isBest
+                                              ? _Palette.peach
+                                              : _Palette.textMuted,
+                                        ),
+                                      ),
+                                    )
+                                        : null,
+                                  ),
+                                  SizedBox(height: r.s(2)),
+                                  TweenAnimationBuilder<double>(
+                                    tween: Tween(
+                                        begin: 0.0, end: hFrac),
+                                    duration: Duration(
+                                        milliseconds: 600 + i * 80),
+                                    curve: Curves.easeOutCubic,
+                                    builder: (_, anim, __) => Container(
+                                      height: r.s(100) * anim,
+                                      constraints: BoxConstraints(
+                                        minHeight:
+                                        hasWorkout ? r.s(4) : 0,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: barColor,
+                                        borderRadius:
+                                        BorderRadius.vertical(
+                                          top: Radius.circular(r.s(6)),
+                                          bottom: Radius.circular(r.s(2)),
+                                        ),
+                                        border: isFuture
+                                            ? Border.all(
+                                            color: _Palette.divider,
+                                            width: 1)
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: r.s(8)),
+                                  Text(
+                                    dayNames[i],
+                                    style: GoogleFonts.inter(
+                                      color: isToday
+                                          ? _Palette.peach
+                                          : isFuture
+                                          ? _Palette.textMuted
+                                          : _Palette.text,
+                                      fontSize: r.fs(10),
+                                      fontWeight: isToday
+                                          ? FontWeight.w800
+                                          : FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: r.s(18)),
-            Container(
-              padding:
-              EdgeInsets.symmetric(horizontal: r.s(10), vertical: r.s(12)),
-              decoration: BoxDecoration(
+              SizedBox(height: r.s(18)),
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: r.s(12), vertical: r.s(12)),
+                decoration: BoxDecoration(
                   color: _Palette.bg,
-                  borderRadius: BorderRadius.circular(r.s(14))),
-              child: Row(
-                children: [
-                  Expanded(
-                      child: _footerStat('⚡', _formatVolume(weekVol),
-                          'тоннаж', _Palette.peach, r)),
-                  Container(width: 1, height: r.s(26), color: _Palette.divider),
-                  Expanded(
-                      child: _footerStat('🏋️', '$thisWeek', 'тренировок',
-                          _Palette.green, r)),
-                  Container(width: 1, height: r.s(26), color: _Palette.divider),
-                  Expanded(
-                      child: _footerStat('📅', '$activeDays/7', 'дней',
-                          _Palette.sage, r)),
-                ],
+                  borderRadius: BorderRadius.circular(r.s(14)),
+                ),
+                child: Row(
+                  children: [
+                    _rhythmStat('📅', '$activeDays/7', 'дней', r),
+                    _rhythmDivider(r),
+                    _rhythmStat('🏋️', _formatKg(totalVol), 'всего', r),
+                    _rhythmDivider(r),
+                    _rhythmStat(
+                        '⭐',
+                        bestVol > 0 ? '$bestDayName' : '—',
+                        bestVol > 0 ? _formatKg(bestVol) : 'лучший',
+                        r),
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _footerStat(
-      String emoji, String value, String label, Color color, _R r) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
+  Widget _rhythmEmpty(_R r) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: r.s(24)),
+      child: Center(
+        child: Column(
           children: [
-            Text(emoji, style: TextStyle(fontSize: r.fs(11))),
-            SizedBox(width: r.s(4)),
-            Flexible(
-              child: Text(value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                      color: _Palette.text,
-                      fontSize: r.fs(14),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.4)),
-            ),
+            Text('🌱', style: TextStyle(fontSize: r.fs(32))),
+            SizedBox(height: r.s(10)),
+            Text('Пока нет тренировок',
+                style: GoogleFonts.inter(
+                    color: _Palette.text,
+                    fontSize: r.fs(14),
+                    fontWeight: FontWeight.w500)),
+            SizedBox(height: r.s(4)),
+            Text('Начни первую — статистика появится здесь',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                    color: _Palette.textMuted,
+                    fontSize: r.fs(11),
+                    height: 1.4)),
           ],
         ),
-        SizedBox(height: r.s(2)),
-        Text(label,
-            style: GoogleFonts.inter(
-                color: _Palette.textMuted,
-                fontSize: r.fs(8.5),
-                fontWeight: FontWeight.w500)),
-      ],
+      ),
+    );
+  }
+
+  Widget _rhythmDivider(_R r) => Container(
+    width: 1,
+    height: r.s(26),
+    color: _Palette.divider,
+  );
+
+  Widget _rhythmStat(String emoji, String value, String label, _R r) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(emoji, style: TextStyle(fontSize: r.fs(11))),
+              SizedBox(width: r.s(4)),
+              Flexible(
+                child: Text(value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                        color: _Palette.text,
+                        fontSize: r.fs(14),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.4)),
+              ),
+            ],
+          ),
+          SizedBox(height: r.s(2)),
+          Text(label,
+              style: GoogleFonts.inter(
+                  color: _Palette.textMuted,
+                  fontSize: r.fs(8.5),
+                  fontWeight: FontWeight.w500)),
+        ],
+      ),
     );
   }
 
   // ═════════════════════════════════════════════════════════
-  //  QUICK DOCK — единый контейнер
+  //  QUICK DOCK
   // ═════════════════════════════════════════════════════════
   Widget _quickDock(FitnessProvider fitness) {
     final r = _R(context);
@@ -1833,7 +2113,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ═════════════════════════════════════════════════════════
-  //  TARGETS — с крупными иконками без рамок
+  //  TARGETS
   // ═════════════════════════════════════════════════════════
   Widget _targetsSection(FitnessProvider fitness) {
     final r = _R(context);
@@ -2025,6 +2305,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ═════════════════════════════════════════════════════════
   //  HELPERS
   // ═════════════════════════════════════════════════════════
+  String _fmtNum(int n) {
+    if (n >= 10000) return '${(n / 1000).toStringAsFixed(1).replaceAll('.0', '')}k';
+    if (n >= 1000) {
+      final s = n.toString();
+      return '${s.substring(0, s.length - 3)} ${s.substring(s.length - 3)}';
+    }
+    return '$n';
+  }
+
   List<_Badge> _getBadges(Map<String, dynamic> stats) {
     final total = ((stats['totalWorkouts'] ?? 0) as num).toInt();
     final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
@@ -2102,7 +2391,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (dailyVolumes.isNotEmpty) {
       final bestVol = dailyVolumes.values.reduce(math.max);
       if (bestVol > 0) {
-        prs.add(_PR('⚡', _formatVolume(bestVol), 'за тренировку',
+        prs.add(_PR('⚡', _shortKg(bestVol), 'за тренировку',
             _Palette.yellow));
       }
     }
@@ -2112,7 +2401,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
     if (total > 0) prs.add(_PR('🎯', '$total', 'всего', _Palette.green));
     if (volume > 0) {
-      prs.add(_PR('🔥', _formatVolume(volume), 'общий тоннаж', _Palette.pink));
+      prs.add(_PR('🔥', _shortKg(volume), 'общий тоннаж', _Palette.pink));
     }
 
     return prs;
@@ -2310,7 +2599,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       id:
                                       'quick_ex_${quickDay.exercises.length}',
                                       exerciseId: exercise.id,
-                                      order: quickDay.exercises.length,
+                                      order:
+                                      quickDay.exercises.length,
                                       sets: [
                                         ExerciseSet(
                                             setNumber: 1,
@@ -2637,17 +2927,47 @@ class _VolumeCardState extends State<_VolumeCard> {
     await prefs.setDouble('weekly_volume_goal', v);
   }
 
+  double _goalForPeriod(int period) {
+    switch (period) {
+      case 0: return _weeklyGoal;
+      case 1: return _weeklyGoal * 4.3;
+      case 2: return _weeklyGoal * 52;
+      default: return 0;
+    }
+  }
+
+  String _periodHeaderLabel(int period) {
+    switch (period) {
+      case 0: return 'НА ЭТОЙ НЕДЕЛЕ';
+      case 1: return 'В ЭТОМ МЕСЯЦЕ';
+      case 2: return 'В ЭТОМ ГОДУ';
+      default: return 'ЗА ВСЁ ВРЕМЯ';
+    }
+  }
+
+  String _goalPeriodWord(int period) {
+    switch (period) {
+      case 0: return 'недели';
+      case 1: return 'месяца';
+      case 2: return 'года';
+      default: return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = _R(context);
     final now = DateTime.now();
-    final weekStart = DateTime(now.year, now.month, now.day - now.weekday + 1);
+    final weekStart =
+    DateTime(now.year, now.month, now.day - now.weekday + 1);
     final monthStart = DateTime(now.year, now.month, 1);
     final yearStart = DateTime(now.year, 1, 1);
     final lastWeekStart = weekStart.subtract(const Duration(days: 7));
 
-    double weekVol = 0, monthVol = 0, yearVol = 0, allVol = 0;
-    double lastWeekVol = 0;
+    double weekVol = 0, monthVol = 0, yearVol = 0, allVol = 0, lastWeekVol = 0;
+    int weekSets = 0, monthSets = 0, yearSets = 0, allSets = 0;
+    int weekEx = 0, monthEx = 0, yearEx = 0, allEx = 0;
+    int weekWk = 0, monthWk = 0, yearWk = 0, allWk = 0;
     final last4Weeks = List<double>.filled(4, 0);
 
     try {
@@ -2655,15 +2975,48 @@ class _VolumeCardState extends State<_VolumeCard> {
         final d = _extractLogDate(log);
         if (d == null) continue;
         final v = _extractLogVolume(log);
-        if (v <= 0) continue;
+        int sets = 0;
+        int exercises = 0;
+        try {
+          final exList = log.exercisesLog;
+          if (exList is List) {
+            exercises = exList.length;
+            for (final ex in exList) {
+              final sList = ex.sets;
+              if (sList is List) sets += sList.length;
+            }
+          }
+        } catch (_) {}
 
         allVol += v;
-        if (!d.isBefore(yearStart)) yearVol += v;
-        if (!d.isBefore(monthStart)) monthVol += v;
-        if (!d.isBefore(weekStart)) weekVol += v;
-        if (!d.isBefore(lastWeekStart) && d.isBefore(weekStart)) {
-          lastWeekVol += v;
+        allSets += sets;
+        allEx += exercises;
+        allWk += 1;
+
+        final isThisWeek = !d.isBefore(weekStart);
+        final isThisMonth = !d.isBefore(monthStart);
+        final isThisYear = !d.isBefore(yearStart);
+        final isLastWeek = !d.isBefore(lastWeekStart) && d.isBefore(weekStart);
+
+        if (isThisWeek) {
+          weekVol += v;
+          weekSets += sets;
+          weekEx += exercises;
+          weekWk += 1;
         }
+        if (isThisMonth) {
+          monthVol += v;
+          monthSets += sets;
+          monthEx += exercises;
+          monthWk += 1;
+        }
+        if (isThisYear) {
+          yearVol += v;
+          yearSets += sets;
+          yearEx += exercises;
+          yearWk += 1;
+        }
+        if (isLastWeek) lastWeekVol += v;
 
         final day = DateTime(d.year, d.month, d.day);
         for (int i = 0; i < 4; i++) {
@@ -2678,20 +3031,38 @@ class _VolumeCardState extends State<_VolumeCard> {
     } catch (_) {}
 
     final values = [weekVol, monthVol, yearVol, allVol];
-    final currentVal = values[_selectedPeriod];
-    final diff = weekVol - lastWeekVol;
-    final pctChange = lastWeekVol > 0
-        ? ((diff / lastWeekVol) * 100).round()
-        : (weekVol > 0 ? 100 : 0);
-    final goalPct =
-    _weeklyGoal > 0 ? (weekVol / _weeklyGoal).clamp(0.0, 1.0) : 0.0;
-    final goalReached = weekVol >= _weeklyGoal;
+    final setsList = [weekSets, monthSets, yearSets, allSets];
+    final exercisesList = [weekEx, monthEx, yearEx, allEx];
+    final workoutsList = [weekWk, monthWk, yearWk, allWk];
+
+    final currentVol = values[_selectedPeriod];
+    final currentSets = setsList[_selectedPeriod];
+    final currentExercises = exercisesList[_selectedPeriod];
+    final currentWorkouts = workoutsList[_selectedPeriod];
+
+    final hasGoal = _selectedPeriod < 3;
+    final goalForPeriod = hasGoal ? _goalForPeriod(_selectedPeriod) : 0.0;
+    final goalPct = hasGoal && goalForPeriod > 0
+        ? (currentVol / goalForPeriod).clamp(0.0, 1.0)
+        : 0.0;
+    final goalReached = hasGoal && currentVol >= goalForPeriod;
     final accent = goalReached ? _Palette.green : _Palette.sage;
+
+    final displayValue = _formatKg(currentVol);
+    final tonsSubtitle = _formatTons(currentVol);
+
+    final showWeekTrend = _selectedPeriod == 0;
+    final weekDiff = weekVol - lastWeekVol;
+    final weekPct = lastWeekVol > 0
+        ? ((weekDiff / lastWeekVol) * 100).round()
+        : (weekVol > 0 ? 100 : 0);
+
     final maxWeek = last4Weeks.reduce(math.max);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20)),
       child: Container(
+        padding: EdgeInsets.all(r.s(20)),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -2713,275 +3084,322 @@ class _VolumeCardState extends State<_VolumeCard> {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(r.s(28)),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -40,
-                right: -40,
-                child: IgnorePointer(
-                  child: Container(
-                    width: r.s(160),
-                    height: r.s(160),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          _Palette.green.withOpacity(0.10),
-                          _Palette.green.withOpacity(0.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: r.s(34),
+                  height: r.s(34),
+                  decoration: BoxDecoration(
+                    color: _Palette.green.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(r.s(10)),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text('🏋️', style: TextStyle(fontSize: r.fs(15))),
+                ),
+                SizedBox(width: r.s(10)),
+                Text('ОБЪЁМ ТРЕНИРОВОК',
+                    style: GoogleFonts.inter(
+                        color: _Palette.green,
+                        fontSize: r.fs(10),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.4)),
+                const Spacer(),
+                if (hasGoal && _loaded)
+                  _TapScale(
+                    onTap: _editGoal,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: r.s(10), vertical: r.s(6)),
+                      decoration: BoxDecoration(
+                        color: accent.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(r.s(10)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.flag_rounded,
+                              color: accent, size: r.s(11)),
+                          SizedBox(width: r.s(4)),
+                          Text(_formatKg(goalForPeriod),
+                              style: GoogleFonts.inter(
+                                  color: accent,
+                                  fontSize: r.fs(10.5),
+                                  fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(r.s(20)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: r.s(34),
-                          height: r.s(34),
-                          decoration: BoxDecoration(
-                            color: _Palette.green.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(r.s(10)),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text('🏋️',
-                              style: TextStyle(fontSize: r.fs(15))),
+              ],
+            ),
+            SizedBox(height: r.s(16)),
+
+            Row(
+              children: List.generate(4, (i) {
+                final selected = _selectedPeriod == i;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: i < 3 ? r.s(6) : 0),
+                    child: _TapScale(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _selectedPeriod = i);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        padding: EdgeInsets.symmetric(vertical: r.s(8)),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? _Palette.green
+                              : Colors.white.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(r.s(10)),
                         ),
-                        SizedBox(width: r.s(10)),
-                        Text('ОБЪЁМ',
-                            style: GoogleFonts.inter(
-                                color: _Palette.green,
-                                fontSize: r.fs(10),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.6)),
-                        const Spacer(),
-                        _TapScale(
-                          onTap: _editGoal,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: r.s(10), vertical: r.s(6)),
-                            decoration: BoxDecoration(
-                              color: accent.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(r.s(10)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.flag_rounded,
-                                    color: accent, size: r.s(11)),
-                                SizedBox(width: r.s(4)),
-                                Text('${_fmtNum(_weeklyGoal.round())} кг',
-                                    style: GoogleFonts.inter(
-                                        color: accent,
-                                        fontSize: r.fs(10.5),
-                                        fontWeight: FontWeight.w700)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: r.s(16)),
-                    Row(
-                      children: List.generate(4, (i) {
-                        final selected = _selectedPeriod == i;
-                        return Expanded(
-                          child: Padding(
-                            padding:
-                            EdgeInsets.only(right: i < 3 ? r.s(6) : 0),
-                            child: _TapScale(
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                setState(() => _selectedPeriod = i);
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 220),
-                                padding:
-                                EdgeInsets.symmetric(vertical: r.s(8)),
-                                decoration: BoxDecoration(
+                        child: Center(
+                          child: Text(_periodLabels[i],
+                              style: GoogleFonts.inter(
                                   color: selected
-                                      ? _Palette.green
-                                      : Colors.white.withOpacity(0.6),
-                                  borderRadius:
-                                  BorderRadius.circular(r.s(10)),
-                                ),
-                                child: Center(
-                                  child: Text(_periodLabels[i],
-                                      style: GoogleFonts.inter(
-                                          color: selected
-                                              ? Colors.white
-                                              : _Palette.textMuted,
-                                          fontSize: r.fs(11),
-                                          fontWeight: FontWeight.w600)),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    SizedBox(height: r.s(16)),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(_formatVolume(currentVal),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.inter(
-                                      color: _Palette.text,
-                                      fontSize: r.fs(34),
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: -1.6,
-                                      height: 1)),
-                              SizedBox(height: r.s(6)),
-                              Text(
-                                _selectedPeriod == 0
-                                    ? 'к прошлой неделе: ${_formatVolume(lastWeekVol)} кг'
-                                    : _selectedPeriod == 1
-                                    ? 'за текущий месяц'
-                                    : _selectedPeriod == 2
-                                    ? 'за ${now.year} год'
-                                    : 'за всё время',
-                                style: GoogleFonts.inter(
-                                    color: _Palette.textMuted,
-                                    fontSize: r.fs(11)),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_selectedPeriod == 0)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: r.s(9), vertical: r.s(6)),
-                            decoration: BoxDecoration(
-                              color: (diff >= 0
-                                  ? _Palette.green
-                                  : _Palette.pink)
-                                  .withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(r.s(9)),
-                            ),
-                            child: Text(
-                                '${diff >= 0 ? '↑' : '↓'} ${pctChange.abs()}%',
-                                style: GoogleFonts.inter(
-                                    color: diff >= 0
-                                        ? _Palette.green
-                                        : _Palette.pink,
-                                    fontSize: r.fs(12),
-                                    fontWeight: FontWeight.w700)),
-                          ),
-                      ],
-                    ),
-                    if (_selectedPeriod == 0) ...[
-                      SizedBox(height: r.s(18)),
-                      SizedBox(
-                        height: r.s(58),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: List.generate(4, (i) {
-                            final v = last4Weeks[i];
-                            final h = maxWeek > 0
-                                ? (v / maxWeek).clamp(0.15, 1.0)
-                                : 0.15;
-                            final isNow = i == 3;
-                            final barColor =
-                            isNow ? _Palette.green : _Palette.sage;
-                            return Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                    right: i < 3 ? r.s(6) : 0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    TweenAnimationBuilder<double>(
-                                      tween: Tween(begin: 0.0, end: h),
-                                      duration:
-                                      Duration(milliseconds: 500 + i * 100),
-                                      curve: Curves.easeOutCubic,
-                                      builder: (_, anim, __) => Container(
-                                        height: r.s(36) * anim,
-                                        decoration: BoxDecoration(
-                                          color: barColor,
-                                          borderRadius:
-                                          BorderRadius.circular(r.s(6)),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: r.s(6)),
-                                    Text(isNow ? 'сейчас' : '-${3 - i}н',
-                                        style: GoogleFonts.inter(
-                                            color: isNow
-                                                ? _Palette.green
-                                                : _Palette.textMuted,
-                                            fontSize: r.fs(8.5),
-                                            fontWeight: FontWeight.w600)),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }),
+                                      ? Colors.white
+                                      : _Palette.textMuted,
+                                  fontSize: r.fs(11),
+                                  fontWeight: FontWeight.w600)),
                         ),
                       ),
-                    ],
-                    SizedBox(height: r.s(16)),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(r.s(5)),
-                            child: Stack(
-                              children: [
-                                Container(
-                                    height: r.s(10),
-                                    color: Colors.white.withOpacity(0.7)),
-                                TweenAnimationBuilder<double>(
-                                  tween: Tween(begin: 0.0, end: goalPct),
-                                  duration: const Duration(milliseconds: 900),
-                                  builder: (_, v, __) => FractionallySizedBox(
-                                    widthFactor: v,
-                                    child: Container(
-                                      height: r.s(10),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            accent.withOpacity(0.7),
-                                            accent
-                                          ],
-                                        ),
-                                        borderRadius:
-                                        BorderRadius.circular(r.s(5)),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: r.s(10)),
-                        Text('${(goalPct * 100).round()}%',
-                            style: GoogleFonts.inter(
-                                color: accent,
-                                fontSize: r.fs(12),
-                                fontWeight: FontWeight.w700)),
-                      ],
                     ),
-                  ],
+                  ),
+                );
+              }),
+            ),
+            SizedBox(height: r.s(18)),
+
+            Text(_periodHeaderLabel(_selectedPeriod),
+                style: GoogleFonts.inter(
+                    color: _Palette.textMuted,
+                    fontSize: r.fs(10),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8)),
+            SizedBox(height: r.s(6)),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(displayValue,
+                            style: GoogleFonts.inter(
+                                color: _Palette.text,
+                                fontSize: r.fs(34),
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: -1.6,
+                                height: 1,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures()
+                                ])),
+                      ),
+                      if (tonsSubtitle != null) ...[
+                        SizedBox(height: r.s(4)),
+                        Text(tonsSubtitle,
+                            style: GoogleFonts.inter(
+                                color: _Palette.textMuted,
+                                fontSize: r.fs(12),
+                                fontWeight: FontWeight.w500)),
+                      ],
+                    ],
+                  ),
+                ),
+                if (showWeekTrend)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: r.s(9), vertical: r.s(6)),
+                    decoration: BoxDecoration(
+                      color: (weekDiff >= 0
+                          ? _Palette.green
+                          : _Palette.pink)
+                          .withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(r.s(9)),
+                    ),
+                    child: Text(
+                        '${weekDiff >= 0 ? '↑' : '↓'} ${weekPct.abs()}%',
+                        style: GoogleFonts.inter(
+                            color: weekDiff >= 0
+                                ? _Palette.green
+                                : _Palette.pink,
+                            fontSize: r.fs(12),
+                            fontWeight: FontWeight.w700)),
+                  ),
+              ],
+            ),
+            SizedBox(height: r.s(12)),
+
+            Row(
+              children: [
+                _countChip('$currentWorkouts', 'трен.', r),
+                SizedBox(width: r.s(6)),
+                _countChip('$currentExercises', 'упр.', r),
+                SizedBox(width: r.s(6)),
+                _countChip('$currentSets', 'подх.', r),
+              ],
+            ),
+
+            if (showWeekTrend && maxWeek > 0) ...[
+              SizedBox(height: r.s(18)),
+              SizedBox(
+                height: r.s(60),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(4, (i) {
+                    final v = last4Weeks[i];
+                    final hFrac =
+                    maxWeek > 0 ? (v / maxWeek).clamp(0.10, 1.0) : 0.10;
+                    final isNow = i == 3;
+                    final barColor = isNow ? _Palette.green : _Palette.sage;
+                    return Expanded(
+                      child: Padding(
+                        padding:
+                        EdgeInsets.only(right: i < 3 ? r.s(6) : 0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(v > 0 ? _shortKg(v) : '—',
+                                style: GoogleFonts.inter(
+                                    color: isNow
+                                        ? _Palette.green
+                                        : _Palette.textMuted,
+                                    fontSize: r.fs(9),
+                                    fontWeight: FontWeight.w600)),
+                            SizedBox(height: r.s(3)),
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.0, end: hFrac),
+                              duration:
+                              Duration(milliseconds: 500 + i * 100),
+                              curve: Curves.easeOutCubic,
+                              builder: (_, anim, __) => Container(
+                                height: r.s(32) * anim,
+                                decoration: BoxDecoration(
+                                  color: barColor,
+                                  borderRadius:
+                                  BorderRadius.circular(r.s(6)),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: r.s(6)),
+                            Text(isNow ? 'сейчас' : '-${3 - i}н',
+                                style: GoogleFonts.inter(
+                                    color: isNow
+                                        ? _Palette.green
+                                        : _Palette.textMuted,
+                                    fontSize: r.fs(8.5),
+                                    fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               ),
             ],
-          ),
+
+            if (hasGoal) ...[
+              SizedBox(height: r.s(18)),
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(r.s(5)),
+                      child: Stack(
+                        children: [
+                          Container(
+                              height: r.s(10),
+                              color: Colors.white.withOpacity(0.7)),
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: goalPct),
+                            duration: const Duration(milliseconds: 900),
+                            builder: (_, v, __) => FractionallySizedBox(
+                              widthFactor: v,
+                              child: Container(
+                                height: r.s(10),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      accent.withOpacity(0.7),
+                                      accent
+                                    ],
+                                  ),
+                                  borderRadius:
+                                  BorderRadius.circular(r.s(5)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: r.s(10)),
+                  Text('${(goalPct * 100).round()}%',
+                      style: GoogleFonts.inter(
+                          color: accent,
+                          fontSize: r.fs(12),
+                          fontWeight: FontWeight.w700)),
+                ],
+              ),
+              SizedBox(height: r.s(8)),
+              Text(
+                  'Цель ${_goalPeriodWord(_selectedPeriod)}: ${_formatKg(goalForPeriod)}',
+                  style: GoogleFonts.inter(
+                      color: _Palette.textMuted,
+                      fontSize: r.fs(11))),
+            ],
+
+            SizedBox(height: r.s(14)),
+            Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    size: r.s(12), color: _Palette.textMuted),
+                SizedBox(width: r.s(4)),
+                Expanded(
+                  child: Text('Тоннаж = вес × повторения × подходы',
+                      style: GoogleFonts.inter(
+                          color: _Palette.textMuted,
+                          fontSize: r.fs(10))),
+                ),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _countChip(String value, String label, _R r) {
+    return Container(
+      padding:
+      EdgeInsets.symmetric(horizontal: r.s(10), vertical: r.s(6)),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.65),
+        borderRadius: BorderRadius.circular(r.s(8)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(value,
+              style: GoogleFonts.inter(
+                  color: _Palette.text,
+                  fontSize: r.fs(12),
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()])),
+          SizedBox(width: r.s(4)),
+          Text(label,
+              style: GoogleFonts.inter(
+                  color: _Palette.textMuted,
+                  fontSize: r.fs(10),
+                  fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
@@ -3031,6 +3449,11 @@ class _VolumeCardState extends State<_VolumeCard> {
                       color: _Palette.text,
                       fontSize: r.fs(20),
                       fontWeight: FontWeight.w600)),
+              SizedBox(height: r.s(4)),
+              Text('Цель месяца и года рассчитается автоматически',
+                  style: GoogleFonts.inter(
+                      color: _Palette.textMuted,
+                      fontSize: r.fs(11))),
               SizedBox(height: r.s(16)),
               TextField(
                 controller: ctrl,
@@ -3082,7 +3505,7 @@ class _VolumeCardState extends State<_VolumeCard> {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  DATA MODELS & PAINTERS
+//  DATA MODELS
 // ═══════════════════════════════════════════════════════════════════
 class _Badge {
   final String emoji, label, subtitle;
@@ -3125,6 +3548,9 @@ class _ConfettiParticle {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  CONFETTI PAINTER
+// ═══════════════════════════════════════════════════════════════════
 class _ConfettiPainter extends CustomPainter {
   final double progress;
   final List<_ConfettiParticle> particles;
@@ -3158,6 +3584,9 @@ class _ConfettiPainter extends CustomPainter {
       old.progress != progress;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  HERO RINGS PAINTER
+// ═══════════════════════════════════════════════════════════════════
 class _HeroRingsPainter extends CustomPainter {
   final double anim;
   final List<bool> daysActive;
@@ -3189,19 +3618,19 @@ class _HeroRingsPainter extends CustomPainter {
     const r5 = 30.0;
     const stroke = 10.0;
 
-    _drawHourNumbers(canvas, center, rDigits * scale, _Palette.green, scale);
+    _drawHourNumbers(canvas, center, rDigits * scale, _HeroAccents.sage, scale);
     _drawTimeDial(canvas, center, r1 * scale, stroke * scale, time,
-        _Palette.green, anim);
+        _HeroAccents.peach, anim);
     _drawDayLabels(
-        canvas, center, rDayLabels * scale, daysActive, _Palette.yellow, scale);
+        canvas, center, rDayLabels * scale, daysActive, _HeroAccents.amber, scale);
     _drawDaysRing(
-        canvas, center, r2 * scale, stroke * scale, daysActive, _Palette.yellow);
+        canvas, center, r2 * scale, stroke * scale, daysActive, _HeroAccents.amber);
     _drawProgressRing(canvas, center, r3 * scale, stroke * scale,
-        caloriesProgress * anim, _Palette.sage);
+        caloriesProgress * anim, _HeroAccents.sage);
     _drawProgressRing(canvas, center, r4 * scale, stroke * scale,
-        workoutsProgress * anim, _Palette.peach);
+        workoutsProgress * anim, _HeroAccents.pink);
     _drawProgressRing(canvas, center, r5 * scale, stroke * scale,
-        streakProgress * anim, _Palette.pink);
+        streakProgress * anim, _HeroAccents.sky);
   }
 
   void _drawHourNumbers(
@@ -3230,7 +3659,7 @@ class _HeroRingsPainter extends CustomPainter {
   void _drawDayLabels(Canvas canvas, Offset center, double radius,
       List<bool> daysActive, Color color, double scale) {
     const names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    final fontSize = 9.0 * scale;
+    final fontSize = 10.5 * scale;
     for (int i = 0; i < 7; i++) {
       final angle = -math.pi / 2 + (i / 7.0 + 1.0 / 14.0) * 2 * math.pi;
       final pos = Offset(center.dx + math.cos(angle) * radius,
@@ -3242,16 +3671,16 @@ class _HeroRingsPainter extends CustomPainter {
       Color textColor;
       FontWeight weight;
       if (isToday) {
-        textColor = _Palette.peach;
+        textColor = _HeroAccents.peach;
         weight = FontWeight.w900;
       } else if (hasWorkout) {
         textColor = color;
         weight = FontWeight.w900;
       } else if (isPast) {
-        textColor = _Palette.peach.withOpacity(0.65);
-        weight = FontWeight.w700;
+        textColor = _HeroAccents.peach.withOpacity(0.75);
+        weight = FontWeight.w800;
       } else {
-        textColor = color.withOpacity(0.35);
+        textColor = color.withOpacity(0.55);
         weight = FontWeight.w700;
       }
 
@@ -3320,7 +3749,7 @@ class _HeroRingsPainter extends CustomPainter {
               ..style = PaintingStyle.stroke
               ..strokeWidth = stroke * 0.75
               ..strokeCap = StrokeCap.round
-              ..color = color.withOpacity(0.13));
+              ..color = color.withOpacity(0.18));
       }
     }
     final timeAngle = -math.pi / 2 + progress * 2 * math.pi;
@@ -3359,10 +3788,10 @@ class _HeroRingsPainter extends CustomPainter {
             false,
             Paint()
               ..style = PaintingStyle.stroke
-              ..strokeWidth = stroke * 1.6
+              ..strokeWidth = stroke * 1.9
               ..strokeCap = StrokeCap.round
-              ..color = color.withOpacity(0.20)
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+              ..color = color.withOpacity(0.35)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
         canvas.drawArc(
             rect,
             startAngle + segGap,
@@ -3370,7 +3799,7 @@ class _HeroRingsPainter extends CustomPainter {
             false,
             Paint()
               ..style = PaintingStyle.stroke
-              ..strokeWidth = stroke
+              ..strokeWidth = stroke * 1.15
               ..strokeCap = StrokeCap.round
               ..color = color);
         canvas.drawArc(
@@ -3380,9 +3809,9 @@ class _HeroRingsPainter extends CustomPainter {
             false,
             Paint()
               ..style = PaintingStyle.stroke
-              ..strokeWidth = stroke * 0.35
+              ..strokeWidth = stroke * 0.4
               ..strokeCap = StrokeCap.round
-              ..color = Colors.white.withOpacity(0.6));
+              ..color = Colors.white.withOpacity(0.75));
       } else if (isToday) {
         canvas.drawArc(
             rect,
@@ -3391,9 +3820,20 @@ class _HeroRingsPainter extends CustomPainter {
             false,
             Paint()
               ..style = PaintingStyle.stroke
-              ..strokeWidth = stroke
+              ..strokeWidth = stroke * 1.9
               ..strokeCap = StrokeCap.round
-              ..color = _Palette.peach);
+              ..color = _HeroAccents.peach.withOpacity(0.35)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+        canvas.drawArc(
+            rect,
+            startAngle + segGap,
+            sweep - segGap * 2,
+            false,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = stroke * 1.15
+              ..strokeCap = StrokeCap.round
+              ..color = _HeroAccents.peach);
       } else if (isPast) {
         canvas.drawArc(
             rect,
@@ -3402,9 +3842,9 @@ class _HeroRingsPainter extends CustomPainter {
             false,
             Paint()
               ..style = PaintingStyle.stroke
-              ..strokeWidth = stroke * 0.75
+              ..strokeWidth = stroke * 0.85
               ..strokeCap = StrokeCap.round
-              ..color = _Palette.peach.withOpacity(0.35));
+              ..color = _HeroAccents.peach.withOpacity(0.45));
       } else {
         canvas.drawArc(
             rect,
@@ -3415,7 +3855,7 @@ class _HeroRingsPainter extends CustomPainter {
               ..style = PaintingStyle.stroke
               ..strokeWidth = stroke * 0.75
               ..strokeCap = StrokeCap.round
-              ..color = color.withOpacity(0.13));
+              ..color = color.withOpacity(0.22));
       }
     }
   }
@@ -3428,7 +3868,7 @@ class _HeroRingsPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = stroke * 0.75
-          ..color = color.withOpacity(0.13));
+          ..color = color.withOpacity(0.18));
     if (progress <= 0) return;
 
     final rect = Rect.fromCircle(center: center, radius: radius);
@@ -3444,7 +3884,7 @@ class _HeroRingsPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = stroke * 1.6
           ..strokeCap = StrokeCap.round
-          ..color = color.withOpacity(0.22)
+          ..color = color.withOpacity(0.28)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7));
     canvas.drawArc(
         rect,
@@ -3469,9 +3909,16 @@ class _HeroRingsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _HeroRingsPainter old) => true;
+  bool shouldRepaint(covariant _HeroRingsPainter old) =>
+      old.anim != anim ||
+          old.caloriesProgress != caloriesProgress ||
+          old.workoutsProgress != workoutsProgress ||
+          old.streakProgress != streakProgress;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  TAP SCALE
+// ═══════════════════════════════════════════════════════════════════
 class _TapScale extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
@@ -3500,4 +3947,1095 @@ class _TapScaleState extends State<_TapScale> {
       ),
     );
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SEASON VINE 3.0 — настоящая serpentine-змея
+//  • Y-волна внутри ряда (каждый лист на своей высоте)
+//  • Большие петли между рядами (настоящая вьющаяся лоза)
+//  • Спиральные усики на переходах
+//  • Светящиеся точки-декор по фону
+//  • Крупные листья 52×68 с двойной тенью
+// ═══════════════════════════════════════════════════════════════════
+class _SeasonVine extends StatefulWidget {
+  final WellnessProvider wellness;
+  final NutritionProvider nutrition;
+  final _R r;
+  final VoidCallback onOpenKnowledge;
+
+  const _SeasonVine({
+    required this.wellness,
+    required this.nutrition,
+    required this.r,
+    required this.onOpenKnowledge,
+  });
+
+  @override
+  State<_SeasonVine> createState() => _SeasonVineState();
+}
+
+class _SeasonVineState extends State<_SeasonVine>
+    with TickerProviderStateMixin {
+  late final AnimationController _pulse;
+  late final AnimationController _sway;
+  int? _expandedMonth;
+
+  static const _monthNames = [
+    '', 'янв', 'фев', 'мар', 'апр', 'май', 'июн',
+    'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+    _sway = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5000),
+    )..repeat(reverse: true);
+    _expandedMonth = widget.wellness.currentMonth;
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    _sway.dispose();
+    super.dispose();
+  }
+
+  void _toggleMonth(int month) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _expandedMonth = _expandedMonth == month ? null : month;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = widget.r;
+    final currentMonth = widget.wellness.currentMonth;
+    final monthsWithSeason = widget.wellness.monthsWithSeason;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Заголовок
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: r.s(20)),
+          child: Row(
+            children: [
+              Text('🌱', style: TextStyle(fontSize: r.fs(16))),
+              SizedBox(width: r.s(6)),
+              Expanded(
+                child: Text(
+                  'В сезоне · ${_monthNames[currentMonth]}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    color: _Palette.text,
+                    fontSize: r.fs(20),
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+              ),
+              _TapScale(
+                onTap: widget.onOpenKnowledge,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: r.s(10), vertical: r.s(6)),
+                  decoration: BoxDecoration(
+                    color: _Palette.green.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(r.s(10)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Знания',
+                        style: GoogleFonts.inter(
+                          color: _Palette.green,
+                          fontSize: r.fs(11),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(width: r.s(3)),
+                      Icon(Icons.arrow_forward_rounded,
+                          color: _Palette.green, size: r.s(12)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: r.s(24)),
+
+        // Лоза
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: r.s(6)),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return _buildVine(
+                constraints: constraints,
+                currentMonth: currentMonth,
+                monthsWithSeason: monthsWithSeason,
+                r: r,
+              );
+            },
+          ),
+        ),
+
+        // Панель продуктов
+        AnimatedSize(
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: _expandedMonth == null
+              ? const SizedBox(width: double.infinity, height: 0)
+              : _buildProductPanel(_expandedMonth!, r),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVine({
+    required BoxConstraints constraints,
+    required int currentMonth,
+    required Set<int> monthsWithSeason,
+    required _R r,
+  }) {
+    final w = constraints.maxWidth;
+    final leafW = r.s(52);
+    final leafH = r.s(68);
+    final rowH = r.s(158);
+    final topY = r.s(70);
+    final waveAmp = r.s(24);
+    final bulge = r.s(42);
+
+    final leftX = leafW / 2 + r.s(10);
+    final rightX = w - leafW / 2 - r.s(10);
+
+    // 12 точек serpentine с заметной Y-волной
+    final points = <Offset>[];
+    for (int row = 0; row < 3; row++) {
+      final isEven = row.isEven;
+      final baseY = topY + row * rowH;
+      for (int col = 0; col < 4; col++) {
+        final realCol = isEven ? col : (3 - col);
+        final xFrac = realCol / 3;
+        final x = leftX + xFrac * (rightX - leftX);
+        // Волна внутри ряда - каждый лист на своей высоте
+        final wave = math.sin(xFrac * math.pi * 2 + (isEven ? 0 : math.pi));
+        final y = baseY + wave * waveAmp;
+        points.add(Offset(x, y));
+      }
+    }
+
+    final totalH = topY + 2 * rowH + leafH / 2 + r.s(50);
+
+    return SizedBox(
+      height: totalH,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // ── Декоративные светящиеся точки ──
+          ..._buildDecorDots(w, totalH, r),
+
+          // ── Лоза ──
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: AnimatedBuilder(
+                animation: _pulse,
+                builder: (_, __) => CustomPaint(
+                  painter: _BigVinePainter(
+                    points: points,
+                    monthsWithSeason: monthsWithSeason,
+                    currentMonth: currentMonth,
+                    pulseValue: _pulse.value,
+                    leafH: leafH,
+                    bulge: bulge,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── Листья ──
+          for (int i = 0; i < 12; i++)
+            Positioned(
+              left: points[i].dx - (leafW + r.s(28)) / 2,
+              top: points[i].dy - (leafH + r.s(28)) / 2,
+              child: _MonthLeaf(
+                month: i + 1,
+                monthName: _monthNames[i + 1],
+                width: leafW,
+                height: leafH,
+                isCurrent: i + 1 == currentMonth,
+                inSeason: monthsWithSeason.contains(i + 1),
+                isExpanded: i + 1 == _expandedMonth,
+                products: widget.wellness.productsForMonth(i + 1),
+                pulse: _pulse,
+                sway: _sway,
+                swayPhase: i,
+                r: r,
+                onTap: () => _toggleMonth(i + 1),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildDecorDots(double w, double h, _R r) {
+    final dots = <Widget>[];
+    final rng = math.Random(2024);
+    final palette = [
+      _Palette.sage.withOpacity(0.14),
+      _Palette.peach.withOpacity(0.12),
+      _Palette.pink.withOpacity(0.10),
+      _Palette.yellow.withOpacity(0.12),
+      _Palette.green.withOpacity(0.10),
+    ];
+    for (int i = 0; i < 22; i++) {
+      final x = rng.nextDouble() * w;
+      final y = rng.nextDouble() * h;
+      final size = r.s(3 + rng.nextDouble() * 5);
+      final color = palette[i % palette.length];
+      dots.add(Positioned(
+        left: x,
+        top: y,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.35),
+                blurRadius: size * 0.8,
+                spreadRadius: 0.5,
+              ),
+            ],
+          ),
+        ),
+      ));
+    }
+    return dots;
+  }
+
+  Widget _buildProductPanel(int month, _R r) {
+    final meta = metaForMonth(month);
+    final products = widget.wellness.productsForMonth(month);
+    final monthName = _monthNames[month];
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(r.s(16), r.s(20), r.s(16), r.s(0)),
+      child: Container(
+        padding: EdgeInsets.all(r.s(16)),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              meta.soft,
+              meta.soft.withOpacity(0.55),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(r.s(24)),
+          border: Border.all(color: meta.accent.withOpacity(0.30)),
+          boxShadow: [
+            BoxShadow(
+              color: meta.deep.withOpacity(0.10),
+              blurRadius: r.s(20),
+              offset: Offset(0, r.s(8)),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: r.s(42),
+                  height: r.s(42),
+                  decoration: BoxDecoration(
+                    color: meta.accent,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: meta.deep.withOpacity(0.25),
+                        blurRadius: r.s(10),
+                        offset: Offset(0, r.s(3)),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(meta.emoji,
+                      style: TextStyle(fontSize: r.fs(20))),
+                ),
+                SizedBox(width: r.s(12)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${meta.label} · $monthName',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: meta.deep,
+                          fontSize: r.fs(16),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Text(
+                        products.isEmpty
+                            ? 'Нет сезонных продуктов'
+                            : '${products.length} ${_productsWord(products.length)} в сезоне',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: meta.deep.withOpacity(0.7),
+                          fontSize: r.fs(12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => setState(() => _expandedMonth = null),
+                  child: Container(
+                    width: r.s(32),
+                    height: r.s(32),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: meta.deep.withOpacity(0.7),
+                      size: r.s(16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (products.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: r.s(16)),
+                child: Center(
+                  child: Text(
+                    '🌾  В этом месяце нет сезонных продуктов',
+                    style: GoogleFonts.inter(
+                      color: meta.deep.withOpacity(0.6),
+                      fontSize: r.fs(12),
+                    ),
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                height: r.s(84),
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: products.length,
+                  separatorBuilder: (_, __) => SizedBox(width: r.s(8)),
+                  itemBuilder: (_, i) =>
+                      _panelProductCard(products[i], meta, r),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _panelProductCard(
+      ProductKnowledge k, SeasonMeta meta, _R r) {
+    return GestureDetector(
+      onTap: () => _openProductSheet(k),
+      child: Container(
+        width: r.s(76),
+        padding: EdgeInsets.symmetric(vertical: r.s(10), horizontal: r.s(6)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(r.s(16)),
+          boxShadow: [
+            BoxShadow(
+              color: meta.deep.withOpacity(0.08),
+              blurRadius: r.s(10),
+              offset: Offset(0, r.s(3)),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(k.emoji, style: TextStyle(fontSize: r.fs(24))),
+            SizedBox(height: r.s(6)),
+            Text(
+              k.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                color: _Palette.text,
+                fontSize: r.fs(10),
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openProductSheet(ProductKnowledge k) {
+    HapticFeedback.selectionClick();
+    FoodProduct? product;
+    for (final p in widget.nutrition.products) {
+      if (p.id == k.key) {
+        product = p;
+        break;
+      }
+      final norm = p.name
+          .toLowerCase()
+          .replaceAll('ё', 'е')
+          .replaceAll(' ', '_');
+      if (norm.contains(k.key) || k.key.contains(norm)) {
+        product = p;
+        break;
+      }
+    }
+    showProductKnowledgeSheet(
+      context,
+      product: product,
+      knowledge: k,
+      nutrition: widget.nutrition,
+    );
+  }
+
+  String _productsWord(int n) {
+    if (n == 1) return 'продукт';
+    if (n >= 2 && n <= 4) return 'продукта';
+    return 'продуктов';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MONTH LEAF — крупный лист с двойной тенью и выразительным дизайном
+// ═══════════════════════════════════════════════════════════════════
+class _MonthLeaf extends StatelessWidget {
+  final int month;
+  final String monthName;
+  final double width;
+  final double height;
+  final bool isCurrent;
+  final bool inSeason;
+  final bool isExpanded;
+  final List<ProductKnowledge> products;
+  final Animation<double> pulse;
+  final Animation<double> sway;
+  final int swayPhase;
+  final _R r;
+  final VoidCallback onTap;
+
+  const _MonthLeaf({
+    required this.month,
+    required this.monthName,
+    required this.width,
+    required this.height,
+    required this.isCurrent,
+    required this.inSeason,
+    required this.isExpanded,
+    required this.products,
+    required this.pulse,
+    required this.sway,
+    required this.swayPhase,
+    required this.r,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = metaForMonth(month);
+    final isHighlighted = isCurrent || isExpanded;
+
+    Color fillTop, fillBottom, textColor, veinColor;
+    if (isExpanded) {
+      fillTop = meta.accent;
+      fillBottom = meta.deep;
+      textColor = Colors.white;
+      veinColor = Colors.white.withOpacity(0.35);
+    } else if (isCurrent) {
+      fillTop = meta.accent;
+      fillBottom = meta.accent.withOpacity(0.82);
+      textColor = Colors.white;
+      veinColor = Colors.white.withOpacity(0.35);
+    } else if (inSeason) {
+      fillTop = meta.soft;
+      fillBottom = meta.soft.withOpacity(0.65);
+      textColor = meta.deep;
+      veinColor = meta.deep.withOpacity(0.22);
+    } else {
+      fillTop = _Palette.bg;
+      fillBottom = _Palette.bg.withOpacity(0.65);
+      textColor = _Palette.textMuted.withOpacity(0.55);
+      veinColor = _Palette.textMuted.withOpacity(0.18);
+    }
+
+    final hasFruit = products.isNotEmpty;
+    final fruitEmoji = hasFruit ? products.first.emoji : null;
+    final extraCount = products.length > 1 ? '+${products.length - 1}' : null;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedBuilder(
+        animation: isCurrent ? pulse : sway,
+        builder: (_, child) {
+          final double angle;
+          if (isCurrent) {
+            angle = 0;
+          } else {
+            final phase = swayPhase * 0.6;
+            angle = math.sin(sway.value * math.pi * 2 + phase) * 0.05;
+          }
+          return Transform.rotate(
+            angle: angle,
+            alignment: Alignment.bottomCenter,
+            child: child,
+          );
+        },
+        child: AnimatedScale(
+          scale: isExpanded ? 1.18 : (isCurrent ? 1.05 : 1.0),
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutBack,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: width + r.s(28),
+                height: height + r.s(28),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Пульсирующий ореол
+                    if (isCurrent && !isExpanded)
+                      AnimatedBuilder(
+                        animation: pulse,
+                        builder: (_, __) {
+                          final p = pulse.value;
+                          return Container(
+                            width: (width + r.s(28)) * (0.82 + p * 0.22),
+                            height: (height + r.s(28)) * (0.82 + p * 0.22),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: meta.accent
+                                  .withOpacity(0.22 * (1 - p)),
+                            ),
+                          );
+                        },
+                      ),
+
+                    // Лист
+                    Container(
+                      width: width,
+                      height: height,
+                      decoration: BoxDecoration(
+                        boxShadow: isHighlighted
+                            ? [
+                          // Большая цветная тень
+                          BoxShadow(
+                            color: meta.deep.withOpacity(0.32),
+                            blurRadius: r.s(18),
+                            offset: Offset(0, r.s(8)),
+                          ),
+                          // Контактная тень
+                          BoxShadow(
+                            color: meta.deep.withOpacity(0.15),
+                            blurRadius: r.s(4),
+                            offset: Offset(0, r.s(2)),
+                          ),
+                        ]
+                            : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: r.s(8),
+                            offset: Offset(0, r.s(3)),
+                          ),
+                        ],
+                      ),
+                      child: ClipPath(
+                        clipper: _LeafClipper(),
+                        child: Stack(
+                          children: [
+                            // Градиент
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [fillTop, fillBottom],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Световой блик сверху-слева
+                            if (isHighlighted)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: RadialGradient(
+                                      center: const Alignment(-0.5, -0.6),
+                                      radius: 1.2,
+                                      colors: [
+                                        Colors.white.withOpacity(0.28),
+                                        Colors.transparent,
+                                      ],
+                                      stops: const [0.0, 0.7],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            // Центральная жилка
+                            Positioned(
+                              left: width / 2 - 0.6,
+                              top: height * 0.12,
+                              bottom: height * 0.10,
+                              child: Container(
+                                width: 1.2,
+                                decoration: BoxDecoration(
+                                  color: veinColor,
+                                  borderRadius: BorderRadius.circular(1),
+                                ),
+                              ),
+                            ),
+                            // Боковые прожилки (4 штуки)
+                            for (final side in [-1.0, 1.0])
+                              for (final frac in [0.28, 0.52])
+                                Positioned(
+                                  left: width / 2,
+                                  top: height * frac,
+                                  child: Transform.rotate(
+                                    angle: side * 0.55,
+                                    alignment: side > 0
+                                        ? Alignment.centerLeft
+                                        : Alignment.centerRight,
+                                    child: Container(
+                                      width: width * 0.28,
+                                      height: 1,
+                                      color: veinColor,
+                                    ),
+                                  ),
+                                ),
+                            // Номер месяца
+                            Align(
+                              alignment: const Alignment(0, -0.20),
+                              child: Text(
+                                '$month',
+                                style: GoogleFonts.inter(
+                                  color: textColor,
+                                  fontSize: r.fs(22),
+                                  fontWeight: isHighlighted
+                                      ? FontWeight.w900
+                                      : FontWeight.w700,
+                                  height: 1,
+                                  letterSpacing: -1.0,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures()
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Эмодзи продукта
+                            if (fruitEmoji != null)
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: r.s(10),
+                                child: Center(
+                                  child: Text(
+                                    fruitEmoji,
+                                    style:
+                                    TextStyle(fontSize: r.fs(18)),
+                                  ),
+                                ),
+                              ),
+                            // +N badge
+                            if (extraCount != null)
+                              Positioned(
+                                right: r.s(6),
+                                top: r.s(10),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: r.s(5),
+                                    vertical: r.s(2),
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isHighlighted
+                                        ? Colors.white.withOpacity(0.30)
+                                        : meta.accent,
+                                    borderRadius:
+                                    BorderRadius.circular(r.s(7)),
+                                  ),
+                                  child: Text(
+                                    extraCount,
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: r.fs(9),
+                                      fontWeight: FontWeight.w800,
+                                      height: 1,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures()
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: r.s(6)),
+              // Подпись месяца
+              Text(
+                monthName,
+                style: GoogleFonts.inter(
+                  color: isHighlighted
+                      ? meta.deep
+                      : (inSeason
+                      ? _Palette.text
+                      : _Palette.textMuted.withOpacity(0.55)),
+                  fontSize: r.fs(10.5),
+                  fontWeight: isHighlighted
+                      ? FontWeight.w800
+                      : (inSeason ? FontWeight.w600 : FontWeight.w500),
+                  letterSpacing: -0.1,
+                  height: 1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LEAF CLIPPER — элегантная форма листа (с заострённым верхом)
+// ═══════════════════════════════════════════════════════════════════
+class _LeafClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final w = size.width;
+    final h = size.height;
+    final path = Path();
+    // Верхний пик
+    path.moveTo(w / 2, 0);
+    // Правая сторона - вытянутая
+    path.cubicTo(
+      w * 0.92, h * 0.15,
+      w * 1.0, h * 0.58,
+      w * 0.72, h * 0.94,
+    );
+    // Нижняя правая часть - к центру
+    path.quadraticBezierTo(w * 0.58, h, w / 2, h);
+    // Нижняя левая - симметрично
+    path.quadraticBezierTo(w * 0.42, h, w * 0.28, h * 0.94);
+    // Левая сторона
+    path.cubicTo(
+      0, h * 0.58,
+      w * 0.08, h * 0.15,
+      w / 2, 0,
+    );
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  VINE SEGMENT — данные одного сегмента лозы
+// ═══════════════════════════════════════════════════════════════════
+class _VineSegment {
+  final Path path;
+  final bool active;
+  final bool isTransition;
+  final Offset p1;
+  final Offset p2;
+  final double dir;
+
+  _VineSegment({
+    required this.path,
+    required this.active,
+    required this.isTransition,
+    required this.p1,
+    required this.p2,
+    required this.dir,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  BIG VINE PAINTER — настоящая serpentine + большие петли + усики
+// ═══════════════════════════════════════════════════════════════════
+class _BigVinePainter extends CustomPainter {
+  final List<Offset> points;
+  final Set<int> monthsWithSeason;
+  final int currentMonth;
+  final double pulseValue;
+  final double leafH;
+  final double bulge;
+
+  _BigVinePainter({
+    required this.points,
+    required this.monthsWithSeason,
+    required this.currentMonth,
+    required this.pulseValue,
+    required this.leafH,
+    required this.bulge,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+
+    final segments = _buildSegments();
+    final fullPath = _combineSegments(segments);
+
+    // 1. Большая мягкая тень под всей лозой
+    canvas.drawPath(
+      fullPath.shift(const Offset(0, 3)),
+      Paint()
+        ..color = _Palette.green.withOpacity(0.12)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 12
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
+    );
+
+    // 2. Базовая лоза (тонкая, светлая)
+    canvas.drawPath(
+      fullPath,
+      Paint()
+        ..color = _Palette.sage.withOpacity(0.28)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    // 3. Активные (зелёные) сегменты
+    for (final seg in segments) {
+      if (!seg.active) continue;
+      canvas.drawPath(
+        seg.path,
+        Paint()
+          ..color = _Palette.green.withOpacity(0.82)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5.5
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    // 4. Тонкие блестящие прожилки поверх активных
+    for (final seg in segments) {
+      if (!seg.active) continue;
+      canvas.drawPath(
+        seg.path,
+        Paint()
+          ..color = Colors.white.withOpacity(0.20)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    // 5. Спиральные усики на переходах
+    for (final seg in segments) {
+      if (seg.isTransition) {
+        _drawTendrilPair(canvas, seg);
+      }
+    }
+
+    // 6. Пульс текущего месяца
+    final currentIdx = currentMonth - 1;
+    if (currentIdx >= 0 && currentIdx < points.length) {
+      final c = points[currentIdx];
+      final pulseR = 6 + 12 * pulseValue;
+      canvas.drawCircle(
+        c,
+        pulseR,
+        Paint()
+          ..color = _Palette.green.withOpacity(0.45 * (1 - pulseValue))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+      canvas.drawCircle(c, 5, Paint()..color = _Palette.green);
+      canvas.drawCircle(
+        c,
+        2.2,
+        Paint()..color = Colors.white,
+      );
+    }
+  }
+
+  List<_VineSegment> _buildSegments() {
+    final segs = <_VineSegment>[];
+    for (int i = 0; i < points.length - 1; i++) {
+      final p1 = points[i];
+      final p2 = points[i + 1];
+      // Переход между рядами
+      final isTransition = (i + 1) % 4 == 0 && i < points.length - 2;
+
+      final segPath = Path();
+      segPath.moveTo(p1.dx, p1.dy);
+
+      if (isTransition) {
+        // БОЛЬШАЯ петля наружу
+        final rowIdx = i ~/ 4;
+        final isEvenRow = rowIdx.isEven;
+        // Чётные ряды кончаются справа → петля вправо
+        // Нечётные кончаются слева → петля влево
+        final dir = isEvenRow ? 1.0 : -1.0;
+
+        final cx1 = p1.dx + dir * bulge;
+        final cy1 = p1.dy + (p2.dy - p1.dy) * 0.15;
+        final cx2 = p2.dx + dir * bulge;
+        final cy2 = p2.dy - (p2.dy - p1.dy) * 0.15;
+        segPath.cubicTo(cx1, cy1, cx2, cy2, p2.dx, p2.dy);
+
+        final active = monthsWithSeason.contains(i + 1) ||
+            monthsWithSeason.contains(i + 2);
+
+        segs.add(_VineSegment(
+          path: segPath,
+          active: active,
+          isTransition: true,
+          p1: p1,
+          p2: p2,
+          dir: dir,
+        ));
+      } else {
+        // Внутри ряда — лёгкая дуга
+        final midX = (p1.dx + p2.dx) / 2;
+        final midY = (p1.dy + p2.dy) / 2;
+        final ctrlOff = (p2.dx - p1.dx).sign * 4;
+        segPath.quadraticBezierTo(
+            midX, midY + ctrlOff, p2.dx, p2.dy);
+
+        final active = monthsWithSeason.contains(i + 1) ||
+            monthsWithSeason.contains(i + 2);
+
+        segs.add(_VineSegment(
+          path: segPath,
+          active: active,
+          isTransition: false,
+          p1: p1,
+          p2: p2,
+          dir: 0,
+        ));
+      }
+    }
+    return segs;
+  }
+
+  Path _combineSegments(List<_VineSegment> segs) {
+    final path = Path();
+    if (segs.isEmpty) return path;
+    path.addPath(segs.first.path, Offset.zero);
+    for (int i = 1; i < segs.length; i++) {
+      path.addPath(segs[i].path, Offset.zero);
+    }
+    return path;
+  }
+
+  void _drawTendrilPair(Canvas canvas, _VineSegment seg) {
+    final p1 = seg.p1;
+    final p2 = seg.p2;
+    final dir = seg.dir;
+
+    // Верхний усик у p1, наружу
+    _drawSpiral(
+      canvas,
+      Offset(p1.dx + dir * bulge * 0.55, p1.dy + (p2.dy - p1.dy) * 0.15),
+      -dir,
+      maxR: 14,
+    );
+    // Нижний усик у p2
+    _drawSpiral(
+      canvas,
+      Offset(p2.dx + dir * bulge * 0.55, p2.dy - (p2.dy - p1.dy) * 0.15),
+      -dir,
+      maxR: 14,
+    );
+  }
+
+  void _drawSpiral(
+      Canvas canvas,
+      Offset center,
+      double rotationDir, {
+        double maxR = 12,
+      }) {
+    final path = Path();
+    const turns = 2.0;
+    const steps = 28;
+    for (int i = 0; i <= steps; i++) {
+      final t = i / steps;
+      final angle = rotationDir * t * math.pi * 2 * turns;
+      final radius = maxR * (1 - t * 0.82);
+      final x = center.dx + math.cos(angle) * radius;
+      final y = center.dy + math.sin(angle) * radius;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    // Тень спирали
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = _Palette.sage.withOpacity(0.20)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.6
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+    );
+    // Основная спираль
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = _Palette.sage.withOpacity(0.70)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BigVinePainter old) =>
+      old.currentMonth != currentMonth ||
+          old.pulseValue != pulseValue ||
+          old.monthsWithSeason != monthsWithSeason;
 }

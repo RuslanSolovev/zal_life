@@ -1,3 +1,4 @@
+// main.dart
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import 'features/fitness/database/fitness_database.dart';
 import 'features/fitness/providers/fitness_provider.dart';
 import 'features/fitness/providers/pedometer_provider.dart';
 import 'features/nutrition/providers/nutrition_provider.dart';
+import 'features/nutrition/providers/wellness_provider.dart';
 import 'features/nutrition/providers/color_settings_provider.dart';
 import 'home_screen.dart';
 
@@ -33,6 +35,9 @@ void main() async {
         ChangeNotifierProvider<FitnessProvider>.value(value: fitness),
         ChangeNotifierProvider<NutritionProvider>.value(value: nutrition),
         ChangeNotifierProvider<PedometerProvider>.value(value: pedometer),
+        ChangeNotifierProvider<WellnessProvider>(
+          create: (_) => WellnessProvider(),
+        ),
         ChangeNotifierProvider<ColorSettingsProvider>(
           create: (_) => ColorSettingsProvider(),
         ),

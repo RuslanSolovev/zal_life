@@ -5,9 +5,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/nutrition_models.dart';
 import '../../providers/nutrition_provider.dart';
+import '../../providers/wellness_provider.dart';
+import '../widgets/product_knowledge_sheet.dart';
 
 // ═══════════════════════════════════════════════════════════════════
 //  Design tokens
@@ -91,18 +94,16 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   final _scrollController = ScrollController();
 
   Timer? _debounceTimer;
-  String _rawQuery = ''; // immediate (for rail visibility / focus state)
-  String _query = '';    // debounced (used for filtering)
+  String _rawQuery = '';
+  String _query = '';
   String? _selectedCategory;
   FoodProduct? _selectedProduct;
-  FoodProduct? _displayedProduct; // survives deselect for slide-out animation
+  FoodProduct? _displayedProduct;
   late MealType _selectedMeal;
   bool _reduceMotion = false;
 
-  // §4 remember last-used grams per product for quick-add
   final Map<String, double> _lastGrams = {};
 
-  // §13 memoize filter results
   List<FoodProduct>? _cacheFiltered;
   String _cacheQuery = '__';
   String? _cacheCategory = '__';
@@ -147,7 +148,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   Duration _dur(int ms) =>
       _reduceMotion ? Duration.zero : Duration(milliseconds: ms);
 
-  // §2 debounced search
   void _onSearchChanged(String v) {
     setState(() {
       _rawQuery = v;
@@ -199,7 +199,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     });
   }
 
-  // §3b meal picker
   Future<void> _showMealPicker() async {
     final entries = widget.nutritionProvider.getEntriesForDate(widget.date);
     final kcalByMeal = <MealType, double>{};
@@ -322,7 +321,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     }
   }
 
-  // §13 memoized filter
   List<FoodProduct> _filterProducts(NutritionProvider provider) {
     final products = provider.products;
     final id = identityHashCode(products);
@@ -343,7 +341,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     return result;
   }
 
-  // ── ADD ────────────────────────────────────────────────────────
   Future<void> _addProduct(FoodProduct p, double grams, {required bool close}) async {
     if (grams <= 0) return;
     HapticFeedback.mediumImpact();
@@ -377,6 +374,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
         content: Text('${p.name} · ${grams.round()} г добавлен'),
         behavior: SnackBarBehavior.floating,
         backgroundColor: _P.greenDeep,
+        duration: const Duration(seconds: 3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         action: SnackBarAction(
           label: 'Отменить',
@@ -396,6 +394,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
       content: Text(msg),
       behavior: SnackBarBehavior.floating,
       backgroundColor: _P.greenDeep,
+      duration: const Duration(seconds: 3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ));
   }
@@ -406,10 +405,10 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = widget.nutritionProvider;
+    final wellness = context.watch<WellnessProvider>();
     final filtered = _filterProducts(provider);
     final showQuick = _rawQuery.isEmpty && _selectedCategory == null;
 
-    // §14 already-in-diary lookup, computed once per build
     final entries = provider.getEntriesForDate(widget.date);
     final addedByProduct = <String, double>{};
     for (final e in entries) {
@@ -417,7 +416,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
           (addedByProduct[e.productId] ?? 0) + e.grams;
     }
 
-    // §1 header kcal preview
     int? kcalPreview;
     if (_selectedProduct != null) {
       final g = double.tryParse(_gramsCtrl.text) ?? 0;
@@ -425,6 +423,13 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
         kcalPreview = _selectedProduct!.forGrams(g).calories.round();
       }
     }
+
+    final seasonalProducts = showQuick
+        ? provider.products
+        .where((p) => wellness.isInSeason(p))
+        .take(8)
+        .toList()
+        : const <FoodProduct>[];
 
     return Scaffold(
       backgroundColor: _P.bg,
@@ -451,6 +456,13 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                 SliverToBoxAdapter(child: _buildCategories()),
                 SliverToBoxAdapter(child: _buildMealRow()),
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                // 🌱 Сезон сейчас
+                if (showQuick && seasonalProducts.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: _buildSeasonalRail(seasonalProducts),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                ],
                 if (showQuick && !_quickRailEmpty(provider))
                   SliverToBoxAdapter(child: _buildQuickRail(provider)),
                 if (!showQuick)
@@ -461,14 +473,14 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                 else
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
-                          (_, i) => _buildProductRow(filtered[i], addedByProduct),
+                          (_, i) => _buildProductRow(
+                          filtered[i], addedByProduct, wellness),
                       childCount: filtered.length,
                     ),
                   ),
                 const SliverToBoxAdapter(child: SizedBox(height: 140)),
               ],
             ),
-            // §9 commit bar
             if (_displayedProduct != null)
               Positioned(
                 left: 0,
@@ -582,7 +594,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  3A. CATEGORIES — compact pill strip, no emoji
+  //  3A. CATEGORIES
   // ═══════════════════════════════════════════════════════════════
   Widget _buildCategories() {
     return Padding(
@@ -692,6 +704,125 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  //  🌱 SEASONAL RAIL
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildSeasonalRail(List<FoodProduct> seasonalProducts) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              const Icon(Icons.eco_rounded, size: 16, color: _P.greenDeep),
+              const SizedBox(width: 6),
+              Text('Сезон сейчас',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.3,
+                    color: _P.text,
+                  )),
+              const Spacer(),
+              _Press(
+                onTap: () => _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  child: Row(children: [
+                    Text('Все',
+                        style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _P.greenDeep)),
+                    const Icon(Icons.arrow_forward_rounded,
+                        size: 14, color: _P.greenDeep),
+                  ]),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 100,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            physics: const BouncingScrollPhysics(),
+            itemCount: seasonalProducts.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, i) {
+              final p = seasonalProducts[i];
+              return _Press(
+                onTap: () => _onSelectProduct(p),
+                child: Container(
+                  width: 116,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _P.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _P.divider),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: _P.greenDeep.withOpacity(0.10),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(p.categoryEmoji,
+                                style: const TextStyle(fontSize: 18)),
+                          ),
+                          const Spacer(),
+                          const Icon(Icons.eco_rounded,
+                              size: 14, color: _P.greenDeep),
+                        ],
+                      ),
+                      const Spacer(),
+                      Text(
+                        p.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: _P.text,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                          letterSpacing: -0.1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${p.calories.round()} ккал',
+                        style: GoogleFonts.inter(
+                          color: _P.peachDeep,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          fontFeatures: [ui.FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   //  4. QUICK-PICK RAIL
   // ═══════════════════════════════════════════════════════════════
   Widget _buildQuickRail(NutritionProvider provider) {
@@ -711,7 +842,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -899,9 +1030,13 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   //  5. PRODUCT ROW
   // ═══════════════════════════════════════════════════════════════
   Widget _buildProductRow(
-      FoodProduct p, Map<String, double> addedByProduct) {
+      FoodProduct p,
+      Map<String, double> addedByProduct,
+      WellnessProvider wellness,
+      ) {
     final selected = _selectedProduct?.id == p.id;
     final addedGrams = addedByProduct[p.id] ?? 0;
+    final seasonal = wellness.isInSeason(p);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
@@ -951,16 +1086,27 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                p.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  color: _P.text,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.2,
-                                ),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      p.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        color: _P.text,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -0.2,
+                                      ),
+                                    ),
+                                  ),
+                                  if (seasonal) ...[
+                                    const SizedBox(width: 5),
+                                    const Icon(Icons.eco_rounded,
+                                        size: 14, color: _P.greenDeep),
+                                  ],
+                                ],
                               ),
                               const SizedBox(height: 3),
                               Text(
@@ -1028,7 +1174,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
                 child: selected
-                    ? _buildExpandedEditor(p, addedGrams)
+                    ? _buildExpandedEditor(p, addedGrams, wellness)
                     : const SizedBox(width: double.infinity),
               ),
             ],
@@ -1062,9 +1208,10 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  6. EXPANDED EDITOR — the amount is the hero
+  //  6. EXPANDED EDITOR
   // ═══════════════════════════════════════════════════════════════
-  Widget _buildExpandedEditor(FoodProduct p, double addedGrams) {
+  Widget _buildExpandedEditor(
+      FoodProduct p, double addedGrams, WellnessProvider wellness) {
     final grams = double.tryParse(_gramsCtrl.text) ?? 0;
     final isValid = grams > 0;
     final isOverweight = grams > 2000;
@@ -1072,6 +1219,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     final deltaPct = grams != 100
         ? ((grams - 100) / 100 * 100).round()
         : 0;
+    final knowledge = wellness.knowledgeFor(p);
 
     return Container(
       decoration: const BoxDecoration(
@@ -1082,7 +1230,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // §6 top row: label + big amount + input pill
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -1190,7 +1337,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
             ]),
           ],
           const SizedBox(height: 12),
-          // §6 preset chips (Wrap, packed)
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -1213,7 +1359,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          // §6 macro summary strip
           Container(
             decoration: BoxDecoration(
               color: _P.surface,
@@ -1288,8 +1433,70 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
               ),
             ),
           ],
+          // 🌱 Богат, полезен, осторожно
+          if (knowledge != null) ...[
+            const SizedBox(height: 10),
+            _Press(
+              onTap: () => showProductKnowledgeSheet(
+                context,
+                product: p,
+                knowledge: knowledge,
+                nutrition: widget.nutritionProvider,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _P.greenDeep.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: _P.greenDeep.withOpacity(0.22)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.eco_rounded,
+                          color: _P.greenDeep, size: 16),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Богат, полезен, осторожно',
+                            style: GoogleFonts.inter(
+                              color: _P.greenDeep,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.1,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Витамины · польза · противопоказания',
+                            style: GoogleFonts.inter(
+                              color: _P.textMuted,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded,
+                        color: _P.greenDeep, size: 18),
+                  ],
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
-          // §6 CTA
           SizedBox(
             width: double.infinity,
             height: 52,

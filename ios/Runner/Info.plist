@@ -53,6 +53,14 @@
 	<array>
 		<string>processing</string>
 	</array>
-	<!-- ─────────────────────────────────────── -->
+
+	<!-- ─── КАМЕРА И ГАЛЕРЕЯ (для image_picker) ─── -->
+	<key>NSCameraUsageDescription</key>
+	<string>Камера нужна для добавления фотографий в приложение.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Доступ к галерее нужен для выбора фотографий из вашей библиотеки.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Приложению нужен доступ для сохранения фотографий в галерею.</string>
+	<!-- ─────────────────────────────────────────── -->
 </dict>
 </plist>
