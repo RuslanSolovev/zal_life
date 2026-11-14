@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zal_life/features/nutrition/ui/screens/food_search_screen.dart';
 
 import '../../models/nutrition_models.dart';
@@ -89,6 +90,31 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   bool _reduceMotion = false;
   bool _pulseStarted = false;
 
+  // 🆕 Фон hero
+  String _heroBgImage = 'assets/images/nature_hero3.jpg';
+
+  static const _heroBackgrounds = [
+    'assets/images/nature_hero.jpg',
+    'assets/images/nature_hero2.jpg',
+    'assets/images/nature_hero3.jpg',
+    'assets/images/nature_hero4.jpg',
+    'assets/images/nature_hero5.jpg',
+    'assets/images/nature_hero6.jpg',
+    'assets/images/nature_hero7.jpg',
+    'assets/images/nature_hero8.jpg',
+  ];
+
+  static const _heroBgLabels = {
+    'assets/images/nature_hero.jpg': 'Тропа',
+    'assets/images/nature_hero5.jpg': 'Лес',
+    'assets/images/nature_hero6.jpg': 'Горы',
+    'assets/images/nature_hero7.jpg': 'Закат1',
+    'assets/images/nature_hero2.jpg': 'Закат2',
+    'assets/images/nature_hero3.jpg': 'Закат3',
+    'assets/images/nature_hero4.jpg': 'Закат4',
+    'assets/images/nature_hero8.jpg': 'Закат4',
+  };
+
   static int _lastWaterAmount = 250;
   static final Map<String, Set<String>> _dismissedRecs = {};
 
@@ -113,8 +139,18 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     _scrollController.addListener(_onScroll);
     _entrance.forward();
     _bars.forward();
+    _loadHeroBg();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _chips.forward();
+    });
+  }
+
+  Future<void> _loadHeroBg() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _heroBgImage = prefs.getString('fuel_hero_bg') ??
+          'assets/images/nature_hero3.jpg';
     });
   }
 
@@ -217,6 +253,193 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       return (diff: diff.abs(), positive: diff >= 0);
     } catch (_) {
       return (diff: 0, positive: true);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  BACKGROUND PICKER
+  // ═══════════════════════════════════════════════════════════════
+  Future<void> _openBackgroundPicker() async {
+    HapticFeedback.selectionClick();
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        decoration: const BoxDecoration(
+          color: _P.bg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: _P.divider,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: _P.peachSoft,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.wallpaper_rounded,
+                        color: _P.peachDeep, size: 19),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Фон экрана питания',
+                            style: GoogleFonts.inter(
+                                color: _P.text,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.3)),
+                        const SizedBox(height: 2),
+                        Text('Выберите картинку для шапки',
+                            style: GoogleFonts.inter(
+                                color: _P.textMuted, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.15,
+                children: _heroBackgrounds.map((path) {
+                  final isSelected = path == _heroBgImage;
+                  final label = _heroBgLabels[path] ?? '';
+                  return _Press(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.pop(ctx, path);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isSelected
+                              ? _P.peachDeep
+                              : Colors.white,
+                          width: isSelected ? 3 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                          BoxShadow(
+                            color: _P.peachDeep.withOpacity(0.25),
+                            blurRadius: 12,
+                            spreadRadius: -2,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                            : null,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.asset(
+                            path,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [_Hero.bgTop, _Hero.bgBottom],
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                  Icons.image_not_supported_rounded,
+                                  color: Colors.white.withOpacity(0.5),
+                                  size: 28),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.0),
+                                    Colors.black.withOpacity(0.55),
+                                  ],
+                                  stops: const [0.4, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 10,
+                            bottom: 10,
+                            right: 10,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(label,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700)),
+                                ),
+                                if (isSelected)
+                                  Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Icon(Icons.check_rounded,
+                                        color: _P.peachDeep, size: 14),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (result != null && result != _heroBgImage) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('fuel_hero_bg', result);
+      if (mounted) setState(() => _heroBgImage = result);
+      HapticFeedback.lightImpact();
     }
   }
 
@@ -335,539 +558,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  ЗДОРОВЬЕ — тёмный контейнер
-  // ═══════════════════════════════════════════════════════════════
-  Widget _buildHealthSection(BuildContext context) {
-    final wellness = context.watch<WellnessProvider>();
-    final seasonCount = wellness.seasonalNow.length;
-    final dailyProduct = wellness.productOfDay;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(_padH, 26, _padH, 0),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_Hero.bgTop, _Hero.bgBottom],
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -40,
-                right: -40,
-                child: IgnorePointer(
-                  child: Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          _P.greenDeep.withOpacity(0.22),
-                          _P.greenDeep.withOpacity(0.0),
-                        ],
-                        stops: const [0.0, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Header row ──
-                    Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.06),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.10)),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.eco_rounded,
-                              color: _P.greenSoft, size: 18),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'ЗДОРОВЬЕ И СЕЗОН',
-                                style: GoogleFonts.inter(
-                                  color: _P.greenSoft,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.4,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                seasonCount > 0
-                                    ? '$seasonCount продуктов в сезоне'
-                                    : 'Сезонные продукты',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  color: _Hero.textHigh,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _Press(
-                          onTap: () => _openKnowledge(context, 0),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 7),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.06),
-                              borderRadius: BorderRadius.circular(100),
-                              border: Border.all(
-                                  color: Colors.white.withOpacity(0.10)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('Знания',
-                                    style: GoogleFonts.inter(
-                                      color: _Hero.textHigh,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                    )),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.arrow_forward_rounded,
-                                    color: Colors.white, size: 12),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-
-                    // ── Продукт дня ──
-                    if (dailyProduct != null) ...[
-                      _Press(
-                        onTap: () {
-                          final k = dailyProduct;
-                          final product =
-                          _findProductByName(context, k.displayName);
-                          showProductKnowledgeSheet(
-                            context,
-                            product: product,
-                            knowledge: k,
-                            nutrition: context.read<NutritionProvider>(),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.04),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.08)),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: _P.greenDeep.withOpacity(0.14),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                      color: _P.greenDeep.withOpacity(0.30)),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(dailyProduct.emoji,
-                                    style: const TextStyle(fontSize: 22)),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets
-                                              .symmetric(
-                                              horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: _P.greenDeep
-                                                .withOpacity(0.15),
-                                            borderRadius:
-                                            BorderRadius.circular(100),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Text('✨',
-                                                  style: TextStyle(
-                                                      fontSize: 9)),
-                                              const SizedBox(width: 3),
-                                              Text('ПРОДУКТ ДНЯ',
-                                                  style: GoogleFonts.inter(
-                                                    color: _P.greenSoft,
-                                                    fontSize: 9,
-                                                    fontWeight:
-                                                    FontWeight.w700,
-                                                    letterSpacing: 0.8,
-                                                  )),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      dailyProduct.displayName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.inter(
-                                        color: _Hero.textHigh,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: -0.3,
-                                      ),
-                                    ),
-                                    if (dailyProduct.benefits.isNotEmpty)
-                                      Text(
-                                        dailyProduct.benefits
-                                            .take(2)
-                                            .map((b) => _benefitRu(b))
-                                            .join(' · '),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.inter(
-                                          color: _Hero.textLow,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.chevron_right_rounded,
-                                  color: Colors.white54, size: 18),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-
-                    // ── Сезонная лента — заголовок ──
-                    Row(
-                      children: [
-                        const Icon(Icons.eco_rounded,
-                            color: _P.greenSoft, size: 13),
-                        const SizedBox(width: 6),
-                        Text(
-                          'СЕЗОН СЕЙЧАС',
-                          style: GoogleFonts.inter(
-                            color: _P.greenSoft,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        SeasonPill(
-                            month: wellness.currentMonth, dark: true),
-                        const Spacer(),
-                        _Press(
-                          onTap: () => _openKnowledge(context, 0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('Все',
-                                  style: GoogleFonts.inter(
-                                    color: _Hero.textLow,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  )),
-                              const Icon(Icons.chevron_right_rounded,
-                                  color: _Hero.textLow, size: 14),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    _darkSeasonalStrip(context),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _benefitRu(HealthBenefit b) {
-    switch (b) {
-      case HealthBenefit.immunity:
-        return 'иммунитет';
-      case HealthBenefit.skin:
-        return 'кожа';
-      case HealthBenefit.heart:
-        return 'сердце';
-      case HealthBenefit.digestion:
-        return 'пищеварение';
-      case HealthBenefit.energy:
-        return 'энергия';
-      case HealthBenefit.bones:
-        return 'кости';
-      case HealthBenefit.brain:
-        return 'мозг';
-      case HealthBenefit.eyes:
-        return 'зрение';
-      case HealthBenefit.sleep:
-        return 'сон';
-      case HealthBenefit.weight:
-        return 'вес';
-    }
-  }
-
-  FoodProduct? _findProductByName(BuildContext context, String name) {
-    final provider = context.read<NutritionProvider>();
-    try {
-      return provider.products.firstWhere((p) =>
-      p.name.toLowerCase() == name.toLowerCase() ||
-          p.name.toLowerCase().contains(name.toLowerCase()));
-    } catch (_) {
-      return null;
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  ТЁМНАЯ СЕЗОННАЯ ЛЕНТА — обновлённая
-  // ═══════════════════════════════════════════════════════════════
-  Widget _darkSeasonalStrip(BuildContext context) {
-    final wellness = context.watch<WellnessProvider>();
-    final nutrition = context.watch<NutritionProvider>();
-    final ending = wellness.endingThisMonth.take(6).toList();
-    final starting = wellness.startingNextMonth.take(6).toList();
-    final seasonal = wellness.seasonalNow.take(8).toList();
-    final month = wellness.currentMonth;
-
-    if (seasonal.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Text(
-          'В этом месяце нет сезонных продуктов',
-          style: GoogleFonts.inter(
-            color: _Hero.textLow,
-            fontSize: 11,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Полоса месяцев для текущего сезона ──
-        SeasonMonthsBar(
-          months: metaForMonth(month).months,
-          currentMonth: month,
-          accent: metaForMonth(month).accent,
-          trackColor: Colors.white.withOpacity(0.08),
-          height: 4,
-          showLabels: true,
-        ),
-        const SizedBox(height: 12),
-
-        // ── Лента карточек ──
-        SizedBox(
-          height: 108,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: seasonal.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (_, i) {
-              final k = seasonal[i];
-              FoodProduct? product;
-              try {
-                product = nutrition.products.firstWhere((p) =>
-                p.id == k.key ||
-                    p.name.toLowerCase().contains(
-                        k.displayName.toLowerCase()));
-              } catch (_) {}
-
-              final nextMonth = month == 12 ? 1 : month + 1;
-              final isEnding = !k.seasonMonths.contains(nextMonth);
-
-              return _Press(
-                onTap: () {
-                  showProductKnowledgeSheet(
-                    context,
-                    product: product,
-                    knowledge: k,
-                    nutrition: nutrition,
-                  );
-                },
-                child: Container(
-                  width: 112,
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isEnding
-                          ? _P.peachDeep.withOpacity(0.35)
-                          : Colors.white.withOpacity(0.08),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: _P.greenDeep.withOpacity(0.14),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(k.emoji,
-                                style: const TextStyle(fontSize: 16)),
-                          ),
-                          const Spacer(),
-                          if (isEnding)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 5, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _P.peachDeep.withOpacity(0.18),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'уходит',
-                                style: GoogleFonts.inter(
-                                  color: _P.peachSoft,
-                                  fontSize: 7,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.4,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const Spacer(),
-                      Text(
-                        k.displayName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          color: _Hero.textHigh,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          height: 1.2,
-                          letterSpacing: -0.1,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      SeasonMonthsBar(
-                        months: k.seasonMonths,
-                        currentMonth: month,
-                        accent: _P.greenDeep,
-                        trackColor: Colors.white.withOpacity(0.10),
-                        height: 2,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        // ── Сноска: уходит / скоро ──
-        if (ending.isNotEmpty || starting.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              if (ending.isNotEmpty)
-                _seasonNote(
-                  icon: Icons.schedule_rounded,
-                  color: _P.peachDeep,
-                  label:
-                  '${ending.length} уходит: ${ending.first.displayName}',
-                ),
-              if (starting.isNotEmpty)
-                _seasonNote(
-                  icon: Icons.upcoming_rounded,
-                  color: _P.greenDeep,
-                  label:
-                  '${starting.length} скоро: ${starting.first.displayName}',
-                ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _seasonNote({
-    required IconData icon,
-    required Color color,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              color: color,
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  HERO
+  //  HERO (Nature Premium with Photo)
   // ═══════════════════════════════════════════════════════════════
   Widget _buildHero(DailyNutritionSummary s, NutritionGoals g, bool hasProfile,
       NutritionProvider provider) {
@@ -886,248 +577,308 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
         bottomLeft: Radius.circular(32),
         bottomRight: Radius.circular(32),
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [_Hero.bgTop, _Hero.bgBottom],
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 60,
-              left: 60,
-              child: IgnorePointer(
-                child: AnimatedBuilder(
-                  animation: _pulse,
-                  builder: (_, __) {
-                    final o =
-                    _reduceMotion ? 0.18 : (0.14 + 0.08 * _pulse.value);
-                    return Container(
-                      width: 320,
-                      height: 320,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            accent.withOpacity(o),
-                            accent.withOpacity(0)
-                          ],
-                          stops: const [0.0, 1.0],
-                        ),
-                      ),
-                    );
-                  },
+      child: Stack(
+        children: [
+          // 1. ФОТОГРАФИЯ (настраиваемая)
+          Positioned.fill(
+            child: Image.asset(
+              _heroBgImage,
+              key: ValueKey(_heroBgImage),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [_Hero.bgTop, _Hero.bgBottom],
+                  ),
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _buildAvatar(hasProfile),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Питание',
-                                style: GoogleFonts.inter(
-                                    color: _Hero.textLow, fontSize: 12)),
-                            Text(
-                              isToday
-                                  ? 'Сегодня'
-                                  : _formatDateShort(_selectedDate),
-                              style: GoogleFonts.inter(
-                                color: _Hero.textHigh,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (s.entriesCount > 0) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 9, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.04),
-                            borderRadius: BorderRadius.circular(100),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.09)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.restaurant_menu_rounded,
-                                  color: Colors.white, size: 12),
-                              const SizedBox(width: 5),
-                              Text('${s.entriesCount}',
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    fontFeatures: const [
-                                      ui.FontFeature.tabularFigures()
-                                    ],
-                                  )),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                      ],
-                      _darkPill(
-                        icon: Icons.calendar_today_rounded,
-                        label: isToday ? 'ДАТА' : '→',
-                        onTap: _pickDate,
-                      ),
+          ),
+
+          // 2. ГРАДИЕНТНЫЙ OVERLAY ДЛЯ ЧИТАЕМОСТИ
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.45),
+                    Colors.black.withOpacity(0.15),
+                    Colors.black.withOpacity(0.65),
+                    _P.bg.withOpacity(0.0),
+                  ],
+                  stops: const [0.0, 0.3, 0.8, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. ПЛАВНЫЙ ПЕРЕХОД В ОСНОВНОЙ ФОН СТРАНИЦЫ
+          Positioned(
+            left: 0, right: 0, bottom: 0, height: 60,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _P.bg.withOpacity(0.0),
+                      _P.bg,
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
+                ),
+              ),
+            ),
+          ),
+
+          // 4. ПУЛЬСИРУЮЩЕЕ СВЕЧЕНИЕ
+          Positioned(
+            top: 60,
+            left: 60,
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _pulse,
+                builder: (_, __) {
+                  final o = _reduceMotion ? 0.18 : (0.14 + 0.08 * _pulse.value);
+                  return Container(
+                    width: 320,
+                    height: 320,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          accent.withOpacity(o),
+                          accent.withOpacity(0)
+                        ],
+                        stops: const [0.0, 1.0],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // 5. КОНТЕНТ
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildAvatar(hasProfile),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Semantics(
-                            label:
-                            '${s.calories.round()} из ${g.calories.round()} килокалорий, ${(rawPct * 100).round()} процентов',
-                            child: _Press(
-                              onLongPress: () => _showGoalsEditor(context),
-                              child: RepaintBoundary(
-                                child: SizedBox(
-                                  width: 140,
-                                  height: 140,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      _animBars(
-                                            (t) => CustomPaint(
-                                          size: const Size(140, 140),
-                                          painter: _HeroGaugePainter(
-                                            percent: pct * t,
-                                            color: accent,
-                                            glowColor: accent.withOpacity(0.55),
-                                            background:
-                                            Colors.white.withOpacity(0.08),
-                                          ),
-                                        ),
-                                      ),
-                                      Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            noMeals
-                                                ? '—'
-                                                : '${(rawPct * 100).round()}%',
-                                            style: GoogleFonts.inter(
-                                              color: _Hero.textHigh,
-                                              fontSize: 30,
-                                              fontWeight: FontWeight.w600,
-                                              letterSpacing: -1.6,
-                                              height: 1,
-                                              fontFeatures: [
-                                                ui.FontFeature.tabularFigures()
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 3),
-                                          Text('ЦЕЛИ',
-                                              style: GoogleFonts.inter(
-                                                color: _Hero.textLow,
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: 1.2,
-                                              )),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                          Text('Питание',
+                              style: GoogleFonts.inter(
+                                  color: _Hero.textLow,
+                                  fontSize: 12,
+                                  shadows: [
+                                    Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                  ])),
+                          Text(
+                            isToday
+                                ? 'Сегодня'
+                                : _formatDateShort(_selectedDate),
+                            style: GoogleFonts.inter(
+                              color: _Hero.textHigh,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.4,
+                              shadows: [
+                                Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 6)
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          _remainingChip(remaining, isOver, accent),
-                          const SizedBox(height: 6),
-                          _yesterdayChip(yDiff),
                         ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text('ДНЕВНОЙ БАЛАНС',
-                                style: GoogleFonts.inter(
-                                  color: _Hero.textLow,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
-                                )),
-                            const SizedBox(height: 6),
-                            Text(
-                              '${s.calories.round()}',
-                              maxLines: 1,
-                              style: GoogleFonts.inter(
-                                color: _Hero.textHigh,
-                                fontSize: 42,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -1.8,
-                                height: 1,
-                                fontFeatures: [ui.FontFeature.tabularFigures()],
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text('/ ${g.calories.round()} ккал',
-                                style: GoogleFonts.inter(
-                                  color: _Hero.textLow,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                )),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              width: 130,
-                              child: _animBars(
-                                    (t) => ClipRRect(
-                                  borderRadius: BorderRadius.circular(2),
-                                  child: LinearProgressIndicator(
-                                    value: pct * t,
-                                    minHeight: 2,
-                                    backgroundColor:
-                                    Colors.white.withOpacity(0.08),
-                                    valueColor: AlwaysStoppedAnimation(accent),
-                                  ),
+                    ),
+                    if (s.entriesCount > 0) ...[
+                      _glassPill(
+                        icon: Icons.restaurant_menu_rounded,
+                        label: '${s.entriesCount}',
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    _iconPill(
+                      icon: Icons.tune_rounded,
+                      onTap: _openBackgroundPicker,
+                    ),
+                    const SizedBox(width: 6),
+                    _darkPill(
+                      icon: Icons.calendar_today_rounded,
+                      label: isToday ? 'ДАТА' : '→',
+                      onTap: _pickDate,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Semantics(
+                          label:
+                          '${s.calories.round()} из ${g.calories.round()} килокалорий, ${(rawPct * 100).round()} процентов',
+                          child: _Press(
+                            onLongPress: () => _showGoalsEditor(context),
+                            child: RepaintBoundary(
+                              child: SizedBox(
+                                width: 140,
+                                height: 140,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    _animBars(
+                                          (t) => CustomPaint(
+                                        size: const Size(140, 140),
+                                        painter: _HeroGaugePainter(
+                                          percent: pct * t,
+                                          color: accent,
+                                          glowColor: accent.withOpacity(0.55),
+                                          background:
+                                          Colors.white.withOpacity(0.15),
+                                        ),
+                                      ),
+                                    ),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          noMeals
+                                              ? '—'
+                                              : '${(rawPct * 100).round()}%',
+                                          style: GoogleFonts.inter(
+                                            color: _Hero.textHigh,
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: -1.6,
+                                            height: 1,
+                                            fontFeatures: [
+                                              ui.FontFeature.tabularFigures()
+                                            ],
+                                            shadows: [
+                                              Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 6)
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text('ЦЕЛИ',
+                                            style: GoogleFonts.inter(
+                                              color: _Hero.textLow,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 1.2,
+                                              shadows: [
+                                                Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                              ],
+                                            )),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
+                        const SizedBox(height: 10),
+                        _remainingChip(remaining, isOver, accent),
+                        const SizedBox(height: 6),
+                        _yesterdayChip(yDiff),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('ДНЕВНОЙ БАЛАНС',
+                              style: GoogleFonts.inter(
+                                color: _Hero.textLow,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.2,
+                                shadows: [
+                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                ],
+                              )),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${s.calories.round()}',
+                            maxLines: 1,
+                            style: GoogleFonts.inter(
+                              color: _Hero.textHigh,
+                              fontSize: 42,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -1.8,
+                              height: 1,
+                              fontFeatures: [ui.FontFeature.tabularFigures()],
+                              shadows: [
+                                Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 8)
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text('/ ${g.calories.round()} ккал',
+                              style: GoogleFonts.inter(
+                                color: _Hero.textLow,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                shadows: [
+                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                ],
+                              )),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: 130,
+                            child: _animBars(
+                                  (t) => ClipRRect(
+                                borderRadius: BorderRadius.circular(2),
+                                child: LinearProgressIndicator(
+                                  value: pct * t,
+                                  minHeight: 2,
+                                  backgroundColor: Colors.white.withOpacity(0.15),
+                                  valueColor: AlwaysStoppedAnimation(accent),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.15)),
                   ),
-                  const SizedBox(height: 22),
-                  Row(
+                  child: Row(
                     children: [
                       _ringlet('Б', s.protein, g.protein, _P.greenDeep),
                       _ringlet('Ж', s.fat, g.fat, _P.peachDeep),
                       _ringlet('У', s.carbs, g.carbs, _P.yellowDeep),
-                      _ringlet('В', s.waterMl.toDouble(),
-                          g.waterMl.toDouble(), _P.skyDeep),
+                      _ringlet('В', s.waterMl.toDouble(), g.waterMl.toDouble(), _P.skyDeep),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
 
@@ -1149,8 +900,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.15),
+        color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1168,7 +920,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                 ? 'Превышено на ${remaining.abs().round()} ккал'
                 : '${remaining.round()} ккал осталось',
             style: GoogleFonts.inter(
-              color: accent,
+              color: Colors.white,
               fontSize: 11,
               fontWeight: FontWeight.w600,
               fontFeatures: [ui.FontFeature.tabularFigures()],
@@ -1184,7 +936,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
+          color: Colors.white.withOpacity(0.10),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -1201,7 +953,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: Colors.white.withOpacity(0.10),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1218,7 +970,7 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
           Text(
             '${d.diff} ккал vs вчера',
             style: GoogleFonts.inter(
-              color: color,
+              color: Colors.white,
               fontSize: 9,
               fontWeight: FontWeight.w600,
               fontFeatures: const [ui.FontFeature.tabularFigures()],
@@ -1236,30 +988,33 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       child: Column(
         children: [
           SizedBox(
-            width: 18,
-            height: 18,
+            width: 20,
+            height: 20,
             child: _animBars(
                   (t) => CustomPaint(
                 painter: _RingletPainter(
                   percent: pct * t,
                   color: color,
-                  background: Colors.white.withOpacity(0.10),
+                  background: Colors.white.withOpacity(0.15),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           Text(
             cur.round().toString(),
             style: GoogleFonts.inter(
               color: _Hero.textHigh,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               height: 1,
               fontFeatures: [ui.FontFeature.tabularFigures()],
+              shadows: [
+                Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+              ],
             ),
           ),
-          const SizedBox(height: 1),
+          const SizedBox(height: 2),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -1269,11 +1024,14 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.4,
+                    shadows: [
+                      Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                    ],
                   )),
               const SizedBox(width: 3),
               Text(pctLabel,
                   style: GoogleFonts.inter(
-                    color: _Hero.textLow.withOpacity(0.7),
+                    color: _Hero.textLow.withOpacity(0.8),
                     fontSize: 8,
                     fontWeight: FontWeight.w500,
                     fontFeatures: const [ui.FontFeature.tabularFigures()],
@@ -1293,8 +1051,11 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
         height: 44,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: _Hero.bgBottom,
-          border: Border.all(color: Colors.white.withOpacity(0.18)),
+          color: Colors.white.withOpacity(0.15),
+          border: Border.all(color: Colors.white.withOpacity(0.25)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8)
+          ],
         ),
         alignment: Alignment.center,
         child: Icon(
@@ -1302,6 +1063,45 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
           color: hasProfile ? _Hero.accent : _Hero.textLow,
           size: 22,
         ),
+      ),
+    );
+  }
+
+  Widget _glassPill({required IconData icon, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: Colors.white.withOpacity(0.20)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 12),
+          const SizedBox(width: 5),
+          Text(label,
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [ui.FontFeature.tabularFigures()],
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconPill({required IconData icon, required VoidCallback onTap}) {
+    return _Press(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: Colors.white.withOpacity(0.20)),
+        ),
+        child: Icon(icon, color: Colors.white, size: 14),
       ),
     );
   }
@@ -1316,9 +1116,9 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
+          color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: Colors.white.withOpacity(0.09)),
+          border: Border.all(color: Colors.white.withOpacity(0.20)),
         ),
         child: Row(
           children: [
@@ -1768,6 +1568,528 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
       _lastWaterAmount = amount;
       await provider.addWater(amount, date: _selectedDate);
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  HEALTH SECTION
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildHealthSection(BuildContext context) {
+    final wellness = context.watch<WellnessProvider>();
+    final seasonCount = wellness.seasonalNow.length;
+    final dailyProduct = wellness.productOfDay;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_padH, 26, _padH, 0),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_Hero.bgTop, _Hero.bgBottom],
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                top: -40,
+                right: -40,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 220,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          _P.greenDeep.withOpacity(0.22),
+                          _P.greenDeep.withOpacity(0.0),
+                        ],
+                        stops: const [0.0, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.10)),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.eco_rounded,
+                              color: _P.greenSoft, size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ЗДОРОВЬЕ И СЕЗОН',
+                                style: GoogleFonts.inter(
+                                  color: _P.greenSoft,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.4,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                seasonCount > 0
+                                    ? '$seasonCount продуктов в сезоне'
+                                    : 'Сезонные продукты',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  color: _Hero.textHigh,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _Press(
+                          onTap: () => _openKnowledge(context, 0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.06),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.10)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Знания',
+                                    style: GoogleFonts.inter(
+                                      color: _Hero.textHigh,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    )),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.arrow_forward_rounded,
+                                    color: Colors.white, size: 12),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+
+                    if (dailyProduct != null) ...[
+                      _Press(
+                        onTap: () {
+                          final k = dailyProduct;
+                          final product =
+                          _findProductByName(context, k.displayName);
+                          showProductKnowledgeSheet(
+                            context,
+                            product: product,
+                            knowledge: k,
+                            nutrition: context.read<NutritionProvider>(),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.04),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.08)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: _P.greenDeep.withOpacity(0.14),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                      color: _P.greenDeep.withOpacity(0.30)),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(dailyProduct.emoji,
+                                    style: const TextStyle(fontSize: 22)),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets
+                                              .symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: _P.greenDeep
+                                                .withOpacity(0.15),
+                                            borderRadius:
+                                            BorderRadius.circular(100),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Text('✨',
+                                                  style: TextStyle(
+                                                      fontSize: 9)),
+                                              const SizedBox(width: 3),
+                                              Text('ПРОДУКТ ДНЯ',
+                                                  style: GoogleFonts.inter(
+                                                    color: _P.greenSoft,
+                                                    fontSize: 9,
+                                                    fontWeight:
+                                                    FontWeight.w700,
+                                                    letterSpacing: 0.8,
+                                                  )),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      dailyProduct.displayName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        color: _Hero.textHigh,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -0.3,
+                                      ),
+                                    ),
+                                    if (dailyProduct.benefits.isNotEmpty)
+                                      Text(
+                                        dailyProduct.benefits
+                                            .take(2)
+                                            .map((b) => _benefitRu(b))
+                                            .join(' · '),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.inter(
+                                          color: _Hero.textLow,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded,
+                                  color: Colors.white54, size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
+                    Row(
+                      children: [
+                        const Icon(Icons.eco_rounded,
+                            color: _P.greenSoft, size: 13),
+                        const SizedBox(width: 6),
+                        Text(
+                          'СЕЗОН СЕЙЧАС',
+                          style: GoogleFonts.inter(
+                            color: _P.greenSoft,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        SeasonPill(
+                            month: wellness.currentMonth, dark: true),
+                        const Spacer(),
+                        _Press(
+                          onTap: () => _openKnowledge(context, 0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Все',
+                                  style: GoogleFonts.inter(
+                                    color: _Hero.textLow,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  )),
+                              const Icon(Icons.chevron_right_rounded,
+                                  color: _Hero.textLow, size: 14),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    _darkSeasonalStrip(context),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _benefitRu(HealthBenefit b) {
+    switch (b) {
+      case HealthBenefit.immunity:
+        return 'иммунитет';
+      case HealthBenefit.skin:
+        return 'кожа';
+      case HealthBenefit.heart:
+        return 'сердце';
+      case HealthBenefit.digestion:
+        return 'пищеварение';
+      case HealthBenefit.energy:
+        return 'энергия';
+      case HealthBenefit.bones:
+        return 'кости';
+      case HealthBenefit.brain:
+        return 'мозг';
+      case HealthBenefit.eyes:
+        return 'зрение';
+      case HealthBenefit.sleep:
+        return 'сон';
+      case HealthBenefit.weight:
+        return 'вес';
+    }
+  }
+
+  FoodProduct? _findProductByName(BuildContext context, String name) {
+    final provider = context.read<NutritionProvider>();
+    try {
+      return provider.products.firstWhere((p) =>
+      p.name.toLowerCase() == name.toLowerCase() ||
+          p.name.toLowerCase().contains(name.toLowerCase()));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _darkSeasonalStrip(BuildContext context) {
+    final wellness = context.watch<WellnessProvider>();
+    final nutrition = context.watch<NutritionProvider>();
+    final ending = wellness.endingThisMonth.take(6).toList();
+    final starting = wellness.startingNextMonth.take(6).toList();
+    final seasonal = wellness.seasonalNow.take(8).toList();
+    final month = wellness.currentMonth;
+
+    if (seasonal.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          'В этом месяце нет сезонных продуктов',
+          style: GoogleFonts.inter(
+            color: _Hero.textLow,
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SeasonMonthsBar(
+          months: metaForMonth(month).months,
+          currentMonth: month,
+          accent: metaForMonth(month).accent,
+          trackColor: Colors.white.withOpacity(0.08),
+          height: 4,
+          showLabels: true,
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 108,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: seasonal.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
+              final k = seasonal[i];
+              FoodProduct? product;
+              try {
+                product = nutrition.products.firstWhere((p) =>
+                p.id == k.key ||
+                    p.name.toLowerCase().contains(
+                        k.displayName.toLowerCase()));
+              } catch (_) {}
+
+              final nextMonth = month == 12 ? 1 : month + 1;
+              final isEnding = !k.seasonMonths.contains(nextMonth);
+
+              return _Press(
+                onTap: () {
+                  showProductKnowledgeSheet(
+                    context,
+                    product: product,
+                    knowledge: k,
+                    nutrition: nutrition,
+                  );
+                },
+                child: Container(
+                  width: 112,
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isEnding
+                          ? _P.peachDeep.withOpacity(0.35)
+                          : Colors.white.withOpacity(0.08),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: _P.greenDeep.withOpacity(0.14),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(k.emoji,
+                                style: const TextStyle(fontSize: 16)),
+                          ),
+                          const Spacer(),
+                          if (isEnding)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: _P.peachDeep.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'уходит',
+                                style: GoogleFonts.inter(
+                                  color: _P.peachSoft,
+                                  fontSize: 7,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Text(
+                        k.displayName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: _Hero.textHigh,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                          letterSpacing: -0.1,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      SeasonMonthsBar(
+                        months: k.seasonMonths,
+                        currentMonth: month,
+                        accent: _P.greenDeep,
+                        trackColor: Colors.white.withOpacity(0.10),
+                        height: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        if (ending.isNotEmpty || starting.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (ending.isNotEmpty)
+                _seasonNote(
+                  icon: Icons.schedule_rounded,
+                  color: _P.peachDeep,
+                  label:
+                  '${ending.length} уходит: ${ending.first.displayName}',
+                ),
+              if (starting.isNotEmpty)
+                _seasonNote(
+                  icon: Icons.upcoming_rounded,
+                  color: _P.greenDeep,
+                  label:
+                  '${starting.length} скоро: ${starting.first.displayName}',
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _seasonNote({
+    required IconData icon,
+    required Color color,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: color,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════

@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/fitness/database/fitness_database.dart';
 import 'features/fitness/providers/fitness_provider.dart';
@@ -10,6 +11,7 @@ import 'features/fitness/providers/pedometer_provider.dart';
 import 'features/nutrition/providers/nutrition_provider.dart';
 import 'features/nutrition/providers/wellness_provider.dart';
 import 'features/nutrition/providers/color_settings_provider.dart';
+import 'features/nutrition/ui/widgets/season_vine_style.dart';
 import 'home_screen.dart';
 
 void main() async {
@@ -19,6 +21,9 @@ void main() async {
   // await FitnessDatabase().deleteDatabaseFile();
 
   await _requestPermissions();
+
+  // ─── Стиль сезонной карточки: восстановить из хранилища ───
+  await _initSeasonVineStyle();
 
   final nutrition = NutritionProvider();
   await nutrition.init();
@@ -45,6 +50,29 @@ void main() async {
       child: const ZalLifeApp(),
     ),
   );
+}
+
+/// Восстанавливает сохранённый стиль и подписывается на автосохранение.
+Future<void> _initSeasonVineStyle() async {
+  const key = 'season_vine_style';
+  final prefs = await SharedPreferences.getInstance();
+
+  // 1. Восстановить
+  final saved = prefs.getString(key);
+  if (saved != null) {
+    final match = SeasonVineStyle.values
+        .where((s) => s.name == saved)
+        .cast<SeasonVineStyle?>()
+        .firstWhere((_) => true, orElse: () => null);
+    if (match != null) {
+      SeasonVineStyleController.current.value = match;
+    }
+  }
+
+  // 2. Сохранять при каждом переключении
+  SeasonVineStyleController.current.addListener(() {
+    prefs.setString(key, SeasonVineStyleController.current.value.name);
+  });
 }
 
 Future<void> _requestPermissions() async {

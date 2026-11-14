@@ -15,6 +15,19 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
 
+    <!-- ─── КАМЕРА И ГАЛЕРЕЯ (для image_picker) ─── -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Android 13+ (API 33+) — новая модель медиа-разрешений -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- Android 12 и ниже (API ≤ 32) — старый способ -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <!-- Опционально: работа на устройствах без камеры -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
+    <!-- ─────────────────────────────────────────── -->
+
     <application
         android:label="zal_life"
         android:name="${applicationName}"
@@ -60,6 +73,10 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- image_picker: проверка доступности камеры -->
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE"/>
         </intent>
     </queries>
 </manifest>

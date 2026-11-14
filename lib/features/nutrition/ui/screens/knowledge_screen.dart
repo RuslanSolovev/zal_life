@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/nutrition_models.dart' show FoodProduct;
 import '../../models/wellness_models.dart';
@@ -131,6 +132,29 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   late int _prevTab = widget.initialTab;
   final _scrollController = ScrollController();
 
+  // 🆕 фон hero
+  String _heroBgImage = 'assets/images/nature_hero2.jpg';
+
+  static const _heroBackgrounds = [
+    'assets/images/nature_hero.jpg',
+    'assets/images/nature_hero2.jpg',
+    'assets/images/nature_hero3.jpg',
+    'assets/images/nature_hero4.jpg',
+    'assets/images/nature_hero5.jpg',
+    'assets/images/nature_hero6.jpg',
+    'assets/images/nature_hero7.jpg',
+  ];
+
+  static const _heroBgLabels = {
+    'assets/images/nature_hero.jpg': 'Тропа',
+    'assets/images/nature_hero5.jpg': 'Лес',
+    'assets/images/nature_hero6.jpg': 'Горы',
+    'assets/images/nature_hero7.jpg': 'Закат1',
+    'assets/images/nature_hero2.jpg': 'Закат2',
+    'assets/images/nature_hero3.jpg': 'Закат3',
+    'assets/images/nature_hero4.jpg': 'Закат4',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -141,6 +165,16 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
       systemNavigationBarColor: _P.bg,
       systemNavigationBarIconBrightness: Brightness.dark,
     ));
+    _loadHeroBg();
+  }
+
+  Future<void> _loadHeroBg() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _heroBgImage = prefs.getString('knowledge_hero_bg') ??
+          'assets/images/nature_hero2.jpg';
+    });
   }
 
   @override
@@ -156,6 +190,201 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
       _prevTab = _activeTab;
       _activeTab = i;
     });
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  BACKGROUND PICKER
+  // ═════════════════════════════════════════════════════════
+  Future<void> _openBackgroundPicker() async {
+    HapticFeedback.selectionClick();
+    final topInset = MediaQuery.paddingOf(context).top;
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        decoration: const BoxDecoration(
+          color: _P.bg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: _P.divider,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: _P.springSoft,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.wallpaper_rounded,
+                        color: _P.springDeep, size: 19),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Фон экрана знаний',
+                            style: _T.sans(
+                              size: 18,
+                              weight: FontWeight.w700,
+                              color: _P.ink,
+                              tracking: -0.4,
+                            )),
+                        const SizedBox(height: 2),
+                        Text('Выберите картинку для шапки',
+                            style: _T.sans(
+                              size: 12,
+                              color: _P.textMuted,
+                            )),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.15,
+                children: _heroBackgrounds.map((path) {
+                  final isSelected = path == _heroBgImage;
+                  final label = _heroBgLabels[path] ?? '';
+                  return _Press(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.pop(ctx, path);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isSelected
+                              ? _P.springDeep
+                              : Colors.white,
+                          width: isSelected ? 3 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                          BoxShadow(
+                            color: _P.springDeep.withOpacity(0.25),
+                            blurRadius: 12,
+                            spreadRadius: -2,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                            : null,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.asset(
+                            path,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [_Hero.bgTop, _Hero.bgBottom],
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                  Icons.image_not_supported_rounded,
+                                  color: Colors.white.withOpacity(0.5),
+                                  size: 28),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.0),
+                                    Colors.black.withOpacity(0.55),
+                                  ],
+                                  stops: const [0.4, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 10,
+                            bottom: 10,
+                            right: 10,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(label,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: _T.sans(
+                                        size: 13,
+                                        weight: FontWeight.w700,
+                                        color: Colors.white,
+                                        tracking: -0.2,
+                                      )),
+                                ),
+                                if (isSelected)
+                                  Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Icon(Icons.check_rounded,
+                                        color: _P.springDeep, size: 14),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (result != null && result != _heroBgImage) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('knowledge_hero_bg', result);
+      if (mounted) setState(() => _heroBgImage = result);
+      HapticFeedback.lightImpact();
+    }
+    // topInset read to suppress unused warning, safe to ignore
+    assert(topInset >= 0);
   }
 
   @override
@@ -267,7 +496,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  HERO — с прогрессом сезона
+  //  HERO — с прогрессом сезона + настраиваемым фоном
   // ═══════════════════════════════════════════════════════════════
   Widget _buildHero(WellnessProvider wellness) {
     final seasonal = wellness.seasonalNow.length;
@@ -286,16 +515,45 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
       child: ClipPath(
         clipper: _OrganicHeroClipper(),
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_Hero.bgTop, _Hero.bgBottom],
-            ),
-          ),
+          // Фон подложен отдельными слоями ниже
+          color: _Hero.bgBottom,
           child: Stack(
             children: [
-              // Sun glow
+              // 1. ФОТОГРАФИЯ
+              Positioned.fill(
+                child: Image.asset(
+                  _heroBgImage,
+                  key: ValueKey(_heroBgImage),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [_Hero.bgTop, _Hero.bgBottom],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // 2. ТЁМНЫЙ OVERLAY ДЛЯ ЧИТАЕМОСТИ
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _Hero.bgTop.withOpacity(0.78),
+                        _Hero.bgBottom.withOpacity(0.90),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // 3. Sun glow
               Positioned(
                 top: -80,
                 right: -80,
@@ -315,7 +573,8 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                   ),
                 ),
               ),
-              // Second glow
+
+              // 4. Second glow
               Positioned(
                 top: 200,
                 left: -100,
@@ -335,6 +594,8 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                   ),
                 ),
               ),
+
+              // 5. КОНТЕНТ
               Padding(
                 padding: EdgeInsets.fromLTRB(24, topInset + 8, 24, 40),
                 child: Column(
@@ -357,6 +618,18 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                           ),
                         ),
                         const Spacer(),
+                        _Press(
+                          onTap: _openBackgroundPicker,
+                          child: _glassPill(
+                            child: const SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: Icon(Icons.tune_rounded,
+                                  color: Colors.white, size: 18),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         _seasonPill(month, palette),
                       ],
                     ),
@@ -383,7 +656,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                         )),
                     const SizedBox(height: 18),
 
-                    // 🆕 Прогресс месяца
+                    // Прогресс месяца
                     _seasonProgress(progress, daysLeft, palette),
                     const SizedBox(height: 18),
 
@@ -421,7 +694,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     );
   }
 
-  // 🆕 Полоса прогресса сезона
+  // Полоса прогресса сезона
   Widget _seasonProgress(double progress, int daysLeft, _SeasonPalette palette) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -461,7 +734,6 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          // Прогресс-бар
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: Stack(
@@ -765,8 +1037,7 @@ class _SeasonTab extends StatefulWidget {
 
 class _SeasonTabState extends State<_SeasonTab>
     with SingleTickerProviderStateMixin {
-  // 🆕 Фильтр по категориям
-  int _filter = 0; // 0=Все, 1=Фрукты, 2=Овощи, 3=Зелень
+  int _filter = 0;
   final _filterLabels = ['Все', 'Фрукты', 'Овощи', 'Зелень'];
 
   late final AnimationController _entrance;
@@ -796,7 +1067,6 @@ class _SeasonTabState extends State<_SeasonTab>
     return items.where((k) {
       final key = k.key.toLowerCase();
       if (_filter == 1) {
-        // Фрукты и ягоды
         return key.contains('apple') ||
             key.contains('pear') ||
             key.contains('plum') ||
@@ -834,7 +1104,6 @@ class _SeasonTabState extends State<_SeasonTab>
             key.contains('avocado');
       }
       if (_filter == 2) {
-        // Овощи и корнеплоды
         return key.contains('cucumber') ||
             key.contains('tomato') ||
             key.contains('pepper') ||
@@ -864,7 +1133,6 @@ class _SeasonTabState extends State<_SeasonTab>
             key.contains('asparagus');
       }
       if (_filter == 3) {
-        // Зелень и травы
         return key.contains('spinach') ||
             key.contains('lettuce') ||
             key.contains('parsley') ||
@@ -961,7 +1229,6 @@ class _SeasonTabState extends State<_SeasonTab>
 
         const SizedBox(height: 10),
 
-        // 🆕 Фильтр-чипы
         _buildFilterChips(palette),
 
         const SizedBox(height: 14),
@@ -982,7 +1249,6 @@ class _SeasonTabState extends State<_SeasonTab>
     );
   }
 
-  // 🆕 Фильтр-чипы
   Widget _buildFilterChips(_SeasonPalette palette) {
     return SizedBox(
       height: 36,
@@ -1094,7 +1360,6 @@ class _IdentityCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Topographic texture
             Positioned(
               right: -30,
               top: -20,
@@ -1105,7 +1370,6 @@ class _IdentityCard extends StatelessWidget {
                 ),
               ),
             ),
-            // Second texture
             Positioned(
               left: -40,
               bottom: -30,
@@ -1196,7 +1460,6 @@ class _IdentityCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                // 🆕 Мини-статы внизу
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -1515,7 +1778,6 @@ class _BentoGrid extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header row
                 Row(
                   children: [
                     Container(
@@ -1568,7 +1830,6 @@ class _BentoGrid extends StatelessWidget {
                   ],
                 ),
                 const Spacer(),
-                // Название
                 Text(
                   k.displayName,
                   maxLines: 1,
@@ -1581,7 +1842,6 @@ class _BentoGrid extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                // Бенефиты
                 if (k.benefits.isNotEmpty)
                   Text(
                     k.benefits
@@ -1704,7 +1964,7 @@ class _ExploreCTA extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  TAB 2 — ВИТАМИНЫ (обновлённый)
+//  TAB 2 — ВИТАМИНЫ
 // ═══════════════════════════════════════════════════════════════════
 class _NutrientsTab extends StatelessWidget {
   final WellnessProvider wellness;
@@ -1723,7 +1983,6 @@ class _NutrientsTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 🆕 Заголовок статистики
         _NutrientsOverview(
           totalNutrients: kinds.length,
           totalProducts: wellness.nutrientCounts.values.fold(
@@ -1854,7 +2113,6 @@ class _NutrientTileState extends State<_NutrientTile>
       ),
       child: Column(
         children: [
-          // 🆕 Цветная верхняя полоска
           Container(
             height: 3,
             decoration: BoxDecoration(
@@ -1945,7 +2203,6 @@ class _NutrientTileState extends State<_NutrientTile>
                       ),
                     ],
                   ),
-                  // 🆕 Прогресс-бар
                   const SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(2),
@@ -2075,7 +2332,6 @@ class _BenefitTile extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // 🆕 Цветная шапка с градиентом
           Container(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
             decoration: BoxDecoration(
@@ -2146,7 +2402,6 @@ class _BenefitTile extends StatelessWidget {
               ],
             ),
           ),
-          // Продукты
           Padding(
             padding: const EdgeInsets.all(12),
             child: products.isEmpty
@@ -2206,10 +2461,7 @@ class _BenefitTile extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  TAB 4 — ОСТОРОЖНО (сгруппировано по severity)
-// ═══════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════
-//  TAB 4 — ОСТОРОЖНО (сгруппировано по severity)
+//  TAB 4 — ОСТОРОЖНО
 // ═══════════════════════════════════════════════════════════════════
 class _ContraTab extends StatelessWidget {
   final WellnessProvider wellness;
@@ -2220,7 +2472,6 @@ class _ContraTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = wellness.productsWithContra;
 
-    // Группировка по max severity
     final warning = <ProductKnowledge>[];
     final caution = <ProductKnowledge>[];
     final info = <ProductKnowledge>[];
@@ -2241,7 +2492,6 @@ class _ContraTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Дисклеймер
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -2273,7 +2523,6 @@ class _ContraTab extends StatelessWidget {
           ),
         ),
 
-        // Группы
         if (warning.isNotEmpty) ...[
           const SizedBox(height: 20),
           _severityHeader(
@@ -2285,7 +2534,7 @@ class _ContraTab extends StatelessWidget {
           const SizedBox(height: 10),
           ...warning.map((k) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _contraCard(context, k), // ← context передан
+            child: _contraCard(context, k),
           )),
         ],
 
@@ -2300,7 +2549,7 @@ class _ContraTab extends StatelessWidget {
           const SizedBox(height: 10),
           ...caution.map((k) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _contraCard(context, k), // ← context передан
+            child: _contraCard(context, k),
           )),
         ],
 
@@ -2315,7 +2564,7 @@ class _ContraTab extends StatelessWidget {
           const SizedBox(height: 10),
           ...info.map((k) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _contraCard(context, k), // ← context передан
+            child: _contraCard(context, k),
           )),
         ],
       ],
@@ -2365,7 +2614,6 @@ class _ContraTab extends StatelessWidget {
     );
   }
 
-  // 🔧 ДОБАВЛЕН ПАРАМЕТР context
   Widget _contraCard(BuildContext context, ProductKnowledge k) {
     return _Press(
       onTap: () => showProductKnowledgeSheet(
@@ -2652,7 +2900,7 @@ class _MicroMonthBar extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  SECTION HEADER — с градиентной линией
+//  SECTION HEADER
 // ═══════════════════════════════════════════════════════════════════
 class _SectionHeader extends StatelessWidget {
   final IconData icon;

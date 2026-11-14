@@ -81,6 +81,31 @@ class _FitnessDashboardState extends State<FitnessDashboard>
   String _profileName = 'Атлет';
   double _savedWeight = 0;
 
+  // 🆕 Настраиваемый фон hero
+  String _heroBgImage = 'assets/images/nature_hero4.jpg';
+
+  static const _heroBackgrounds = [
+    'assets/images/nature_hero.jpg',
+    'assets/images/nature_hero2.jpg',
+    'assets/images/nature_hero3.jpg',
+    'assets/images/nature_hero4.jpg',
+    'assets/images/nature_hero5.jpg',
+    'assets/images/nature_hero6.jpg',
+    'assets/images/nature_hero7.jpg',
+    'assets/images/nature_hero8.jpg',
+  ];
+
+  static const _heroBgLabels = {
+    'assets/images/nature_hero.jpg': 'Тропа',
+    'assets/images/nature_hero5.jpg': 'Лес',
+    'assets/images/nature_hero6.jpg': 'Горы',
+    'assets/images/nature_hero7.jpg': 'Закат1',
+    'assets/images/nature_hero2.jpg': 'Закат2',
+    'assets/images/nature_hero3.jpg': 'Закат3',
+    'assets/images/nature_hero4.jpg': 'Закат4',
+    'assets/images/nature_hero8.jpg': 'Закат4',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -98,7 +123,196 @@ class _FitnessDashboardState extends State<FitnessDashboard>
       _avatarEmoji = prefs.getString('avatar_emoji') ?? '💪';
       _profileName = prefs.getString('profile_name') ?? 'Александр';
       _savedWeight = prefs.getDouble('profile_weight') ?? 0;
+      _heroBgImage = prefs.getString('fitness_hero_bg') ??
+          'assets/images/nature_hero4.jpg';
     });
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  BACKGROUND PICKER
+  // ═════════════════════════════════════════════════════════
+  Future<void> _openBackgroundPicker() async {
+    HapticFeedback.selectionClick();
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        decoration: const BoxDecoration(
+          color: _P.bg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: _P.divider,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: _P.greenSoft,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.wallpaper_rounded,
+                        color: _P.greenDeep, size: 19),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Фон экрана фитнеса',
+                            style: GoogleFonts.inter(
+                                color: _P.text,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.3)),
+                        const SizedBox(height: 2),
+                        Text('Выберите картинку для шапки',
+                            style: GoogleFonts.inter(
+                                color: _P.textMuted, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.15,
+                children: _heroBackgrounds.map((path) {
+                  final isSelected = path == _heroBgImage;
+                  final label = _heroBgLabels[path] ?? '';
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.pop(ctx, path);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isSelected
+                              ? _P.greenDeep
+                              : Colors.white,
+                          width: isSelected ? 3 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                          BoxShadow(
+                            color: _P.greenDeep.withOpacity(0.25),
+                            blurRadius: 12,
+                            spreadRadius: -2,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                            : null,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.asset(
+                            path,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [_Hero.bgTop, _Hero.bgBottom],
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                  Icons.image_not_supported_rounded,
+                                  color: Colors.white.withOpacity(0.5),
+                                  size: 28),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.0),
+                                    Colors.black.withOpacity(0.55),
+                                  ],
+                                  stops: const [0.4, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 10,
+                            bottom: 10,
+                            right: 10,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(label,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700)),
+                                ),
+                                if (isSelected)
+                                  Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Icon(Icons.check_rounded,
+                                        color: _P.greenDeep, size: 14),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (result != null && result != _heroBgImage) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('fitness_hero_bg', result);
+      if (mounted) setState(() => _heroBgImage = result);
+      HapticFeedback.lightImpact();
+    }
   }
 
   @override
@@ -282,7 +496,7 @@ class _FitnessDashboardState extends State<FitnessDashboard>
   }
 
   // ═════════════════════════════════════════════════════════
-  //  HERO SECTION (Dark Mode)
+  //  HERO SECTION (Nature Premium with Photo)
   // ═════════════════════════════════════════════════════════
   Widget _buildPowerHero(FitnessProvider provider, UserFitnessProfile? profile,
       Map<String, dynamic> stats) {
@@ -308,238 +522,339 @@ class _FitnessDashboardState extends State<FitnessDashboard>
         bottomLeft: Radius.circular(32),
         bottomRight: Radius.circular(32),
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [_Hero.bgTop, _Hero.bgBottom],
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 100,
-              left: 100,
-              child: IgnorePointer(
-                child: Container(
-                  width: 320,
-                  height: 310,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        _Hero.accent.withOpacity(0.23),
-                        _Hero.accent.withOpacity(0.0),
-                      ],
-                      stops: const [0.0, 1.0],
-                    ),
+      child: Stack(
+        children: [
+          // 1. ФОТОГРАФИЯ (динамический фон)
+          Positioned.fill(
+            child: Image.asset(
+              _heroBgImage,
+              key: ValueKey(_heroBgImage),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [_Hero.bgTop, _Hero.bgBottom],
                   ),
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _buildPowerAvatar(provider),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+
+          // 2. ГРАДИЕНТНЫЙ OVERLAY ДЛЯ ЧИТАЕМОСТИ
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.45),
+                    Colors.black.withOpacity(0.15),
+                    Colors.black.withOpacity(0.65),
+                    _P.bg.withOpacity(0.0),
+                  ],
+                  stops: const [0.0, 0.3, 0.8, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. ПЛАВНЫЙ ПЕРЕХОД В ФОН СТРАНИЦЫ
+          Positioned(
+            left: 0, right: 0, bottom: 0, height: 60,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _P.bg.withOpacity(0.0),
+                      _P.bg,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 4. РАДИАЛЬНОЕ СВЕЧЕНИЕ
+          Positioned(
+            top: 100,
+            left: 100,
+            child: IgnorePointer(
+              child: Container(
+                width: 320,
+                height: 310,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      _Hero.accent.withOpacity(0.23),
+                      _Hero.accent.withOpacity(0.0),
+                    ],
+                    stops: const [0.0, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 5. КОНТЕНТ
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildPowerAvatar(provider),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Доброе утро,',
+                              style: GoogleFonts.inter(
+                                  color: _Hero.textLow,
+                                  fontSize: 12,
+                                  shadows: [
+                                    Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                  ])),
+                          Text(displayName,
+                              style: GoogleFonts.inter(
+                                  color: _Hero.textHigh,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.4,
+                                  shadows: [
+                                    Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 6)
+                                  ])),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _showEditWeightDialog(profile),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.25),
+                              width: 1),
+                        ),
+                        child: Row(
                           children: [
-                            Text('Доброе утро,',
-                                style: GoogleFonts.inter(
-                                    color: _Hero.textLow, fontSize: 12)),
-                            Text(displayName,
-                                style: GoogleFonts.inter(
-                                    color: _Hero.textHigh,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.4)),
+                            const Icon(Icons.monitor_weight_outlined,
+                                color: Colors.white, size: 14),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${weight.toStringAsFixed(1)} кг',
+                              style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500),
+                            ),
                           ],
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () => _showEditWeightDialog(profile),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 9),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.04),
-                            borderRadius: BorderRadius.circular(100),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.09),
-                                width: 1),
+                    ),
+                    const SizedBox(width: 6),
+                    // 🆕 Кнопка настроек фона
+                    GestureDetector(
+                      onTap: _openBackgroundPicker,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.25),
+                              width: 1),
+                        ),
+                        child: const Icon(Icons.tune_rounded,
+                            color: Colors.white, size: 14),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 130,
+                      height: 130,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 130,
+                            height: 130,
+                            child: CircularProgressIndicator(
+                              value: (streak / 30).clamp(0.0, 1.0),
+                              strokeWidth: 8,
+                              backgroundColor: Colors.white.withOpacity(0.15),
+                              valueColor: const AlwaysStoppedAnimation(
+                                  _Hero.accent),
+                            ),
                           ),
-                          child: Row(
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.monitor_weight_outlined,
-                                  color: Colors.white, size: 14),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${weight.toStringAsFixed(1)} кг',
-                                style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500),
+                              Text('$streak',
+                                  style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: 42,
+                                      fontWeight: FontWeight.w500,
+                                      letterSpacing: -2,
+                                      height: 1,
+                                      shadows: [
+                                        Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 6)
+                                      ])),
+                              Text('дней подряд',
+                                  style: GoogleFonts.inter(
+                                      color: _Hero.textLow,
+                                      fontSize: 10,
+                                      shadows: [
+                                        Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                      ])),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Text('ЭТА НЕДЕЛЯ',
+                                        style: GoogleFonts.inter(
+                                            color: _Hero.textLow,
+                                            fontSize: 10,
+                                            letterSpacing: 1.2,
+                                            shadows: [
+                                              Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                            ])),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                      textBaseline:
+                                      TextBaseline.alphabetic,
+                                      children: [
+                                        Text('$weekWorkouts',
+                                            style: GoogleFonts.inter(
+                                                color: Colors.white,
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.w500,
+                                                letterSpacing: -1,
+                                                shadows: [
+                                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                                ])),
+                                        const SizedBox(width: 4),
+                                        Text('/ 4',
+                                            style: GoogleFonts.inter(
+                                                color: _Hero.textLow,
+                                                fontSize: 14,
+                                                shadows: [
+                                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                                ])),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: Colors.white.withOpacity(0.15)),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Text('ОБЪЕМ',
+                                        style: GoogleFonts.inter(
+                                            color: _Hero.textLow,
+                                            fontSize: 10,
+                                            letterSpacing: 1.2,
+                                            shadows: [
+                                              Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                            ])),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                      textBaseline:
+                                      TextBaseline.alphabetic,
+                                      children: [
+                                        Text(_formatVolume(volume),
+                                            style: GoogleFonts.inter(
+                                                color: Colors.white,
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.w500,
+                                                letterSpacing: -1,
+                                                shadows: [
+                                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                                ])),
+                                        const SizedBox(width: 4),
+                                        Text('кг',
+                                            style: GoogleFonts.inter(
+                                                color: _Hero.textLow,
+                                                fontSize: 14,
+                                                shadows: [
+                                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                                ])),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          Text('Ещё 2 дня до нового достижения',
+                              style: GoogleFonts.inter(
+                                  color: const Color(0xFFC5BBB3),
+                                  fontSize: 11,
+                                  shadows: [
+                                    Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                                  ])),
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 130,
-                        height: 130,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 130,
-                              height: 130,
-                              child: CircularProgressIndicator(
-                                value: (streak / 30).clamp(0.0, 1.0),
-                                strokeWidth: 8,
-                                backgroundColor:
-                                Colors.white.withOpacity(0.06),
-                                valueColor: const AlwaysStoppedAnimation(
-                                    _Hero.accent),
-                              ),
-                            ),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('$streak',
-                                    style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontSize: 42,
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: -2,
-                                        height: 1)),
-                                Text('дней подряд',
-                                    style: GoogleFonts.inter(
-                                        color: _Hero.textLow, fontSize: 10)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                    children: [
-                                      Text('ЭТА НЕДЕЛЯ',
-                                          style: GoogleFonts.inter(
-                                              color: _Hero.textLow,
-                                              fontSize: 10,
-                                              letterSpacing: 1.2)),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.baseline,
-                                        textBaseline:
-                                        TextBaseline.alphabetic,
-                                        children: [
-                                          Text('$weekWorkouts',
-                                              style: GoogleFonts.inter(
-                                                  color: Colors.white,
-                                                  fontSize: 28,
-                                                  fontWeight: FontWeight.w500,
-                                                  letterSpacing: -1)),
-                                          const SizedBox(width: 4),
-                                          Text('/ 4',
-                                              style: GoogleFonts.inter(
-                                                  color: _Hero.textLow,
-                                                  fontSize: 14)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                    width: 1,
-                                    height: 40,
-                                    color: Colors.white.withOpacity(0.1)),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                    children: [
-                                      Text('ОБЪЕМ',
-                                          style: GoogleFonts.inter(
-                                              color: _Hero.textLow,
-                                              fontSize: 10,
-                                              letterSpacing: 1.2)),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.baseline,
-                                        textBaseline:
-                                        TextBaseline.alphabetic,
-                                        children: [
-                                          Text(_formatVolume(volume),
-                                              style: GoogleFonts.inter(
-                                                  color: Colors.white,
-                                                  fontSize: 28,
-                                                  fontWeight: FontWeight.w500,
-                                                  letterSpacing: -1)),
-                                          const SizedBox(width: 4),
-                                          Text('кг',
-                                              style: GoogleFonts.inter(
-                                                  color: _Hero.textLow,
-                                                  fontSize: 14)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Text('Ещё 2 дня до нового достижения',
-                                style: GoogleFonts.inter(
-                                    color: const Color(0xFFC5BBB3),
-                                    fontSize: 11)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                          child: _buildHeroChip(
-                              '⚡', '${_formatVolume(volume)} кг')),
-                      const SizedBox(width: 8),
-                      Expanded(child: _buildHeroChip('📏', '12,6 км')),
-                      const SizedBox(width: 8),
-                      Expanded(child: _buildHeroChip('🥊', '24 раунда')),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _buildHeroChip(
+                            '⚡', '${_formatVolume(volume)} кг')),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildHeroChip('📏', '12,6 км')),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildHeroChip('🥊', '24 раунда')),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -551,9 +866,12 @@ class _FitnessDashboardState extends State<FitnessDashboard>
         width: 46,
         height: 46,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.19), width: 1),
-          color: _Hero.bgBottom,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
+            color: Colors.white.withOpacity(0.15),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8)
+            ]
         ),
         alignment: Alignment.center,
         child: Text(_avatarEmoji, style: const TextStyle(fontSize: 22)),
@@ -565,9 +883,9 @@ class _FitnessDashboardState extends State<FitnessDashboard>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withOpacity(0.10),
         borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: Colors.white.withOpacity(0.06), width: 1),
+        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -576,7 +894,10 @@ class _FitnessDashboardState extends State<FitnessDashboard>
           const SizedBox(width: 6),
           Text(text,
               style: GoogleFonts.inter(
-                  color: const Color(0xFFDCDDE0), fontSize: 11)),
+                  color: const Color(0xFFDCDDE0), fontSize: 11,
+                  shadows: [
+                    Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
+                  ])),
         ],
       ),
     );
