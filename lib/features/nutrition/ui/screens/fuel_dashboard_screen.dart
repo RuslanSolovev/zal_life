@@ -531,12 +531,16 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
               _sectionLabel('СЕГОДНЯ', Icons.wb_sunny_outlined),
               SliverToBoxAdapter(child: _buildMacroCard(summary, goals)),
               const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+// 🆕 НОВАЯ КАРТОЧКА ПЕРЕХОДА В КУХНЮ (над водой)
+              SliverToBoxAdapter(child: _buildKitchenHubCard(provider)),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 14)),
               SliverToBoxAdapter(child: _buildWaterCard(provider, goals)),
 
               if (visibleRecs.isNotEmpty) ...[
                 _sectionLabel('СОВЕТЫ', Icons.auto_awesome_outlined),
-                SliverToBoxAdapter(
-                    child: _buildRecommendations(visibleRecs, dayKey)),
+                SliverToBoxAdapter(child: _buildRecommendations(visibleRecs, dayKey)),
               ],
 
               SliverToBoxAdapter(
@@ -764,24 +768,6 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
                       ),
                       const SizedBox(width: 6),
                     ],
-
-                    // 🆕 КНОПКА КУХНИ
-                    _iconPill(
-                      icon: Icons.kitchen_rounded,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChangeNotifierProvider.value(
-                              value: provider,
-                              child: const KitchenHubScreen(),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 6),
 
                     _iconPill(
                       icon: Icons.tune_rounded,
@@ -1523,6 +1509,85 @@ class _FuelDashboardScreenState extends State<FuelDashboardScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+//  KITCHEN HUB CARD
+// ═══════════════════════════════════════════════════════════════
+  Widget _buildKitchenHubCard(NutritionProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _padH),
+      child: _Press(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChangeNotifierProvider.value(
+                value: provider,
+                child: const KitchenHubScreen(),
+              ),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _P.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _P.divider),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _P.peachSoft,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.kitchen_rounded, color: _P.peachDeep, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'КУХНЯ',
+                      style: GoogleFonts.inter(
+                        color: _P.text,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Кладовая, рецепты и план питания',
+                      style: GoogleFonts.inter(
+                        color: _P.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _P.peachSoft,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.arrow_forward_rounded, color: _P.peachDeep, size: 18),
+              ),
+            ],
+          ),
         ),
       ),
     );

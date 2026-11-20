@@ -30,9 +30,11 @@ import 'features/nutrition/models/nutrition_models.dart' show FoodProduct;
 import 'features/nutrition/models/wellness_models.dart';
 import 'features/nutrition/providers/nutrition_provider.dart';
 import 'features/nutrition/providers/wellness_provider.dart';
+import 'features/nutrition/ui/screens/add_pantry_screen.dart';
 import 'features/nutrition/ui/screens/fuel_dashboard_screen.dart';
 import 'features/nutrition/ui/screens/knowledge_screen.dart';
 import 'features/nutrition/ui/screens/profile_screen.dart';
+import 'features/nutrition/ui/screens/shopping_mode_screen.dart';
 import 'features/nutrition/ui/widgets/season_vine_card.dart';
 
 
@@ -711,9 +713,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ));
   }
 
-  // ═════════════════════════════════════════════════════════
-  //  HERO (Nature Premium with Photo)
-  // ═════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════
+//  HERO (Nature Premium with Photo) — ОБНОВЛЁННЫЙ
+// ═════════════════════════════════════════════════════════
   Widget _hero(FitnessProvider fitness, NutritionProvider nutrition) {
     final r = _R(context);
     final stats = fitness.getStats();
@@ -721,23 +723,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final level = _levelFromStats(stats);
     final today = DateTime.now();
     final thisWeek = _getThisWeek(fitness, today);
-
     final summary = nutrition.getSummaryForDate(today);
     final goals = nutrition.getGoalsForDate(today);
-
     final pWorkouts = (thisWeek / kWeekGoal).clamp(0.0, 1.0);
     final pStreak = (streak / 30).clamp(0.0, 1.0);
     final pCalories = goals.calories > 0
         ? (summary.calories / goals.calories).clamp(0.0, 1.0) : 0.0;
-
     final weekData = _buildWeekData(fitness, today, today.weekday - 1);
     final daysActive = List<bool>.generate(
         7, (i) => i < weekData.length && weekData[i].workouts > 0);
     final todayIdx = today.weekday - 1;
     final daysPassed = todayIdx + 1;
-
-    final hh = today.hour.toString().padLeft(2, '0');
-    final mm = today.minute.toString().padLeft(2, '0');
     final ringSize = r.s(300);
 
     return ClipRRect(
@@ -764,7 +760,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-
           // 2. ГРАДИЕНТНЫЙ OVERLAY ДЛЯ ЧИТАЕМОСТИ
           Positioned.fill(
             child: DecoratedBox(
@@ -773,17 +768,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.45), // Тень сверху
-                    Colors.black.withOpacity(0.10), // Середина
-                    Colors.black.withOpacity(0.55), // Тень снизу
-                    _Palette.bg.withOpacity(0.0),  // Переход в фон
+                    Colors.black.withOpacity(0.45),
+                    Colors.black.withOpacity(0.10),
+                    Colors.black.withOpacity(0.55),
+                    _Palette.bg.withOpacity(0.0),
                   ],
                   stops: const [0.0, 0.3, 0.75, 1.0],
                 ),
               ),
             ),
           ),
-
           // 3. ПЛАВНЫЙ ПЕРЕХОД В ОСНОВНОЙ ФОН СТРАНИЦЫ
           Positioned(
             left: 0, right: 0, bottom: 0, height: 70,
@@ -802,7 +796,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-
           // 4. КОНТЕНТ
           SafeArea(
             bottom: false, left: false, right: false,
@@ -810,159 +803,117 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               padding: EdgeInsets.fromLTRB(r.s(24), r.s(12), r.s(24), r.s(24)),
               child: Column(
                 children: [
+                  // ═══ 1. ВЕРХНИЙ РЯД: Иконки слева + Настройки справа ═══
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _HeroAvatar(
-                        emoji: _avatarEmoji,
-                        imagePath: _avatarImagePath,
-                        size: r.s(56),
-                        onTap: _openProfileScreen,
-                      ),
-                      SizedBox(width: r.s(12)),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${_greetingIcon()} ${_greeting().toUpperCase()}',
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: r.fs(10),
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                                shadows: [
-                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
-                                ],
+                      // 🛒 + 🧺 в столбик, только иконки в кругах
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _TapScale(
+                            onTap: () => _openShoppingMode(context, nutrition),
+                            child: Container(
+                              width: r.s(46), height: r.s(46),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10)],
                               ),
+                              child: const Icon(Icons.shopping_cart_rounded, color: Colors.white, size: 20),
                             ),
-                            Text(
-                              _profileName.isNotEmpty ? _profileName : 'Атлет',
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: _Hero.textHigh,
-                                fontSize: r.fs(20),
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                                shadows: [
-                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 6)
-                                ],
+                          ),
+                          SizedBox(height: r.s(10)),
+                          _TapScale(
+                            onTap: () => _openAddPantry(context, nutrition),
+                            child: Container(
+                              width: r.s(46), height: r.s(46),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10)],
                               ),
+                              child: const Icon(Icons.kitchen_rounded, color: Colors.white, size: 20),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      _LevelBadge(level: level, scale: r.scale),
-                      SizedBox(width: r.s(8)),
+                      const Spacer(),
+                      // ⚙️ Настройки
                       _TapScale(
                         onTap: _openSettings,
                         child: Container(
-                          width: r.s(40), height: r.s(40),
+                          width: r.s(46), height: r.s(46),
                           decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              // Стеклянный эффект
-                              color: Colors.white.withOpacity(0.15),
-                              border: Border.all(
-                                  color: Colors.white.withOpacity(0.25), width: 1),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                )
-                              ]
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.15),
+                            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10)],
                           ),
-                          child: Icon(Icons.tune_rounded,
-                              color: Colors.white, size: r.s(18)),
+                          child: Icon(Icons.tune_rounded, color: Colors.white, size: r.s(20)),
                         ),
                       ),
                     ],
                   ),
+
                   SizedBox(height: r.s(18)),
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: r.s(12), vertical: r.s(8)),
-                        decoration: BoxDecoration(
-                          // Стеклянный эффект
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: Colors.white.withOpacity(0.2)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('🔥', style: TextStyle(fontSize: r.fs(13))),
-                            SizedBox(width: r.s(6)),
-                            Text('$streak дней подряд',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: r.fs(11),
-                                  fontWeight: FontWeight.w600,
-                                )),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(width: 6, height: 6,
-                              decoration: const BoxDecoration(
-                                  color: _Vibrant.neonGreen,
-                                  shape: BoxShape.circle)),
-                          SizedBox(width: r.s(6)),
-                          Text('$hh:$mm',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: r.fs(12),
-                                fontWeight: FontWeight.w600,
-                                shadows: [
-                                  Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)
-                                ],
-                              )),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: r.s(22)),
+
+// ═══ 🆕 КОЛЬЦА ПРОГРЕССА С ЧАСАМИ ВНУТРИ ═══
                   Container(
                     padding: EdgeInsets.all(r.s(8)),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.black.withOpacity(0.15), // Легкое затемнение под кольцами
+                      color: Colors.black.withOpacity(0.15),
                       border: Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
                     child: SizedBox(
                       width: ringSize, height: ringSize,
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 1500),
-                        curve: Curves.easeOutCubic,
-                        builder: (_, anim, __) => CustomPaint(
-                          size: Size(ringSize, ringSize),
-                          painter: _HeroRingsPainter(
-                            anim: anim,
-                            daysActive: daysActive,
-                            daysPassed: daysPassed,
-                            caloriesProgress: pCalories,
-                            workoutsProgress: pWorkouts,
-                            streakProgress: pStreak,
-                            time: today,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // 1. Кольца прогресса (задний план)
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: const Duration(milliseconds: 1500),
+                            curve: Curves.easeOutCubic,
+                            builder: (_, anim, __) => CustomPaint(
+                              size: Size(ringSize, ringSize),
+                              painter: _HeroRingsPainter(
+                                anim: anim,
+                                daysActive: daysActive,
+                                daysPassed: daysPassed,
+                                caloriesProgress: pCalories,
+                                workoutsProgress: pWorkouts,
+                                streakProgress: pStreak,
+                                time: today,
+                              ),
+                            ),
                           ),
-                        ),
+                          // 2. Ретро-часы (точно в центре, со своим фоном)
+                          SizedBox(
+                            width: r.s(90), // Оптимальный размер для центра колец
+                            height: r.s(90),
+                            child: CustomPaint(
+                              painter: _RetroClockPainter(time: today),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+
                   SizedBox(height: r.s(22)),
+
+                  // ═══ 3. ЧИПЫ-ЛЕГЕНДА (Level + 4 метрики) ═══
                   Wrap(
                     alignment: WrapAlignment.center,
-                    spacing: r.s(12), runSpacing: r.s(10),
+                    spacing: r.s(10), runSpacing: r.s(10),
                     children: [
-                      _heroLegendChip(_HeroAccents.peach, 'Время', '$hh:$mm', r),
+                      _LevelBadge(level: level, scale: r.scale),
                       _heroLegendChip(_HeroAccents.amber, 'Неделя', '$thisWeek/7', r),
-                      _heroLegendChip(_HeroAccents.sage, 'Ккал',
-                          '${summary.calories.round()}', r),
+                      _heroLegendChip(_HeroAccents.sage, 'Ккал', '${summary.calories.round()}', r),
                       _heroLegendChip(_HeroAccents.pink, 'Трен.', '$thisWeek/7', r),
                       _heroLegendChip(_HeroAccents.sky, 'Серия', '$streak д', r),
                     ],
@@ -2715,6 +2666,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ═════════════════════════════════════════════════════════
   //  NAVIGATION
   // ═════════════════════════════════════════════════════════
+
+
+  void _openShoppingMode(BuildContext context, NutritionProvider nutrition) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: nutrition,
+          child: const ShoppingModeScreen(),
+        ),
+      ),
+    );
+  }
+
+  void _openAddPantry(BuildContext context, NutritionProvider nutrition) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: nutrition,
+          child: const AddPantryScreen(),
+        ),
+      ),
+    );
+  }
+
   void _openFitness(BuildContext context) => Navigator.push(context,
       MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
           value: context.read<FitnessProvider>(),
@@ -3452,7 +3429,6 @@ class _HeroRingsPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final scale = size.width / 340.0;
-
     const rDigits = 160.0;
     const r1 = 144.0;
     const rDayLabels = 126.0;
@@ -3475,6 +3451,9 @@ class _HeroRingsPainter extends CustomPainter {
         workoutsProgress * anim, _HeroAccents.pink);
     _drawProgressRing(canvas, center, r5 * scale, stroke * scale,
         streakProgress * anim, _HeroAccents.sky);
+
+    // 🆕 ЧАСЫ ВНУТРИ САМОГО ВНУТРЕННЕГО КОЛЬЦА r5
+    _drawCenterClock(canvas, center, r5 * scale, stroke * scale, time);
   }
 
   void _drawHourNumbers(
@@ -3646,6 +3625,114 @@ class _HeroRingsPainter extends CustomPainter {
         Paint()..style = PaintingStyle.stroke
           ..strokeWidth = stroke * 0.4..strokeCap = StrokeCap.round
           ..color = Colors.white.withOpacity(0.65));
+  }
+
+
+  // 🆕 ЧАСЫ ВНУТРИ САМОГО ВНУТРЕННЕГО КОЛЬЦА r5
+// r5 = 30, stroke = 10 → свободный радиус внутри кольца = r5 - stroke/2 = 25
+  void _drawCenterClock(Canvas canvas, Offset center, double r5, double stroke, DateTime time) {
+    // Часы занимают ~75% от свободного пространства внутри r5
+    final clockR = (r5 - stroke * 0.5) * 0.78; // ≈ 19.5
+
+    // 1. Тонкий ободок часов (чтобы визуально отделить от кольца r5)
+    canvas.drawCircle(
+      center, clockR + 1.5,
+      Paint()
+        ..color = Colors.white.withOpacity(0.12)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8,
+    );
+
+    // 2. 12 часовых меток
+    for (int i = 0; i < 12; i++) {
+      final angle = (i * 30 - 90) * (math.pi / 180);
+      final isMain = i % 3 == 0; // 12, 3, 6, 9
+      final startR = clockR - (isMain ? 3.2 : 1.8);
+      final endR = clockR - 0.3;
+      final p1 = Offset(
+        center.dx + math.cos(angle) * startR,
+        center.dy + math.sin(angle) * startR,
+      );
+      final p2 = Offset(
+        center.dx + math.cos(angle) * endR,
+        center.dy + math.sin(angle) * endR,
+      );
+      canvas.drawLine(
+        p1, p2,
+        Paint()
+          ..color = Colors.white.withOpacity(isMain ? 0.9 : 0.5)
+          ..strokeWidth = isMain ? 1.3 : 0.7
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    // 3. Расчёт углов стрелок
+    final hours = time.hour % 12;
+    final minutes = time.minute;
+    final seconds = time.second;
+
+    // 4. Часовая стрелка (короткая)
+    final hourAngle = ((hours + minutes / 60) * 30 - 90) * (math.pi / 180);
+    _drawClockHand(
+      canvas, center, hourAngle,
+      length: clockR * 0.48,
+      width: 1.6,
+      color: Colors.white.withOpacity(0.95),
+    );
+
+    // 5. Минутная стрелка (длинная)
+    final minuteAngle = ((minutes + seconds / 60) * 6 - 90) * (math.pi / 180);
+    _drawClockHand(
+      canvas, center, minuteAngle,
+      length: clockR * 0.72,
+      width: 1.1,
+      color: Colors.white.withOpacity(0.85),
+    );
+
+    // 6. Секундная стрелка (акцентный персиковый цвет)
+    final secondAngle = (seconds * 6 - 90) * (math.pi / 180);
+    _drawClockHand(
+      canvas, center, secondAngle,
+      length: clockR * 0.82,
+      width: 0.5,
+      color: _HeroAccents.peach,
+    );
+
+    // 7. Центральная заклёпка
+    canvas.drawCircle(center, 1.8, Paint()..color = _HeroAccents.peach);
+    canvas.drawCircle(center, 0.8, Paint()..color = Colors.white);
+  }
+
+// 🆕 Вспомогательный метод для отрисовки одной стрелки часов
+  void _drawClockHand(
+      Canvas canvas,
+      Offset center,
+      double angle, {
+        required double length,
+        required double width,
+        required Color color,
+      }) {
+    final end = Offset(
+      center.dx + math.cos(angle) * length,
+      center.dy + math.sin(angle) * length,
+    );
+    // Лёгкая тень для эффекта "приподнятости" над кольцами
+    final shadowOffset = const Offset(0.6, 0.9);
+    canvas.drawLine(
+      center + shadowOffset, end + shadowOffset,
+      Paint()
+        ..color = Colors.black.withOpacity(0.35)
+        ..strokeWidth = width
+        ..strokeCap = StrokeCap.round,
+    );
+    // Основная стрелка
+    canvas.drawLine(
+      center, end,
+      Paint()
+        ..color = color
+        ..strokeWidth = width
+        ..strokeCap = StrokeCap.round,
+    );
   }
 
   @override
@@ -4032,6 +4119,102 @@ class _GlossyProgress extends StatelessWidget {
       ),
     );
   }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  RETRO ANALOG CLOCK PAINTER (С ФОНОМ)
+// ═══════════════════════════════════════════════════════════════════
+class _RetroClockPainter extends CustomPainter {
+  final DateTime time;
+  _RetroClockPainter({required this.time});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // 1. Внешний металлический ободок
+    canvas.drawCircle(center, radius, Paint()
+      ..color = Colors.white.withOpacity(0.25)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0);
+
+    // 2. Внутренний тёмный циферблат (радиальный градиент)
+    canvas.drawCircle(center, radius - 2, Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF2B3A32).withOpacity(0.95), // Темно-зеленый/серый
+          const Color(0xFF1B2027).withOpacity(0.98), // Почти черный
+        ],
+        stops: const [0.0, 1.0],
+      ).createShader(Rect.fromCircle(center: center, radius: radius - 2))
+      ..style = PaintingStyle.fill);
+
+    // 3. Тонкая внутренняя рамка для глубины
+    canvas.drawCircle(center, radius - 4, Paint()
+      ..color = Colors.white.withOpacity(0.1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0);
+
+    // 4. Часовые метки (12 штук)
+    for (int i = 0; i < 12; i++) {
+      final angle = (i * 30 - 90) * (math.pi / 180);
+      final isMain = i % 3 == 0; // 12, 3, 6, 9
+      final startR = radius - (isMain ? 14 : 8);
+      final endR = radius - 4;
+      final p1 = Offset(center.dx + math.cos(angle) * startR, center.dy + math.sin(angle) * startR);
+      final p2 = Offset(center.dx + math.cos(angle) * endR, center.dy + math.sin(angle) * endR);
+      canvas.drawLine(p1, p2, Paint()
+        ..color = Colors.white.withOpacity(isMain ? 0.9 : 0.5)
+        ..strokeWidth = isMain ? 2.0 : 1.0
+        ..strokeCap = StrokeCap.round);
+    }
+
+    // 5. Расчёт углов стрелок
+    final hours = time.hour % 12;
+    final minutes = time.minute;
+    final seconds = time.second;
+
+    // 6. Часовая стрелка
+    final hourAngle = ((hours + minutes / 60) * 30 - 90) * (math.pi / 180);
+    _drawHand(canvas, center, hourAngle, length: radius * 0.45, width: 3.0, color: Colors.white.withOpacity(0.95));
+
+    // 7. Минутная стрелка
+    final minuteAngle = ((minutes + seconds / 60) * 6 - 90) * (math.pi / 180);
+    _drawHand(canvas, center, minuteAngle, length: radius * 0.7, width: 2.0, color: Colors.white.withOpacity(0.85));
+
+    // 8. Секундная стрелка (акцентный ретро-цвет)
+    final secondAngle = (seconds * 6 - 90) * (math.pi / 180);
+    _drawHand(canvas, center, secondAngle, length: radius * 0.8, width: 1.0, color: _HeroAccents.peach);
+
+    // 9. Центральная заклёпка
+    canvas.drawCircle(center, 4.0, Paint()..color = Colors.black.withOpacity(0.5));
+    canvas.drawCircle(center, 3.0, Paint()..color = _HeroAccents.peach);
+    canvas.drawCircle(center, 1.5, Paint()..color = Colors.white);
+  }
+
+  void _drawHand(Canvas canvas, Offset center, double angle, {required double length, required double width, required Color color}) {
+    final end = Offset(center.dx + math.cos(angle) * length, center.dy + math.sin(angle) * length);
+
+    // Тень под стрелкой для эффекта 3D
+    final shadowOffset = const Offset(1.0, 1.5);
+    canvas.drawLine(center + shadowOffset, end + shadowOffset, Paint()
+      ..color = Colors.black.withOpacity(0.4)
+      ..strokeWidth = width
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+
+    // Основная стрелка
+    canvas.drawLine(center, end, Paint()
+      ..color = color
+      ..strokeWidth = width
+      ..strokeCap = StrokeCap.round);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RetroClockPainter old) =>
+      old.time.minute != time.minute || old.time.second != time.second;
 }
 
 // ═══════════════════════════════════════════════════════════════════

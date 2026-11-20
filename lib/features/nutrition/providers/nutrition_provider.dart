@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'package:zal_life/features/nutrition/ui/screens/barcode_lookup_service.dart' hide BarcodeLookupResult, BarcodeProduct, BarcodeSource;
 import '../database/nutrition_database.dart';
 import '../models/nutrition_models.dart';
+import '../models/nutrition_program.dart'; // 🆕 Импорт модели программы
 import '../ui/screens/add_pantry_screen.dart' hide ScanHistoryEntry;
 import '../ui/screens/barcode_lookup_service.dart' hide BarcodeLookupResult, BarcodeProduct, BarcodeSource, OnlineHit;
 import 'dart:convert';
@@ -29,6 +30,12 @@ class NutritionProvider extends ChangeNotifier {
   List<PlanDay> _planDays = [];
   List<PlanMeal> _planMeals = [];
   List<ShoppingItem> _shoppingItems = [];
+
+  // --- 🆕 Программы питания (v11) ---
+  List<NutritionProgram> _programs = [];
+  List<NutritionProgram> get programs => _programs;
+  NutritionProgram? get activeProgram =>
+      _programs.where((p) => p.isActive).firstOrNull;
 
   // --- 🆕 История сканирований ---
   List<ScanHistoryEntry> _scanHistory = [];
@@ -66,6 +73,7 @@ class NutritionProvider extends ChangeNotifier {
       _loadPlan(),
       _loadShoppingList(),
       _loadScanHistory(), // 🆕
+      _loadPrograms(),    // 🆕 v11: Загрузка программ
     ]);
     debugPrint('✅ NutritionProvider готов: ${_products.length} продуктов');
     notifyListeners();
@@ -176,6 +184,12 @@ class NutritionProvider extends ChangeNotifier {
     }
   }
 
+  // 🆕 v11: Загрузка программ питания (🆕 ОБНОВЛЕНО: загружаем ВСЕ программы для истории)
+  Future<void> _loadPrograms() async {
+    final data = await _db.query('nutrition_programs', orderBy: 'createdAt DESC');
+    _programs = data.map((m) => NutritionProgram.fromMap(m)).toList();
+  }
+
   // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
   FoodProduct? _findProduct(String id) {
     try {
@@ -190,6 +204,9 @@ class NutritionProvider extends ChangeNotifier {
     final day = d.day.toString().padLeft(2, '0');
     return '${d.year}-$m-$day';
   }
+
+  bool _isSameDate(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   // ==================== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ====================
   Future<void> saveUserProfile(UserProfile profile) async {
@@ -342,6 +359,190 @@ class NutritionProvider extends ChangeNotifier {
   List<FoodDiaryEntry> getEntriesForDate(DateTime date) {
     final key = _dateKey(date);
     return _diary.where((e) => _dateKey(e.date) == key).toList();
+  }
+
+  // ==================== 🆕 v11: ПРОГРАММЫ ПИТАНИЯ ====================
+
+  // ==================== 🆕 v11: ПРОГРАММЫ ПИТАНИЯ ====================
+
+  // 🆕 Создание программы с индивидуальным планом для каждого дня (через Map)
+  Future<NutritionProgram> createProgram({
+    required String name,
+    required DateTime startDate,
+    required DateTime endDate,
+    required double targetCalories,
+    required double targetProtein,
+    required double targetFat,
+    required double targetCarbs,
+    required Map<String, List<({MealType type, String? templateId})>> dailyPlans,
+  }) async {
+    if (activeProgram != null) {
+      await _db.update('nutrition_programs', {'isActive': 0});
+      _programs.removeWhere((p) => p.isActive);
+    }
+
+    final program = NutritionProgram(
+      id: _uuid.v4(),
+      name: name,
+      createdAt: DateTime.now(),
+      startDate: startDate,
+      endDate: endDate,
+      mode: ProgramMode.byMeals,
+      targetCalories: targetCalories,
+      targetProtein: targetProtein,
+      targetFat: targetFat,
+      targetCarbs: targetCarbs,
+      slots: [],
+      isActive: true,
+    );
+
+    await _db.insert('nutrition_programs', program.toMap());
+    _programs.insert(0, program);
+
+    final start = DateTime(startDate.year, startDate.month, startDate.day);
+    final end = DateTime(endDate.year, endDate.month, endDate.day);
+    final total = end.difference(start).inDays + 1;
+
+    for (int i = 0; i < total; i++) {
+      final d = start.add(Duration(days: i));
+      final key = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+      final day = PlanDay(
+        id: _uuid.v4(),
+        date: d,
+        programId: program.id,
+        targetCalories: targetCalories,
+        targetProtein: targetProtein,
+        targetFat: targetFat,
+        targetCarbs: targetCarbs,
+      );
+      await _db.insert('plan_days', day.toMap());
+      _planDays.add(day);
+
+      final mealsForDay = dailyPlans[key] ?? [];
+      final validMeals = mealsForDay.where((m) => m.type != MealType.other).toList();
+      final mealCount = validMeals.isEmpty ? 1 : validMeals.length;
+
+      for (final planned in mealsForDay) {
+        double mKcal = targetCalories / mealCount;
+        double mPro = targetProtein / mealCount;
+        double mFat = targetFat / mealCount;
+        double mCarb = targetCarbs / mealCount;
+
+        if (planned.templateId != null) {
+          final tpl = _templates.where((t) => t.id == planned.templateId).firstOrNull;
+          if (tpl != null) {
+            mKcal = tpl.caloriesPerPortion;
+            mPro = tpl.proteinPerPortion;
+            mFat = tpl.fatPerPortion;
+            mCarb = tpl.carbsPerPortion;
+          }
+        }
+
+        final meal = PlanMeal(
+          id: _uuid.v4(),
+          dayId: day.id,
+          mealType: planned.type,
+          templateId: planned.templateId,
+          targetCalories: mKcal,
+          targetProtein: mPro,
+          targetFat: mFat,
+          targetCarbs: mCarb,
+        );
+        await _db.insert('plan_meals', meal.toMap());
+        _planMeals.add(meal);
+      }
+    }
+
+    _planDays.sort((a, b) => a.date.compareTo(b.date));
+    notifyListeners();
+    return program;
+  }
+
+  /// 🆕 Начать программу (делает её активной, остальные деактивирует)
+  Future<void> startProgram(String programId) async {
+    // 1. Деактивируем все программы в БД
+    await _db.update('nutrition_programs', {'isActive': 0});
+
+    // 2. Активируем выбранную
+    await _db.update('nutrition_programs', {'isActive': 1}, where: 'id = ?', whereArgs: [programId]);
+
+    // 3. Обновляем локальное состояние
+    _programs = _programs.map((p) {
+      if (p.id == programId) {
+        return _cloneWithActive(p, true);
+      }
+      return _cloneWithActive(p, false);
+    }).toList();
+
+    notifyListeners();
+  }
+
+  /// 🆕 Завершить программу (успешно)
+  Future<void> finishProgram(String programId) async {
+    await _db.update('nutrition_programs', {'isActive': 0}, where: 'id = ?', whereArgs: [programId]);
+    _programs = _programs.map((p) => p.id == programId ? _cloneWithActive(p, false) : p).toList();
+    notifyListeners();
+  }
+
+  /// 🆕 Отменить программу (брошена)
+  Future<void> cancelProgram(String programId) async {
+    await _db.update('nutrition_programs', {'isActive': 0}, where: 'id = ?', whereArgs: [programId]);
+    _programs = _programs.map((p) => p.id == programId ? _cloneWithActive(p, false) : p).toList();
+    notifyListeners();
+  }
+
+  /// 🆕 Хелпер для клонирования с изменением isActive
+  NutritionProgram _cloneWithActive(NutritionProgram p, bool isActive) {
+    return NutritionProgram(
+      id: p.id, name: p.name, createdAt: p.createdAt, startDate: p.startDate,
+      endDate: p.endDate, mode: p.mode, targetCalories: p.targetCalories,
+      targetProtein: p.targetProtein, targetFat: p.targetFat, targetCarbs: p.targetCarbs,
+      slots: p.slots, isActive: isActive,
+    );
+  }
+
+  /// Смена типа дня (Обычный / Читмил / Отпуск)
+  Future<void> setPlanDayType(String dayId, PlanDayType type) async {
+    await _db.update('plan_days', {'dayType': type.name},
+        where: 'id = ?', whereArgs: [dayId]);
+
+    final i = _planDays.indexWhere((d) => d.id == dayId);
+    if (i == -1) return;
+
+    final old = _planDays[i];
+    _planDays[i] = PlanDay(
+      id: old.id,
+      date: old.date,
+      programId: old.programId,
+      targetCalories: old.targetCalories,
+      targetProtein: old.targetProtein,
+      targetFat: old.targetFat,
+      targetCarbs: old.targetCarbs,
+      isCheatDay: type == PlanDayType.cheat,
+      isVacation: type == PlanDayType.vacation,
+      dayType: type,
+    );
+    notifyListeners();
+  }
+
+  /// Подбор рецепта под слот (для трекера)
+  List<MealTemplate> suggestTemplatesForSlot({
+    required double? calories,
+    required double? protein,
+    int limit = 5,
+  }) {
+    if (calories == null || calories <= 0) return _templates.take(limit).toList();
+
+    final list = List<MealTemplate>.from(_templates);
+    list.sort((a, b) {
+      final da = (a.caloriesPerPortion - calories).abs() +
+          ((a.proteinPerPortion - (protein ?? 0)).abs() * 0.5);
+      final db_ = (b.caloriesPerPortion - calories).abs() +
+          ((b.proteinPerPortion - (protein ?? 0)).abs() * 0.5);
+      return da.compareTo(db_);
+    });
+    return list.take(limit).toList();
   }
 
   // ==================== 🆕 v8: ПЛАН НЕДЕЛИ (УЛУЧШЕННАЯ ЛОГИКА) ====================

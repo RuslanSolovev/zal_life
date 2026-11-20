@@ -16,8 +16,8 @@ class NutritionDatabase {
 
   factory NutritionDatabase() => _instance;
 
-  // 🆕 Версия увеличена до 10 для добавления истории сканирований
-  static const int currentVersion = 10;
+  // 🆕 Версия увеличена до 11 для добавления программ питания и таргетов в план
+  static const int currentVersion = 11;
 
   Future<Database> get database async {
     if (_database != null && _database!.isOpen) return _database!;
@@ -277,6 +277,22 @@ class NutritionDatabase {
       scannedAt TEXT NOT NULL
     )''');
 
+    // 🆕 Таблица для программ питания (v11)
+    await db.execute('''CREATE TABLE IF NOT EXISTS nutrition_programs (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      startDate TEXT NOT NULL,
+      endDate TEXT NOT NULL,
+      mode TEXT NOT NULL,
+      targetCalories REAL NOT NULL,
+      targetProtein REAL NOT NULL,
+      targetFat REAL NOT NULL,
+      targetCarbs REAL NOT NULL,
+      slots TEXT DEFAULT '[]',
+      isActive INTEGER DEFAULT 1
+    )''');
+
     await _addColumnIfMissing(db, 'food_products', 'nameNormalized', 'TEXT');
     await _addColumnIfMissing(db, 'meal_templates', 'nameNormalized', 'TEXT');
     await _addColumnIfMissing(db, 'food_diary', 'templateId', 'TEXT');
@@ -303,6 +319,14 @@ class NutritionDatabase {
     await _addColumnIfMissing(db, 'meal_templates', 'carbsPer100g', 'REAL DEFAULT 0');
     await _addColumnIfMissing(db, 'shopping_items', 'category', 'TEXT');
     await _addColumnIfMissing(db, 'shopping_items', 'fallbackName', 'TEXT');
+
+    // 🆕 Новые колонки для v11
+    await _addColumnIfMissing(db, 'plan_days', 'programId', 'TEXT');
+    await _addColumnIfMissing(db, 'plan_days', 'dayType', "TEXT DEFAULT 'regular'");
+    await _addColumnIfMissing(db, 'plan_meals', 'targetCalories', 'REAL');
+    await _addColumnIfMissing(db, 'plan_meals', 'targetProtein', 'REAL');
+    await _addColumnIfMissing(db, 'plan_meals', 'targetFat', 'REAL');
+    await _addColumnIfMissing(db, 'plan_meals', 'targetCarbs', 'REAL');
   }
 
   Future<void> _addColumnIfMissing(DatabaseExecutor db, String table, String column, String definition) async {
@@ -360,6 +384,33 @@ class NutritionDatabase {
         )''');
 
         debugPrint('✅ v10: добавлены таблицы barcode_scan_history и barcode_cache');
+      }
+
+      // 🆕 Миграция для версии 11 (программы питания и таргеты)
+      if (oldVersion < 11) {
+        await txn.execute('''CREATE TABLE IF NOT EXISTS nutrition_programs (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          createdAt TEXT NOT NULL,
+          startDate TEXT NOT NULL,
+          endDate TEXT NOT NULL,
+          mode TEXT NOT NULL,
+          targetCalories REAL NOT NULL,
+          targetProtein REAL NOT NULL,
+          targetFat REAL NOT NULL,
+          targetCarbs REAL NOT NULL,
+          slots TEXT DEFAULT '[]',
+          isActive INTEGER DEFAULT 1
+        )''');
+
+        await _addColumnIfMissing(txn, 'plan_days', 'programId', 'TEXT');
+        await _addColumnIfMissing(txn, 'plan_days', 'dayType', "TEXT DEFAULT 'regular'");
+        await _addColumnIfMissing(txn, 'plan_meals', 'targetCalories', 'REAL');
+        await _addColumnIfMissing(txn, 'plan_meals', 'targetProtein', 'REAL');
+        await _addColumnIfMissing(txn, 'plan_meals', 'targetFat', 'REAL');
+        await _addColumnIfMissing(txn, 'plan_meals', 'targetCarbs', 'REAL');
+
+        debugPrint('✅ v11: nutrition_programs + target-поля для plan_meals');
       }
 
       await _seedDefaultGoals(txn);
@@ -675,6 +726,10 @@ class NutritionDatabase {
       // 🆕 Индексы для новых таблиц
       await db.execute('CREATE INDEX IF NOT EXISTS idx_barcode_cache_code ON barcode_cache(barcode)');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_history_date ON barcode_scan_history(scannedAt DESC)');
+
+      // 🆕 Индексы для v11
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_programs_active ON nutrition_programs(isActive)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_plan_days_program ON plan_days(programId)');
     } catch (e) {
       debugPrint('⚠️ Ошибка создания индексов: $e');
     }

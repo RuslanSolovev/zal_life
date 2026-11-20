@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'nutrition_program.dart';
 
 // ==================== ПРОДУКТ ====================
 
@@ -171,7 +172,7 @@ class FoodDiaryEntry {
   final String productName;
   final String productCategory;
 
-  // НОВОЕ: привязка к шаблону (блюду)
+  // привязка к шаблону (блюду)
   final String? templateId;
   final String? templateName;
 
@@ -310,14 +311,12 @@ class NutritionGoals {
     required String goal, // 'lose' | 'maintain' | 'gain'
     DateTime? date,
   }) {
-    // Базовый метаболизм
     final bmr = isMale
         ? (10 * weight + 6.25 * height - 5 * age + 5)
         : (10 * weight + 6.25 * height - 5 * age - 161);
 
     double tdee = bmr * activityFactor;
 
-    // Корректировка под цель
     switch (goal) {
       case 'lose':
         tdee *= 0.8;
@@ -327,7 +326,6 @@ class NutritionGoals {
         break;
     }
 
-    // Распределение БЖУ
     double pRatio, fRatio, cRatio;
     switch (goal) {
       case 'lose':
@@ -350,10 +348,10 @@ class NutritionGoals {
       id: id,
       date: date,
       calories: tdee.roundToDouble(),
-      protein: ((tdee * pRatio) / 4).roundToDouble(), // 4 ккал/г
-      fat: ((tdee * fRatio) / 9).roundToDouble(), // 9 ккал/г
-      carbs: ((tdee * cRatio) / 4).roundToDouble(), // 4 ккал/г
-      waterMl: (weight * 35).round(), // 35 мл на кг веса
+      protein: ((tdee * pRatio) / 4).roundToDouble(),
+      fat: ((tdee * fRatio) / 9).roundToDouble(),
+      carbs: ((tdee * cRatio) / 4).roundToDouble(),
+      waterMl: (weight * 35).round(),
     );
   }
 }
@@ -386,9 +384,8 @@ class MealTemplateItem {
   );
 }
 
-// ==================== 🆕 v8: РЕЦЕПТЫ — расширения ====================
+// ==================== РЕЦЕПТЫ — расширения ====================
 
-/// Сложность рецепта.
 enum RecipeDifficulty {
   easy, medium, hard;
 
@@ -416,16 +413,13 @@ enum RecipeDifficulty {
   }
 }
 
-/// Типизированные теги рецептов — чтобы не было строковых опечаток.
 class RecipeTags {
-  // приёмы пищи
   static const breakfast = 'breakfast';
   static const lunch = 'lunch';
   static const dinner = 'dinner';
   static const snack = 'snack';
   static const mealPrep = 'meal_prep';
 
-  // диеты
   static const highProtein = 'high_protein';
   static const lowCarb = 'low_carb';
   static const vegetarian = 'vegetarian';
@@ -433,11 +427,10 @@ class RecipeTags {
   static const glutenFree = 'gluten_free';
   static const dairyFree = 'dairy_free';
 
-  // контекст
-  static const quick = 'quick'; // < 15 мин
-  static const budget = 'budget'; // дёшево
-  static const seasonal = 'seasonal'; // сезонное
-  static const comfort = 'comfort'; // домашнее
+  static const quick = 'quick';
+  static const budget = 'budget';
+  static const seasonal = 'seasonal';
+  static const comfort = 'comfort';
 
   static const all = <String>[
     breakfast, lunch, dinner, snack, mealPrep,
@@ -487,11 +480,10 @@ class RecipeTags {
   }
 }
 
-/// Шаг приготовления с опциональным таймером.
 class RecipeStep {
   final int order;
   final String text;
-  final int? timerSec; // опциональный таймер
+  final int? timerSec;
 
   const RecipeStep({
     required this.order,
@@ -518,13 +510,12 @@ class RecipeStep {
   );
 }
 
-/// Запись о приготовлении рецепта.
 class RecipeCookLog {
   final String id;
   final String templateId;
   final DateTime cookedAt;
   final int portions;
-  final int? rating; // 1..5
+  final int? rating;
   final String? note;
   final String? photoBase64;
 
@@ -560,15 +551,12 @@ class RecipeCookLog {
   );
 }
 
-// ==================== 🆕 v8: РАСШИРЕННЫЙ MealTemplate ====================
-
 class MealTemplate {
   final String id;
   final String name;
   final String? description;
   final List<MealTemplateItem> items;
 
-  // 🆕 v8
   final int portions;
   final double? cookedWeight;
   final List<RecipeStep> steps;
@@ -579,7 +567,7 @@ class MealTemplate {
   final int? cookTimeMin;
   final RecipeDifficulty difficulty;
 
-  // 🆕 v8: кэш КБЖУ (заполняется БД автоматически)
+  // кэш КБЖУ (заполняется БД автоматически)
   final double calories;
   final double protein;
   final double fat;
@@ -612,26 +600,22 @@ class MealTemplate {
     this.createdAt,
   });
 
-  // 🆕 удобно: КБЖУ на одну порцию
   double get caloriesPerPortion => portions > 0 ? calories / portions : calories;
   double get proteinPerPortion => portions > 0 ? protein / portions : protein;
   double get fatPerPortion => portions > 0 ? fat / portions : fat;
   double get carbsPerPortion => portions > 0 ? carbs / portions : carbs;
   double get fiberPerPortion => portions > 0 ? fiber / portions : fiber;
 
-  // 🆕 общее время
   int? get totalTimeMin {
     if (prepTimeMin == null && cookTimeMin == null) return null;
     return (prepTimeMin ?? 0) + (cookTimeMin ?? 0);
   }
 
-  // 🆕 готовый вес одной порции (учёт ужарки)
   double get gramsPerPortion {
     final base = cookedWeight ?? totalGrams;
     return portions > 0 ? base / portions : base;
   }
 
-  // 🆕 быстрые проверки тегов
   bool get isQuick => tags.contains(RecipeTags.quick);
   bool get isHighProtein => tags.contains(RecipeTags.highProtein);
 
@@ -712,7 +696,6 @@ class MealTemplate {
         createdAt: createdAt,
       );
 
-  // ── приватные декодеры (не падают на битых данных) ──
   static List<MealTemplateItem> _decodeItems(dynamic raw) {
     try {
       final decoded = jsonDecode(raw as String? ?? '[]');
@@ -812,26 +795,26 @@ class DailyNutritionSummary {
 enum Gender { male, female }
 
 enum ActivityLevel {
-  sedentary, // Сидячий образ жизни, мало движения
-  light, // Лёгкая активность 1-2 раза в неделю
-  moderate, // Умеренная активность 3-5 раз в неделю
-  active, // Активный образ жизни 6-7 раз в неделю
-  veryActive, // Очень активный, физическая работа
-  professional, // Профессиональный спортсмен
+  sedentary,
+  light,
+  moderate,
+  active,
+  veryActive,
+  professional,
 }
 
 enum GoalType {
-  maintain, // Поддержание веса
-  lose, // Похудение
-  gain, // Набор веса
-  muscleGain, // Набор мышечной массы
-  recomposition, // Ре-композиция (сжигание жира + набор мышц)
+  maintain,
+  lose,
+  gain,
+  muscleGain,
+  recomposition,
 }
 
 enum GoalPace {
-  slow, // Медленно (безопасно)
-  moderate, // Умеренно
-  fast, // Быстро (экстремально)
+  slow,
+  moderate,
+  fast,
 }
 
 class UserProfile {
@@ -844,11 +827,11 @@ class UserProfile {
   final ActivityLevel activityLevel;
   final GoalType goalType;
   final GoalPace goalPace;
-  final double? targetWeight; // Целевой вес (если есть)
-  final int? targetDays; // За сколько дней достичь цели
-  final int stepsPerDay; // Среднее количество шагов в день
-  final int workoutsPerWeek; // Тренировки в неделю
-  final double bodyFatPercentage; // Процент жира (опционально)
+  final double? targetWeight;
+  final int? targetDays;
+  final int stepsPerDay;
+  final int workoutsPerWeek;
+  final double bodyFatPercentage;
 
   UserProfile({
     required this.id,
@@ -904,7 +887,6 @@ class UserProfile {
     bodyFatPercentage: (m['bodyFatPercentage'] as num?)?.toDouble() ?? 0,
   );
 
-  // Расчёт базового метаболизма (BMR) по формуле Миффлина-Сан Жеора
   double get bmr {
     if (gender == Gender.male) {
       return 10 * weight + 6.25 * height - 5 * age + 5;
@@ -913,7 +895,6 @@ class UserProfile {
     }
   }
 
-  // Коэффициент активности
   double get activityMultiplier {
     switch (activityLevel) {
       case ActivityLevel.sedentary: return 1.2;
@@ -925,10 +906,8 @@ class UserProfile {
     }
   }
 
-  // TDEE - общий расход энергии
   double get tdee => bmr * activityMultiplier;
 
-  // ИМТ
   double get bmi {
     final h = height / 100;
     return weight / (h * h);
@@ -945,7 +924,6 @@ class UserProfile {
     return 'Ожирение III степени';
   }
 
-  // Целевая калорийность
   double get targetCalories {
     double multiplier = 1.0;
     switch (goalType) {
@@ -974,13 +952,12 @@ class UserProfile {
         }
         break;
       case GoalType.recomposition:
-        multiplier = 1.0; // Поддерживаем, но меняем состав
+        multiplier = 1.0;
         break;
     }
     return tdee * multiplier;
   }
 
-  // Рекомендуемый белок (г)
   double get recommendedProtein {
     switch (goalType) {
       case GoalType.maintain:
@@ -996,24 +973,20 @@ class UserProfile {
     }
   }
 
-  // Рекомендуемый жир (г)
   double get recommendedFat {
     return (targetCalories * 0.25) / 9;
   }
 
-  // Рекомендуемые углеводы (г)
   double get recommendedCarbs {
     final proteinCal = recommendedProtein * 4;
     final fatCal = recommendedFat * 9;
     return (targetCalories - proteinCal - fatCal) / 4;
   }
 
-  // Рекомендуемая вода (мл)
   int get recommendedWater {
     return (weight * 35).round();
   }
 
-  // Прогноз достижения цели
   Map<String, dynamic> get goalPrediction {
     if (targetWeight == null) {
       return {'canPredict': false};
@@ -1023,7 +996,6 @@ class UserProfile {
     final isLose = diff > 0;
     final absDiff = diff.abs();
 
-    // Предполагаемая скорость в зависимости от темпа
     double ratePerWeek;
     switch (goalPace) {
       case GoalPace.slow: ratePerWeek = 0.3; break;
@@ -1031,7 +1003,6 @@ class UserProfile {
       case GoalPace.fast: ratePerWeek = 0.8; break;
     }
 
-    // Для набора мышц скорость ниже
     if (goalType == GoalType.muscleGain) {
       ratePerWeek = 0.2;
     }
@@ -1050,17 +1021,17 @@ class UserProfile {
   }
 }
 
-// ==================== 🆕 v8: КЛАДОВАЯ (PANTRY) ====================
+// ==================== КЛАДОВАЯ (PANTRY) ====================
 
 class PantryItem {
   final String id;
-  final String? productId; // Ссылка на каталог, если есть
-  final String? customName; // Если продукта нет в каталоге
+  final String? productId;
+  final String? customName;
   final double quantity;
-  final String unit; // г, мл, шт
+  final String unit;
   final DateTime? expiresAt;
   final DateTime addedAt;
-  final double? price; // Цена за всю единицу измерения
+  final double? price;
 
   PantryItem({
     required this.id,
@@ -1109,7 +1080,7 @@ class PantryItem {
   );
 }
 
-// ==================== 🆕 v8: ПЛАН НЕДЕЛИ ====================
+// ==================== ПЛАН НЕДЕЛИ (день + приём) ====================
 
 class PlanDay {
   final String id;
@@ -1121,6 +1092,10 @@ class PlanDay {
   final bool isCheatDay;
   final bool isVacation;
 
+  // 🆕 v11: привязка к программе + тип дня
+  final String? programId;
+  final PlanDayType dayType;
+
   PlanDay({
     required this.id,
     required this.date,
@@ -1130,6 +1105,8 @@ class PlanDay {
     this.targetCarbs,
     this.isCheatDay = false,
     this.isVacation = false,
+    this.programId,
+    this.dayType = PlanDayType.regular,
   });
 
   Map<String, dynamic> toMap() => {
@@ -1141,6 +1118,8 @@ class PlanDay {
     'targetCarbs': targetCarbs,
     'isCheatDay': isCheatDay ? 1 : 0,
     'isVacation': isVacation ? 1 : 0,
+    'programId': programId,
+    'dayType': dayType.name,
     'createdAt': DateTime.now().toIso8601String(),
   };
 
@@ -1153,6 +1132,8 @@ class PlanDay {
     targetCarbs: (m['targetCarbs'] as num?)?.toDouble(),
     isCheatDay: (m['isCheatDay'] as int?) == 1,
     isVacation: (m['isVacation'] as int?) == 1,
+    programId: m['programId'] as String?,
+    dayType: PlanDayType.fromName(m['dayType'] as String?),
   );
 }
 
@@ -1160,12 +1141,18 @@ class PlanMeal {
   final String id;
   final String dayId;
   final MealType mealType;
-  final String? templateId; // Ссылка на рецепт
+  final String? templateId;
   final double portions;
-  final List<String> alternatives; // ID альтернативных рецептов (JSON cache)
+  final List<String> alternatives;
   final bool isCompleted;
-  final double? actualGrams; // Если съел не по плану
+  final double? actualGrams;
   final String? note;
+
+  // 🆕 v11: цели по слоту (из программы)
+  final double? targetCalories;
+  final double? targetProtein;
+  final double? targetFat;
+  final double? targetCarbs;
 
   PlanMeal({
     required this.id,
@@ -1177,6 +1164,10 @@ class PlanMeal {
     this.isCompleted = false,
     this.actualGrams,
     this.note,
+    this.targetCalories,
+    this.targetProtein,
+    this.targetFat,
+    this.targetCarbs,
   });
 
   Map<String, dynamic> toMap() => {
@@ -1189,6 +1180,10 @@ class PlanMeal {
     'isCompleted': isCompleted ? 1 : 0,
     'actualGrams': actualGrams,
     'note': note,
+    'targetCalories': targetCalories,
+    'targetProtein': targetProtein,
+    'targetFat': targetFat,
+    'targetCarbs': targetCarbs,
     'createdAt': DateTime.now().toIso8601String(),
   };
 
@@ -1205,6 +1200,10 @@ class PlanMeal {
     isCompleted: (m['isCompleted'] as int?) == 1,
     actualGrams: (m['actualGrams'] as num?)?.toDouble(),
     note: m['note'] as String?,
+    targetCalories: (m['targetCalories'] as num?)?.toDouble(),
+    targetProtein: (m['targetProtein'] as num?)?.toDouble(),
+    targetFat: (m['targetFat'] as num?)?.toDouble(),
+    targetCarbs: (m['targetCarbs'] as num?)?.toDouble(),
   );
 
   static List<String> _decodeStringList(dynamic raw) {
@@ -1218,18 +1217,17 @@ class PlanMeal {
   }
 }
 
-// ==================== 🆕 v8: СПИСОК ПОКУПОК ====================
+// ==================== СПИСОК ПОКУПОК ====================
 
-/// Базис, к которому привязана цена (`estimatedPrice`).
 enum PriceBasis {
-  perPiece, // ₽ за штуку
-  perGram, // ₽ за 1 г
-  per100g, // ₽ за 100 г
-  perKg, // ₽ за 1 кг
-  perMl, // ₽ за 1 мл
-  per100ml, // ₽ за 100 мл
-  perLiter, // ₽ за 1 л
-  perPackage; // ₽ за упаковку (используется вместе с packageWeight)
+  perPiece,
+  perGram,
+  per100g,
+  perKg,
+  perMl,
+  per100ml,
+  perLiter,
+  perPackage;
 
   String get label {
     switch (this) {
@@ -1247,7 +1245,7 @@ enum PriceBasis {
   static PriceBasis fromName(String? name) {
     return PriceBasis.values.firstWhere(
           (e) => e.name == name,
-      orElse: () => PriceBasis.perKg, // исторический дефолт
+      orElse: () => PriceBasis.perKg,
     );
   }
 }
@@ -1257,16 +1255,16 @@ class ShoppingItem {
   final String? productId;
   final String? customName;
   final double quantity;
-  final String unit; // 'шт', 'г', 'кг', 'мл', 'л'
-  final double? packageWeight; // вес одной упаковки в г/мл (опционально)
-  final double? estimatedPrice; // цена в базисе priceBasis
-  final PriceBasis priceBasis; // 🆕 v9
+  final String unit;
+  final double? packageWeight;
+  final double? estimatedPrice;
+  final PriceBasis priceBasis;
   final String? store;
   final bool isUrgent;
   final bool isBought;
   final String? fallbackName;
-  final String? category; // 🆕 ДОБАВЛЕНО: Отдел магазина
-  final DateTime createdAt; // 🆕 ДОБАВЛЕНО: Для сортировки истории
+  final String? category;
+  final DateTime createdAt;
 
   ShoppingItem({
     required this.id,
@@ -1281,9 +1279,9 @@ class ShoppingItem {
     this.isUrgent = false,
     this.isBought = false,
     this.fallbackName,
-    this.category, // 🆕 ДОБАВЛЕНО
-    DateTime? createdAt, // 🆕 ДОБАВЛЕНО
-  }) : this.createdAt = createdAt ?? DateTime.now(); // 🆕 ДОБАВЛЕНО
+    this.category,
+    DateTime? createdAt,
+  }) : this.createdAt = createdAt ?? DateTime.now();
 
   String get displayName => customName ?? 'Продукт';
 
@@ -1313,7 +1311,6 @@ class ShoppingItem {
     }
   }
 
-  // 🆕 ДОБАВЛЕНО: Публичный геттер для честного сравнения цен в истории
   double get pricePerBaseUnit => _pricePerBase;
 
   double get totalPrice {
@@ -1340,8 +1337,8 @@ class ShoppingItem {
     'isUrgent': isUrgent ? 1 : 0,
     'isBought': isBought ? 1 : 0,
     'fallbackName': fallbackName,
-    'category': category, // 🆕 ДОБАВЛЕНО
-    'createdAt': createdAt.toIso8601String(), // 🆕 ИСПРАВЛЕНО: используем поле, а не DateTime.now()
+    'category': category,
+    'createdAt': createdAt.toIso8601String(),
     'updatedAt': DateTime.now().toIso8601String(),
   };
 
@@ -1358,8 +1355,8 @@ class ShoppingItem {
     isUrgent: (m['isUrgent'] as int?) == 1,
     isBought: (m['isBought'] as int?) == 1,
     fallbackName: m['fallbackName'] as String?,
-    category: m['category'] as String?, // 🆕 ДОБАВЛЕНО
-    createdAt: m['createdAt'] != null ? DateTime.parse(m['createdAt'] as String) : DateTime.now(), // 🆕 ИСПРАВЛЕНО
+    category: m['category'] as String?,
+    createdAt: m['createdAt'] != null ? DateTime.parse(m['createdAt'] as String) : DateTime.now(),
   );
 
   ShoppingItem copyWith({
@@ -1375,7 +1372,7 @@ class ShoppingItem {
     bool? isUrgent,
     bool? isBought,
     String? fallbackName,
-    String? category, // 🆕 ДОБАВЛЕНО
+    String? category,
     DateTime? createdAt,
   }) =>
       ShoppingItem(
@@ -1391,13 +1388,13 @@ class ShoppingItem {
         isUrgent: isUrgent ?? this.isUrgent,
         isBought: isBought ?? this.isBought,
         fallbackName: fallbackName ?? this.fallbackName,
-        category: category ?? this.category, // 🆕 ДОБАВЛЕНО
+        category: category ?? this.category,
         createdAt: createdAt ?? this.createdAt,
       );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 🆕 v9: МОДЕЛИ ДЛЯ ШТРИХКОДОВ И ИСТОРИИ (ОБЯЗАТЕЛЬНО ДЛЯ КОМПИЛЯЦИИ)
+// ШТРИХКОДЫ И ИСТОРИЯ
 // ═══════════════════════════════════════════════════════════════
 
 enum BarcodeSource { localDb, cache, openFoodFacts, upcItemDb, manual }
@@ -1501,7 +1498,7 @@ class BarcodeProduct {
 class BarcodeLookupResult {
   final BarcodeProduct? product;
   final bool notFound;
-  final String? hint; // страна по префиксу / пояснение
+  final String? hint;
   final bool fromCache;
 
   const BarcodeLookupResult({
@@ -1534,7 +1531,6 @@ class OnlineHit {
   });
 }
 
-// Модель для истории сканирований (ИДЕЯ 2)
 class ScanHistoryEntry {
   final String barcode;
   final String name;
