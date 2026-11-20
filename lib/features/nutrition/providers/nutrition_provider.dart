@@ -147,20 +147,47 @@ class NutritionProvider extends ChangeNotifier {
     _pantryItems = data.map((m) => PantryItem.fromMap(m)).toList();
   }
 
+  // 🆕 v8: Загрузчики Кухни (ИСПРАВЛЕНО: грузим только активную программу)
   Future<void> _loadPlan() async {
-    final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final endOfNextWeek = startOfWeek.add(const Duration(days: 13));
-    final daysData = await _db.query('plan_days',
-        where: 'date >= ? AND date <= ?',
-        whereArgs: [
-          startOfWeek.toIso8601String().split('T').first,
-          endOfNextWeek.toIso8601String().split('T').first
-        ],
-        orderBy: 'date ASC');
+    // Сначала ищем активную программу
+    final activeProgramData = await _db.query(
+      'nutrition_programs',
+      where: 'isActive = ?',
+      whereArgs: [1],
+      limit: 1,
+    );
+
+    if (activeProgramData.isEmpty) {
+      _planDays = [];
+      _planMeals = [];
+      return;
+    }
+
+    final activeProgramId = activeProgramData.first['id'] as String;
+
+    // Загружаем только дни АКТИВНОЙ программы
+    final daysData = await _db.query(
+      'plan_days',
+      where: 'programId = ?',
+      whereArgs: [activeProgramId],
+      orderBy: 'date ASC',
+    );
     _planDays = daysData.map((m) => PlanDay.fromMap(m)).toList();
-    final mealsData = await _db.query('plan_meals', orderBy: 'createdAt ASC');
-    _planMeals = mealsData.map((m) => PlanMeal.fromMap(m)).toList();
+
+    // Загружаем только приемы пищи этих дней
+    if (_planDays.isNotEmpty) {
+      final dayIds = _planDays.map((d) => d.id).toList();
+      final placeholders = dayIds.map((_) => '?').join(',');
+      final mealsData = await _db.query(
+        'plan_meals',
+        where: 'dayId IN ($placeholders)',
+        whereArgs: dayIds,
+        orderBy: 'createdAt ASC',
+      );
+      _planMeals = mealsData.map((m) => PlanMeal.fromMap(m)).toList();
+    } else {
+      _planMeals = [];
+    }
   }
 
   Future<void> _loadShoppingList() async {
@@ -366,6 +393,7 @@ class NutritionProvider extends ChangeNotifier {
   // ==================== 🆕 v11: ПРОГРАММЫ ПИТАНИЯ ====================
 
   // 🆕 Создание программы с индивидуальным планом для каждого дня (через Map)
+  // 🆕 Создание программы с индивидуальным планом для каждого дня (через Map)
   Future<NutritionProgram> createProgram({
     required String name,
     required DateTime startDate,
@@ -376,11 +404,34 @@ class NutritionProvider extends ChangeNotifier {
     required double targetCarbs,
     required Map<String, List<({MealType type, String? templateId})>> dailyPlans,
   }) async {
-    if (activeProgram != null) {
+    debugPrint('🗑️ Удаление старой программы и всех её планов...');
+
+    // 1. Находим старую активную программу
+    final oldActive = _programs.where((p) => p.isActive).firstOrNull;
+    if (oldActive != null) {
+      // 2. Удаляем все дни и приемы пищи старой программы
+      final oldDays = _planDays.where((d) => d.programId == oldActive.id).toList();
+      if (oldDays.isNotEmpty) {
+        final oldDayIds = oldDays.map((d) => d.id).toList();
+        final placeholders = oldDayIds.map((_) => '?').join(',');
+
+        // Удаляем приемы пищи
+        await _db.delete('plan_meals', where: 'dayId IN ($placeholders)', whereArgs: oldDayIds);
+
+        // Удаляем дни
+        await _db.delete('plan_days', where: 'programId = ?', whereArgs: [oldActive.id]);
+
+        // Очищаем из памяти
+        _planMeals.removeWhere((m) => oldDayIds.contains(m.dayId));
+        _planDays.removeWhere((d) => d.programId == oldActive.id);
+      }
+
+      // 3. Деактивируем программу
       await _db.update('nutrition_programs', {'isActive': 0});
       _programs.removeWhere((p) => p.isActive);
     }
 
+    // 4. Создаём новую программу
     final program = NutritionProgram(
       id: _uuid.v4(),
       name: name,
@@ -403,6 +454,7 @@ class NutritionProvider extends ChangeNotifier {
     final end = DateTime(endDate.year, endDate.month, endDate.day);
     final total = end.difference(start).inDays + 1;
 
+    // 5. Создаём дни и приемы пищи
     for (int i = 0; i < total; i++) {
       final d = start.add(Duration(days: i));
       final key = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -429,13 +481,27 @@ class NutritionProvider extends ChangeNotifier {
         double mFat = targetFat / mealCount;
         double mCarb = targetCarbs / mealCount;
 
-        if (planned.templateId != null) {
-          final tpl = _templates.where((t) => t.id == planned.templateId).firstOrNull;
-          if (tpl != null) {
-            mKcal = tpl.caloriesPerPortion;
-            mPro = tpl.proteinPerPortion;
-            mFat = tpl.fatPerPortion;
-            mCarb = tpl.carbsPerPortion;
+        // 🆕 Поддержка продуктов (PROD:xxx)
+        final isProduct = planned.templateId?.startsWith('PROD:') ?? false;
+        final actualId = isProduct ? planned.templateId!.substring(5) : planned.templateId;
+
+        if (actualId != null) {
+          if (isProduct) {
+            final prod = _products.where((p) => p.id == actualId).firstOrNull;
+            if (prod != null) {
+              mKcal = prod.calories;
+              mPro = prod.protein;
+              mFat = prod.fat;
+              mCarb = prod.carbs;
+            }
+          } else {
+            final tpl = _templates.where((t) => t.id == actualId).firstOrNull;
+            if (tpl != null) {
+              mKcal = tpl.caloriesPerPortion;
+              mPro = tpl.proteinPerPortion;
+              mFat = tpl.fatPerPortion;
+              mCarb = tpl.carbsPerPortion;
+            }
           }
         }
 
@@ -443,7 +509,7 @@ class NutritionProvider extends ChangeNotifier {
           id: _uuid.v4(),
           dayId: day.id,
           mealType: planned.type,
-          templateId: planned.templateId,
+          templateId: planned.templateId, // Сохраняем с префиксом PROD: если есть
           targetCalories: mKcal,
           targetProtein: mPro,
           targetFat: mFat,
@@ -455,6 +521,7 @@ class NutritionProvider extends ChangeNotifier {
     }
 
     _planDays.sort((a, b) => a.date.compareTo(b.date));
+    debugPrint('✅ Программа создана: ${_planDays.length} дней, ${_planMeals.length} приемов пищи');
     notifyListeners();
     return program;
   }
@@ -548,6 +615,7 @@ class NutritionProvider extends ChangeNotifier {
   // ==================== 🆕 v8: ПЛАН НЕДЕЛИ (УЛУЧШЕННАЯ ЛОГИКА) ====================
 
   /// 🎯 Идея 1 и 2: Отметить прием как съеденный с корректировкой порции
+  /// 🎯 Отметить прием как съеденный с корректировкой порции
   Future<void> markMealAsCompleted(String mealId, {double portions = 1.0, DateTime? date}) async {
     final index = _planMeals.indexWhere((m) => m.id == mealId);
     if (index == -1) return;
@@ -575,19 +643,41 @@ class NutritionProvider extends ChangeNotifier {
 
     _planMeals[index] = updatedMeal;
 
-    if (meal.templateId != null && portions > 0) {
-      final template = _templates.firstWhere(
-              (t) => t.id == meal.templateId,
-          orElse: () => MealTemplate(id: '', name: '', items: [])
-      );
+    // 🆕 Определяем: это продукт (PROD:xxx) или рецепт
+    final isProduct = meal.templateId?.startsWith('PROD:') ?? false;
+    final actualId = isProduct ? meal.templateId!.substring(5) : meal.templateId;
 
-      if (template.id.isNotEmpty) {
-        final alreadyLogged = getEntriesForDate(targetDate).any(
-                (e) => e.templateId == template.id && e.mealType == meal.mealType
-        );
+    if (actualId != null && portions > 0) {
+      if (isProduct) {
+        // 🆕 Это продукт — добавляем его в дневник напрямую
+        final product = _products.where((p) => p.id == actualId).firstOrNull;
+        if (product != null) {
+          final alreadyLogged = getEntriesForDate(targetDate).any(
+                  (e) => e.productId == product.id && e.mealType == meal.mealType
+          );
 
-        if (!alreadyLogged) {
-          await _addTemplateAsMealWithPortions(template, meal.mealType, portions: portions, date: targetDate);
+          if (!alreadyLogged) {
+            await addEntry(
+              product: product,
+              grams: 100, // Стандартная порция для продукта
+              mealType: meal.mealType,
+              date: targetDate,
+              templateId: meal.templateId, // Сохраняем PROD:xxx для связи
+              templateName: product.name,
+            );
+          }
+        }
+      } else {
+        // Это рецепт — добавляем его ингредиенты
+        final template = _templates.where((t) => t.id == actualId).firstOrNull;
+        if (template != null) {
+          final alreadyLogged = getEntriesForDate(targetDate).any(
+                  (e) => e.templateId == template.id && e.mealType == meal.mealType
+          );
+
+          if (!alreadyLogged) {
+            await _addTemplateAsMealWithPortions(template, meal.mealType, portions: portions, date: targetDate);
+          }
         }
       }
     }
