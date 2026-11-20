@@ -143,16 +143,44 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     'assets/images/nature_hero5.jpg',
     'assets/images/nature_hero6.jpg',
     'assets/images/nature_hero7.jpg',
+    'assets/images/nature_hero8.jpg',
+    'assets/images/nature_hero9.jpg',
+    'assets/images/nature_hero10.jpg',
+    'assets/images/nature_hero11.jpg',
+    'assets/images/nature_hero12.jpg',
+    'assets/images/nature_hero13.jpg',
+    'assets/images/nature_hero14.jpg',
+    'assets/images/nature_hero15.jpg',
+    'assets/images/nature_hero16.jpg',
+    'assets/images/nature_hero17.jpg',
+    'assets/images/nature_hero18.jpg',
+    'assets/images/nature_hero19.jpg',
+    'assets/images/nature_hero20.jpg',
+    'assets/images/nature_hero21.jpg',
   ];
 
   static const _heroBgLabels = {
     'assets/images/nature_hero.jpg': 'Тропа',
+    'assets/images/nature_hero2.jpg': 'Закат 1',
+    'assets/images/nature_hero3.jpg': 'Закат 2',
+    'assets/images/nature_hero4.jpg': 'Закат 3',
     'assets/images/nature_hero5.jpg': 'Лес',
     'assets/images/nature_hero6.jpg': 'Горы',
-    'assets/images/nature_hero7.jpg': 'Закат1',
-    'assets/images/nature_hero2.jpg': 'Закат2',
-    'assets/images/nature_hero3.jpg': 'Закат3',
-    'assets/images/nature_hero4.jpg': 'Закат4',
+    'assets/images/nature_hero7.jpg': 'Закат 4',
+    'assets/images/nature_hero8.jpg': 'Рассвет',
+    'assets/images/nature_hero9.jpg': 'Поле',
+    'assets/images/nature_hero10.jpg': 'Река',
+    'assets/images/nature_hero11.jpg': 'Озеро',
+    'assets/images/nature_hero12.jpg': 'Море',
+    'assets/images/nature_hero13.jpg': 'Пляж',
+    'assets/images/nature_hero14.jpg': 'Пустыня',
+    'assets/images/nature_hero15.jpg': 'Водопад',
+    'assets/images/nature_hero16.jpg': 'Каньон',
+    'assets/images/nature_hero17.jpg': 'Степь',
+    'assets/images/nature_hero18.jpg': 'Тайга',
+    'assets/images/nature_hero19.jpg': 'Луг',
+    'assets/images/nature_hero20.jpg': 'Дюны',
+    'assets/images/nature_hero21.jpg': 'Утёс',
   };
 
   @override
@@ -202,177 +230,199 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        decoration: const BoxDecoration(
-          color: _P.bg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      builder: (ctx) => ConstrainedBox(
+        // ⬇️ Ограничиваем высоту шторки до 85% экрана
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.85,
         ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: _P.divider,
-                    borderRadius: BorderRadius.circular(3),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          decoration: const BoxDecoration(
+            color: _P.bg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Граббер ──
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: _P.divider,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: _P.springSoft,
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.wallpaper_rounded,
-                        color: _P.springDeep, size: 19),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Фон экрана знаний',
-                            style: _T.sans(
-                              size: 18,
-                              weight: FontWeight.w700,
-                              color: _P.ink,
-                              tracking: -0.4,
-                            )),
-                        const SizedBox(height: 2),
-                        Text('Выберите картинку для шапки',
-                            style: _T.sans(
-                              size: 12,
-                              color: _P.textMuted,
-                            )),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.15,
-                children: _heroBackgrounds.map((path) {
-                  final isSelected = path == _heroBgImage;
-                  final label = _heroBgLabels[path] ?? '';
-                  return _Press(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.pop(ctx, path);
-                    },
-                    child: Container(
+                const SizedBox(height: 20),
+
+                // ── Заголовок ──
+                Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: isSelected
-                              ? _P.springDeep
-                              : Colors.white,
-                          width: isSelected ? 3 : 1,
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                          BoxShadow(
-                            color: _P.springDeep.withOpacity(0.25),
-                            blurRadius: 12,
-                            spreadRadius: -2,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                            : null,
+                        color: _P.springSoft,
+                        borderRadius: BorderRadius.circular(11),
                       ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        fit: StackFit.expand,
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.wallpaper_rounded,
+                          color: _P.springDeep, size: 19),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Image.asset(
-                            path,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [_Hero.bgTop, _Hero.bgBottom],
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                  Icons.image_not_supported_rounded,
-                                  color: Colors.white.withOpacity(0.5),
-                                  size: 28),
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.black.withOpacity(0.0),
-                                    Colors.black.withOpacity(0.55),
-                                  ],
-                                  stops: const [0.4, 1.0],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 10,
-                            bottom: 10,
-                            right: 10,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(label,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: _T.sans(
-                                        size: 13,
-                                        weight: FontWeight.w700,
-                                        color: Colors.white,
-                                        tracking: -0.2,
-                                      )),
-                                ),
-                                if (isSelected)
-                                  Container(
-                                    width: 22,
-                                    height: 22,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: const Icon(Icons.check_rounded,
-                                        color: _P.springDeep, size: 14),
-                                  ),
-                              ],
-                            ),
-                          ),
+                          Text('Фон экрана знаний',
+                              style: _T.sans(
+                                size: 18,
+                                weight: FontWeight.w700,
+                                color: _P.ink,
+                                tracking: -0.4,
+                              )),
+                          const SizedBox(height: 2),
+                          Text(
+                              '${_heroBackgrounds.length} вариантов на выбор',
+                              style: _T.sans(
+                                size: 12,
+                                color: _P.textMuted,
+                              )),
                         ],
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 18),
+
+                // ⬇️⬇️ СКРОЛЛ ЗДЕСЬ ⬇️⬇️
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: GridView.count(
+                      crossAxisCount: 3,                  // 3 колонки для 21 шт.
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.82,
+                      children: _heroBackgrounds.map((path) {
+                        final isSelected = path == _heroBgImage;
+                        final label = _heroBgLabels[path] ?? '';
+                        return _Press(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(ctx, path);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected
+                                    ? _P.springDeep
+                                    : Colors.white,
+                                width: isSelected ? 3 : 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                BoxShadow(
+                                  color: _P.springDeep.withOpacity(0.25),
+                                  blurRadius: 12,
+                                  spreadRadius: -2,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                                  : null,
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  path,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [_Hero.bgTop, _Hero.bgBottom],
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                        Icons.image_not_supported_rounded,
+                                        color: Colors.white.withOpacity(0.5),
+                                        size: 22),
+                                  ),
+                                ),
+                                Positioned.fill(
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0.0),
+                                          Colors.black.withOpacity(0.55),
+                                        ],
+                                        stops: const [0.4, 1.0],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Метка внизу
+                                Positioned(
+                                  left: 8,
+                                  right: 8,
+                                  bottom: 8,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: _T.sans(
+                                            size: 10.5,
+                                            weight: FontWeight.w700,
+                                            color: Colors.white,
+                                            tracking: -0.2,
+                                          ),
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Container(
+                                          width: 18,
+                                          height: 18,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: const Icon(
+                                              Icons.check_rounded,
+                                              color: _P.springDeep,
+                                              size: 12),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

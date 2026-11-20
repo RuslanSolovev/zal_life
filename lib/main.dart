@@ -1,4 +1,3 @@
-// main.dart
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +23,11 @@ void main() async {
 
   // ─── Стиль сезонной карточки: восстановить из хранилища ───
   await _initSeasonVineStyle();
+
+  // 🆕 АВТОСИНХРОНИЗАЦИЯ ИЗОБРАЖЕНИЙ УПРАЖНЕНИЙ
+  // Этот метод проверяет и обновляет картинки стандартных упражнений
+  // в соответствии с кодом, НЕ затрагивая пользовательские загрузки.
+  await FitnessDatabase().syncExerciseImages();
 
   final nutrition = NutritionProvider();
   await nutrition.init();

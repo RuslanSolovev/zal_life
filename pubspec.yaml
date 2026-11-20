@@ -11,8 +11,6 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
 
-
-
   # --- добавленные зависимости ---
   provider: ^6.1.2
   sqflite: ^2.3.3+1
@@ -25,16 +23,23 @@ dependencies:
   fl_chart: ^0.69.0
   shared_preferences: ^2.3.2
 
-
+  # --- изображения ---
   cached_network_image: ^3.4.1
+
   # --- шагомер: Android + iOS ---
   accurate_step_counter: ^3.1.0   # Android: foreground service + защита от ребута
   pedometer: ^4.0.2                # iOS: CMPedometer (нативный, работает 24/7)
   permission_handler: ^11.3.1
   confetti: ^0.8.0
 
-
   google_fonts: ^6.1.0
+
+  # 🆕 КЛАДОВАЯ (Сканер + OCR)
+  mobile_scanner: ^5.1.1
+  google_mlkit_text_recognition: ^0.13.0
+
+  # 🆕 ИСПРАВЛЕНО: http должен быть в dependencies, а не в dev_dependencies!
+  http: ^1.2.1
 
 dev_dependencies:
   flutter_test:

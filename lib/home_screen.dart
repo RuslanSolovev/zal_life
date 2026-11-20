@@ -210,16 +210,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     'assets/images/nature_hero5.jpg',
     'assets/images/nature_hero6.jpg',
     'assets/images/nature_hero7.jpg',
+    'assets/images/nature_hero8.jpg',
+    'assets/images/nature_hero9.jpg',
+    'assets/images/nature_hero10.jpg',
+    'assets/images/nature_hero11.jpg',
+    'assets/images/nature_hero12.jpg',
+    'assets/images/nature_hero13.jpg',
+    'assets/images/nature_hero14.jpg',
+    'assets/images/nature_hero15.jpg',
+    'assets/images/nature_hero16.jpg',
+    'assets/images/nature_hero17.jpg',
+    'assets/images/nature_hero18.jpg',
+    'assets/images/nature_hero19.jpg',
+    'assets/images/nature_hero20.jpg',
+    'assets/images/nature_hero21.jpg',
   ];
 
   static const _heroBgLabels = {
     'assets/images/nature_hero.jpg': 'Тропа',
+    'assets/images/nature_hero2.jpg': 'Закат 1',
+    'assets/images/nature_hero3.jpg': 'Закат 2',
+    'assets/images/nature_hero4.jpg': 'Закат 3',
     'assets/images/nature_hero5.jpg': 'Лес',
     'assets/images/nature_hero6.jpg': 'Горы',
-    'assets/images/nature_hero7.jpg': 'Закат1',
-    'assets/images/nature_hero2.jpg': 'Закат2',
-    'assets/images/nature_hero3.jpg': 'Закат3',
-    'assets/images/nature_hero4.jpg': 'Закат4',
+    'assets/images/nature_hero7.jpg': 'Закат 4',
+    'assets/images/nature_hero8.jpg': 'Рассвет',
+    'assets/images/nature_hero9.jpg': 'Поле',
+    'assets/images/nature_hero10.jpg': 'Река',
+    'assets/images/nature_hero11.jpg': 'Озеро',
+    'assets/images/nature_hero12.jpg': 'Море',
+    'assets/images/nature_hero13.jpg': 'Пляж',
+    'assets/images/nature_hero14.jpg': 'Пустыня',
+    'assets/images/nature_hero15.jpg': 'Водопад',
+    'assets/images/nature_hero16.jpg': 'Каньон',
+    'assets/images/nature_hero17.jpg': 'Степь',
+    'assets/images/nature_hero18.jpg': 'Тайга',
+    'assets/images/nature_hero19.jpg': 'Луг',
+    'assets/images/nature_hero20.jpg': 'Дюны',
+    'assets/images/nature_hero21.jpg': 'Утёс',
   };
 
   static const int kWeekGoal = 7;
@@ -350,173 +378,199 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => Container(
-        padding: EdgeInsets.fromLTRB(r.s(20), r.s(12), r.s(20), r.s(24)),
-        decoration: BoxDecoration(
-          color: _Palette.bg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(r.s(28))),
+      builder: (ctx) => ConstrainedBox(
+        // ⬇️ Ограничиваем высоту шторки до 85% экрана
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.85,
         ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: r.s(38),
-                  height: r.s(5),
-                  decoration: BoxDecoration(
-                    color: _Palette.divider,
-                    borderRadius: BorderRadius.circular(r.s(3)),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(r.s(20), r.s(12), r.s(20), r.s(24)),
+          decoration: BoxDecoration(
+            color: _Palette.bg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(r.s(28))),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Граббер ──
+                Center(
+                  child: Container(
+                    width: r.s(38),
+                    height: r.s(5),
+                    decoration: BoxDecoration(
+                      color: _Palette.divider,
+                      borderRadius: BorderRadius.circular(r.s(3)),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: r.s(20)),
-              Row(
-                children: [
-                  Container(
-                    width: r.s(38),
-                    height: r.s(38),
-                    decoration: BoxDecoration(
-                      color: _Palette.greenSoft,
-                      borderRadius: BorderRadius.circular(r.s(11)),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.wallpaper_rounded,
-                        color: _Palette.green, size: r.s(19)),
-                  ),
-                  SizedBox(width: r.s(12)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Фон главного экрана',
-                            style: GoogleFonts.inter(
-                                color: _Palette.text,
-                                fontSize: r.fs(18),
-                                fontWeight: FontWeight.w600)),
-                        SizedBox(height: r.s(2)),
-                        Text('Выберите картинку для шапки',
-                            style: GoogleFonts.inter(
-                                color: _Palette.textMuted,
-                                fontSize: r.fs(12))),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: r.s(18)),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: r.s(12),
-                crossAxisSpacing: r.s(12),
-                childAspectRatio: 1.15,
-                children: _heroBackgrounds.map((path) {
-                  final isSelected = path == _heroBgImage;
-                  final label = _heroBgLabels[path] ?? '';
-                  return _TapScale(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.pop(ctx, path);
-                    },
-                    child: Container(
+                SizedBox(height: r.s(20)),
+
+                // ── Заголовок ──
+                Row(
+                  children: [
+                    Container(
+                      width: r.s(38),
+                      height: r.s(38),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(r.s(18)),
-                        border: Border.all(
-                          color: isSelected
-                              ? _Palette.green
-                              : Colors.white.withOpacity(0.9),
-                          width: isSelected ? 3 : 1,
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                          BoxShadow(
-                            color: _Palette.green.withOpacity(0.25),
-                            blurRadius: 12,
-                            spreadRadius: -2,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                            : null,
+                        color: _Palette.greenSoft,
+                        borderRadius: BorderRadius.circular(r.s(11)),
                       ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        fit: StackFit.expand,
+                      alignment: Alignment.center,
+                      child: Icon(Icons.wallpaper_rounded,
+                          color: _Palette.green, size: r.s(19)),
+                    ),
+                    SizedBox(width: r.s(12)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Image.asset(
-                            path,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [_Hero.bgTop, _Hero.bgBottom],
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                  Icons.image_not_supported_rounded,
-                                  color: Colors.white.withOpacity(0.5),
-                                  size: r.s(28)),
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.black.withOpacity(0.0),
-                                    Colors.black.withOpacity(0.55),
-                                  ],
-                                  stops: const [0.4, 1.0],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: r.s(10),
-                            bottom: r.s(10),
-                            right: r.s(10),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(label,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.inter(
-                                          color: Colors.white,
-                                          fontSize: r.fs(13),
-                                          fontWeight: FontWeight.w700)),
-                                ),
-                                if (isSelected)
-                                  Container(
-                                    width: r.s(22),
-                                    height: r.s(22),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Icon(Icons.check_rounded,
-                                        color: _Palette.green,
-                                        size: r.s(14)),
-                                  ),
-                              ],
-                            ),
-                          ),
+                          Text('Фон главного экрана',
+                              style: GoogleFonts.inter(
+                                  color: _Palette.text,
+                                  fontSize: r.fs(18),
+                                  fontWeight: FontWeight.w600)),
+                          SizedBox(height: r.s(2)),
+                          Text('${_heroBackgrounds.length} вариантов на выбор',
+                              style: GoogleFonts.inter(
+                                  color: _Palette.textMuted,
+                                  fontSize: r.fs(12))),
                         ],
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-            ],
+                  ],
+                ),
+                SizedBox(height: r.s(18)),
+
+                // ⬇️⬇️ СКРОЛЛ ЗДЕСЬ ⬇️⬇️
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: GridView.count(
+                      crossAxisCount: 3,                 // 3 колонки — для 21 шт. идеально
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: r.s(10),
+                      crossAxisSpacing: r.s(10),
+                      childAspectRatio: 0.82,            // чуть выше, чем шире
+                      children: _heroBackgrounds.map((path) {
+                        final isSelected = path == _heroBgImage;
+                        final label = _heroBgLabels[path] ?? '';
+                        return _TapScale(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(ctx, path);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(r.s(16)),
+                              border: Border.all(
+                                color: isSelected
+                                    ? _Palette.green
+                                    : Colors.white.withOpacity(0.9),
+                                width: isSelected ? 3 : 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                BoxShadow(
+                                  color: _Palette.green.withOpacity(0.25),
+                                  blurRadius: 12,
+                                  spreadRadius: -2,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                                  : null,
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  path,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [_Hero.bgTop, _Hero.bgBottom],
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                        Icons.image_not_supported_rounded,
+                                        color: Colors.white.withOpacity(0.5),
+                                        size: r.s(22)),
+                                  ),
+                                ),
+                                Positioned.fill(
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0.0),
+                                          Colors.black.withOpacity(0.55),
+                                        ],
+                                        stops: const [0.4, 1.0],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Метка внизу
+                                Positioned(
+                                  left: r.s(8),
+                                  right: r.s(8),
+                                  bottom: r.s(8),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: r.fs(10.5),
+                                              fontWeight: FontWeight.w700,
+                                              shadows: [
+                                                Shadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.5),
+                                                  blurRadius: 4,
+                                                ),
+                                              ]),
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Container(
+                                          width: r.s(18),
+                                          height: r.s(18),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Icon(Icons.check_rounded,
+                                              color: _Palette.green,
+                                              size: r.s(12)),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
