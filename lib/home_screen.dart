@@ -1,266 +1,549 @@
 // lib/home_screen.dart
-//
-// Главный экран Zal Life.
-// Зависимости: provider, google_fonts, shared_preferences,
-// cached_network_image, sensors_plus (используется внутри PedometerProvider).
-
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
-
+import 'dart:ui' show MaskFilter, BlurStyle, FontFeature;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-// ⬇️ РЕАЛЬНЫЕ ПРОВАЙДЕРЫ ПРОЕКТА
+// Fitness Imports
+import 'package:zal_life/features/fitness/database/ui/screens/active_program_screen.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/exercise_library_screen.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/fitness_dashboard.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/fitness_target_details_screen.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/fitness_targets_screen.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/pedometer_screen.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/progress_screen.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/wellbeing_screen.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/workout_execution_screen.dart';
+import 'package:zal_life/features/fitness/database/ui/screens/workout_log_screen.dart';
+import 'package:zal_life/features/fitness/providers/pedometer_provider.dart';
+import 'features/fitness/models/enums.dart';
+import 'features/fitness/models/fitness_models.dart';
 import 'features/fitness/providers/fitness_provider.dart';
-import 'features/fitness/providers/pedometer_provider.dart';
+// Nutrition Imports
+import 'features/nutrition/models/nutrition_models.dart' show FoodProduct;
+import 'features/nutrition/models/wellness_models.dart';
+import 'features/nutrition/models/nutrition_program.dart';
 import 'features/nutrition/providers/nutrition_provider.dart';
 import 'features/nutrition/providers/wellness_provider.dart';
+import 'features/nutrition/ui/screens/add_pantry_screen.dart';
+import 'features/nutrition/ui/screens/fuel_dashboard_screen.dart';
+import 'features/nutrition/ui/screens/knowledge_screen.dart';
+import 'features/nutrition/ui/screens/profile_screen.dart';
+import 'features/nutrition/ui/screens/shopping_mode_screen.dart';
+import 'features/nutrition/ui/widgets/season_vine_card.dart';
+import 'features/nutrition/ui/screens/programs_hub_screen.dart';
+import 'features/nutrition/ui/screens/plan_tracker_screen.dart';
 
-// ============================================================================
-// ПАЛИТРА, ТИПОГРАФИКА И ОБЩИЕ ХЕЛПЕРЫ
-// ============================================================================
+part 'home_hero_creative.dart';
+part 'home_hero.dart';
+part 'home_widgets.dart';
+part 'home_hero_extra.dart';
 
-class _P {
-  static const bg = Color(0xFFF7F5F0);
-  static const card = Color(0xFFFFFFFF);
-  static const ink = Color(0xFF1E2A24);
-  static const muted = Color(0xFF7A857E);
-  static const green = Color(0xFF2F7D5B);
-  static const pink = Color(0xFFE06A8B);
-  static const sage = Color(0xFF8FA98A);
-  static const peach = Color(0xFFF0A05A);
-  static const blue = Color(0xFF5B8DEF);
-  static const line = Color(0xFFEAE7DF);
+const int kWeekGoal = 7;
+
+// ═══════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════════
+DateTime? _extractLogDate(dynamic log) {
+  try { final d = log.date; if (d is DateTime) return d; } catch (_) {}
+  try { final d = log.startedAt; if (d is DateTime) return d; } catch (_) {}
+  try { final d = log.createdAt; if (d is DateTime) return d; } catch (_) {}
+  try { final d = log.performedAt; if (d is DateTime) return d; } catch (_) {}
+  try {
+    final d = log.timestamp;
+    if (d is DateTime) return d;
+    if (d is int) return DateTime.fromMillisecondsSinceEpoch(d);
+  } catch (_) {}
+  return null;
 }
 
-TextStyle _t({
-  double size = 14,
-  FontWeight weight = FontWeight.w600,
-  Color color = _P.ink,
-  double height = 1.25,
-  double letter = 0,
-}) =>
-    GoogleFonts.manrope(
-      fontSize: size,
-      fontWeight: weight,
-      color: color,
-      height: height,
-      letterSpacing: letter,
+double _extractLogVolume(dynamic log) {
+  try { final v = log.totalVolume; if (v is num) return v.toDouble(); } catch (_) {}
+  try { final v = log.volume; if (v is num) return v.toDouble(); } catch (_) {}
+  try {
+    double total = 0;
+    final exList = log.exercisesLog;
+    if (exList is List) {
+      for (final ex in exList) {
+        final sList = ex.sets;
+        if (sList is List) {
+          for (final s in sList) {
+            final w = s.weight;
+            final r = s.reps;
+            if (w is num && r is num) total += w.toDouble() * r.toDouble();
+          }
+        }
+      }
+    }
+    return total;
+  } catch (_) { return 0; }
+}
+
+String _groupNum(int n) {
+  final s = n.toString();
+  final buf = StringBuffer();
+  for (int i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(' ');
+    buf.write(s[i]);
+  }
+  return buf.toString();
+}
+
+String _formatKg(double v) {
+  if (v < 1) return '0 кг';
+  return '${_groupNum(v.round())} кг';
+}
+
+String? _formatTons(double v) {
+  if (v < 1000) return null;
+  final t = v / 1000;
+  final s = t >= 10 ? t.toStringAsFixed(0) : t.toStringAsFixed(1);
+  return '≈ ${s.replaceAll('.', ',')} т';
+}
+
+String _shortKg(double v) {
+  if (v >= 1000) {
+    final k = v / 1000;
+    return k >= 10 ? '${k.toStringAsFixed(0)}k' : '${k.toStringAsFixed(1)}k';
+  }
+  return v.round().toString();
+}
+
+String _fmtNum(int n) {
+  if (n >= 10000) return '${(n / 1000).toStringAsFixed(1).replaceAll('.0', '')}k';
+  if (n >= 1000) {
+    final s = n.toString();
+    return '${s.substring(0, s.length - 3)} ${s.substring(s.length - 3)}';
+  }
+  return '$n';
+}
+
+String _greeting() {
+  final hour = DateTime.now().hour;
+  if (hour < 6) return 'Доброй ночи';
+  if (hour < 12) return 'Доброе утро';
+  if (hour < 18) return 'Добрый день';
+  return 'Добрый вечер';
+}
+
+String _greetingIcon() {
+  final hour = DateTime.now().hour;
+  if (hour < 6) return '🌙';
+  if (hour < 12) return '☀️';
+  if (hour < 18) return '🌤';
+  return '🌆';
+}
+
+int _calcWorkoutsThisWeek(FitnessProvider fitness, DateTime today) {
+  final monday = DateTime(today.year, today.month, today.day - (today.weekday - 1));
+  int count = 0;
+  try {
+    for (final log in fitness.logs) {
+      final d = _extractLogDate(log);
+      if (d == null) continue;
+      final justDate = DateTime(d.year, d.month, d.day);
+      if (!justDate.isBefore(monday)) count++;
+    }
+  } catch (_) {}
+  return count;
+}
+
+int _getThisWeek(FitnessProvider fitness, DateTime today) {
+  final stats = fitness.getStats();
+  final provider = ((stats['workoutsThisWeek'] ?? 0) as num).toInt();
+  if (provider > 0) return provider;
+  return _calcWorkoutsThisWeek(fitness, today);
+}
+
+List<_DayData> _buildWeekData(
+    FitnessProvider fitness, DateTime today, int todayIndex) {
+  final result = <_DayData>[];
+  for (int i = 0; i < 7; i++) {
+    final targetDay = today.subtract(Duration(days: todayIndex - i));
+    final isFuture = i > todayIndex;
+    int workoutCount = 0;
+    double volume = 0;
+    if (!isFuture) {
+      try {
+        final logs = fitness.getLogsForDate(targetDay);
+        workoutCount = logs.length;
+        for (final log in logs) { volume += _extractLogVolume(log); }
+      } catch (_) {}
+    }
+    result.add(_DayData(
+      date: targetDay,
+      workouts: workoutCount,
+      volume: volume,
+      isToday: i == todayIndex,
+      isFuture: isFuture,
+    ));
+  }
+  return result;
+}
+
+int _levelFromStats(Map<String, dynamic> stats) {
+  final total = ((stats['totalWorkouts'] ?? 0) as num).toInt();
+  return 1 + (total ~/ 3);
+}
+
+List<_Badge> _getBadges(Map<String, dynamic> stats) {
+  final total = ((stats['totalWorkouts'] ?? 0) as num).toInt();
+  final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
+  final volume = ((stats['totalVolume'] ?? 0.0) as num).toDouble();
+  final list = <_Badge>[];
+  if (total >= 1) list.add(_Badge('🏅', 'Первая', 'Начало пути', _Palette.peach));
+  if (streak >= 7) list.add(_Badge('🔥', '7 дней', 'В ритме', _Palette.pink));
+  if (total >= 10) list.add(_Badge('💪', '10 тренировок', 'Сильная неделя', _Palette.green));
+  if (volume >= 1000) list.add(_Badge('⚡', 'Тонна', '50км за месяц', _Palette.yellow));
+  if (streak >= 30) list.add(_Badge('👑', '30 дней', 'Железная воля', _Palette.sage));
+  return list;
+}
+
+List<_PR> _getPRs(FitnessProvider fitness) {
+  final prs = <_PR>[];
+  final stats = fitness.getStats();
+  final total = ((stats['totalWorkouts'] ?? 0) as num).toInt();
+  final volume = ((stats['totalVolume'] ?? 0.0) as num).toDouble();
+  final dailyVolumes = <String, double>{};
+  final dailyWorkouts = <String, int>{};
+  try {
+    for (final log in fitness.logs) {
+      final d = _extractLogDate(log);
+      if (d == null) continue;
+      final key = '${d.year}-${d.month}-${d.day}';
+      dailyVolumes[key] = (dailyVolumes[key] ?? 0) + _extractLogVolume(log);
+      dailyWorkouts[key] = (dailyWorkouts[key] ?? 0) + 1;
+    }
+  } catch (_) {}
+  if (dailyVolumes.isNotEmpty) {
+    final bestVol = dailyVolumes.values.reduce(math.max);
+    if (bestVol > 0) prs.add(_PR('⚡', _shortKg(bestVol), 'за тренировку', _Palette.yellow));
+  }
+  if (dailyWorkouts.isNotEmpty) {
+    final bestDay = dailyWorkouts.values.reduce(math.max);
+    if (bestDay > 0) prs.add(_PR('🏋️', '$bestDay', 'за день', _Palette.peach));
+  }
+  if (total > 0) prs.add(_PR('🎯', '$total', 'всего', _Palette.green));
+  if (volume > 0) prs.add(_PR('🔥', _shortKg(volume), 'общий тоннаж', _Palette.pink));
+  return prs;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DESIGN SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+class _Palette {
+  static const bg = Color(0xFFF6F5F1);
+  static const surface = Color(0xFFFFFFFF);
+  static const text = Color(0xFF263D36);
+  static const textMuted = Color(0xFF7C8982);
+  static const green = Color(0xFF426C59);
+  static const greenSoft = Color(0xFFE7EFE5);
+  static const sage = Color(0xFF8CAB93);
+  static const peach = Color(0xFFC79475);
+  static const peachSoft = Color(0xFFF5E6DC);
+  static const pink = Color(0xFFBB8F9D);
+  static const pinkSoft = Color(0xFFF2E4E7);
+  static const yellow = Color(0xFFE7D9B8);
+  static const divider = Color(0xFFE5E8E1);
+}
+
+class _Hero {
+  static const bgTop = Color(0xFF1B2027);
+  static const bgBottom = Color(0xFF161719);
+  static const accent = Color(0xFFEF9563);
+  static const textHigh = Colors.white;
+  static const textLow = Color(0xFFA4A6AA);
+}
+
+class _HeroAccents {
+  static const peach = Color(0xFFEF9563);
+  static const amber = Color(0xFFE8B858);
+  static const sage = Color(0xFFA5C9AF);
+  static const pink = Color(0xFFE899A8);
+  static const sky = Color(0xFF7EA8C6);
+}
+
+class _Vibrant {
+  static const neonGreen = Color(0xFF3DDC84);
+  static const vividPeach = Color(0xFFFF8A65);
+  static const electricBlue = Color(0xFF4A90E2);
+  static const glowingPink = Color(0xFFFF6B8B);
+  static const goldTop = Color(0xFFF4D06F);
+  static const goldMid = Color(0xFFE8B858);
+  static const goldBottom = Color(0xFFD4A04A);
+}
+
+class _R {
+  final double scale;
+  _R(BuildContext context)
+      : scale = (MediaQuery.sizeOf(context).width / 390).clamp(0.85, 1.2);
+  double s(double v) => v * scale;
+  double fs(double v) => v * scale;
+}
+
+class _AppImg extends StatelessWidget {
+  final String? path;
+  final BoxFit fit;
+  final Widget? fallback;
+  const _AppImg({this.path, this.fit = BoxFit.cover, this.fallback});
+  @override
+  Widget build(BuildContext context) {
+    final p = path;
+    final fb = fallback ?? const SizedBox.shrink();
+    if (p == null || p.isEmpty) return fb;
+    if (p.startsWith('assets/')) {
+      return Image.asset(p, fit: fit, errorBuilder: (_, __, ___) => fb);
+    }
+    if (p.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: p, fit: fit,
+        placeholder: (_, __) => fb,
+        errorWidget: (_, __, ___) => fb,
+      );
+    }
+    return Image.file(File(p), fit: fit, errorBuilder: (_, __, ___) => fb);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  🆕 SECTION CONTAINER — обёртка для группировки карточек
+// ═══════════════════════════════════════════════════════════════════
+class _SectionContainer extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String? subtitle;
+  final Color accentColor;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final List<Widget> children;
+  final EdgeInsets? padding;
+
+  const _SectionContainer({
+    required this.emoji,
+    required this.title,
+    this.subtitle,
+    required this.accentColor,
+    this.actionLabel,
+    this.onAction,
+    required this.children,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final r = _R(context);
+
+    // 🛡️ Локальные переменные для корректного smart cast (null safety)
+    final action = onAction;
+    final label = actionLabel;
+
+    return Padding(
+      padding: padding ?? EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Заголовок секции
+          Padding(
+            padding: EdgeInsets.only(bottom: r.s(14)),
+            child: Row(
+              children: [
+                Container(
+                  width: r.s(32), height: r.s(32),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(r.s(10)),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(emoji, style: TextStyle(fontSize: r.s(16))),
+                ),
+                SizedBox(width: r.s(10)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                        style: GoogleFonts.inter(
+                          color: _Palette.text,
+                          fontSize: r.fs(17),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      if (subtitle != null)
+                        Text(subtitle!,
+                          style: GoogleFonts.inter(
+                            color: _Palette.textMuted,
+                            fontSize: r.fs(11),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // ✅ Здесь smart cast гарантированно сработает
+                if (label != null && action != null)
+                  _TapScale(
+                    onTap: action,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: r.s(4)),
+                      child: Text(label, // восклицательный знак не нужен, Dart уже знает, что это не null
+                        style: GoogleFonts.inter(
+                          color: accentColor,
+                          fontSize: r.fs(12),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Контент секции
+          ...children,
+        ],
+      ),
     );
-
-/// Универсальная «мягкая» карточка bento-стиля.
-Widget _card({
-  required Color color,
-  required Widget child,
-}) {
-  return Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: color == _P.card
-          ? [
-        BoxShadow(
-          color: _P.ink.withOpacity(0.04),
-          blurRadius: 16,
-          offset: const Offset(0, 6),
-        ),
-      ]
-          : null,
-    ),
-    child: child,
-  );
+  }
 }
 
-// ============================================================================
-// HOME SCREEN
-// ============================================================================
-
+// ═══════════════════════════════════════════════════════════════════
+//  MAIN SCREEN
+// ═══════════════════════════════════════════════════════════════════
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  // --- анимации ---
-  late final AnimationController _stagger;
+  late final AnimationController _entrance;
   late final AnimationController _confetti;
-
-  // --- prefs ---
-  SharedPreferences? _prefs;
-  String _name = 'Атлет';
-  String _emoji = '🏃';
+  late final ScrollController _scroll;
+  late List<_ConfettiParticle> _confettiParticles;
+  bool? _wasCompleted;
+  String _avatarEmoji = '💪';
   String? _avatarImagePath;
-  int _heroBg = 0;
+  String _profileName = '';
+  String _heroBgImage = 'assets/images/nature_hero2.jpg';
   int _heroStyle = 0;
-  int _pedometerBg = 0;
-
-  // --- конфетти ---
-  List<_Particle> _particles = const [];
-  bool _weekGoalWasMet = false;
-
-  bool _loading = true;
-
-  static const _weekdayShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  int _pedometerBgIndex = 0;
+  static const _pedometerBgPrefsKey = 'pedometer_bg_index';
+  static const _heroBackgrounds = [
+    'assets/images/nature_hero.jpg',
+    'assets/images/nature_hero2.jpg',
+    'assets/images/nature_hero3.jpg',
+    'assets/images/nature_hero4.jpg',
+    'assets/images/nature_hero5.jpg',
+    'assets/images/nature_hero6.jpg',
+    'assets/images/nature_hero7.jpg',
+    'assets/images/nature_hero8.jpg',
+    'assets/images/nature_hero9.jpg',
+    'assets/images/nature_hero10.jpg',
+    'assets/images/nature_hero11.jpg',
+    'assets/images/nature_hero12.jpg',
+    'assets/images/nature_hero13.jpg',
+    'assets/images/nature_hero14.jpg',
+    'assets/images/nature_hero15.jpg',
+    'assets/images/nature_hero16.jpg',
+    'assets/images/nature_hero17.jpg',
+    'assets/images/nature_hero18.jpg',
+    'assets/images/nature_hero19.jpg',
+    'assets/images/nature_hero20.jpg',
+    'assets/images/nature_hero21.jpg',
+  ];
+  static const _heroBgLabels = {
+    'assets/images/nature_hero.jpg': 'Тропа',
+    'assets/images/nature_hero2.jpg': 'Закат 1',
+    'assets/images/nature_hero3.jpg': 'Закат 2',
+    'assets/images/nature_hero4.jpg': 'Закат 3',
+    'assets/images/nature_hero5.jpg': 'Лес',
+    'assets/images/nature_hero6.jpg': 'Горы',
+    'assets/images/nature_hero7.jpg': 'Закат 4',
+    'assets/images/nature_hero8.jpg': 'Рассвет',
+    'assets/images/nature_hero9.jpg': 'Поле',
+    'assets/images/nature_hero10.jpg': 'Река',
+    'assets/images/nature_hero11.jpg': 'Озеро',
+    'assets/images/nature_hero12.jpg': 'Море',
+    'assets/images/nature_hero13.jpg': 'Пляж',
+    'assets/images/nature_hero14.jpg': 'Пустыня',
+    'assets/images/nature_hero15.jpg': 'Водопад',
+    'assets/images/nature_hero16.jpg': 'Каньон',
+    'assets/images/nature_hero17.jpg': 'Степь',
+    'assets/images/nature_hero18.jpg': 'Тайга',
+    'assets/images/nature_hero19.jpg': 'Луг',
+    'assets/images/nature_hero20.jpg': 'Дюны',
+    'assets/images/nature_hero21.jpg': 'Утёс',
+  };
 
   @override
   void initState() {
     super.initState();
-    _stagger = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1150),
-    );
+    _entrance = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1100))..forward();
     _confetti = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..addStatusListener((s) {
-      if (s == AnimationStatus.completed && mounted) {
-        setState(() => _particles = const []);
-      }
-    });
-    _loadPrefs();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _stagger.forward();
+        vsync: this, duration: const Duration(milliseconds: 2200));
+    _confettiParticles = _generateConfetti();
+    _scroll = ScrollController();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _avatarEmoji = prefs.getString('avatar_emoji') ?? '💪';
+      _avatarImagePath = prefs.getString('avatar_image_path');
+      _profileName = prefs.getString('profile_name') ?? 'Спортсмен';
+      _heroBgImage = prefs.getString('hero_bg_image') ?? 'assets/images/nature_hero2.jpg';
+      _heroStyle = (prefs.getInt('hero_style') ?? 0).clamp(0, _heroStyleNames.length - 1);
+      _pedometerBgIndex = prefs.getInt(_pedometerBgPrefsKey) ?? 0;
     });
   }
 
   @override
   void dispose() {
-    _stagger.dispose();
+    _entrance.dispose();
     _confetti.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
-  Future<void> _loadPrefs() async {
-    final p = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _prefs = p;
-      _name = p.getString('profile_name') ?? 'Атлет';
-      _emoji = p.getString('avatar_emoji') ?? '🏃';
-      _avatarImagePath = p.getString('avatar_image_path');
-      _heroBg = (p.getInt('hero_bg_image') ?? 0).clamp(0, _heroBgs.length - 1);
-      _heroStyle = (p.getInt('hero_style') ?? 0).clamp(0, _heroStyles.length - 1);
-      _pedometerBg =
-          (p.getInt('pedometer_bg_index') ?? 0).clamp(0, _pedometerBgs.length - 1);
-      _loading = false;
-    });
+  List<_ConfettiParticle> _generateConfetti() {
+    final rng = math.Random(42);
+    const colors = [_Palette.green, _Palette.peach, _Palette.sage, _Palette.pink, _Palette.yellow];
+    return List.generate(70, (i) => _ConfettiParticle(
+      xFrac: rng.nextDouble(),
+      startY: -20 - rng.nextDouble() * 80,
+      vx: (rng.nextDouble() - 0.5) * 300,
+      vy: 500 + rng.nextDouble() * 400,
+      rot0: rng.nextDouble() * math.pi * 2,
+      rotV: (rng.nextDouble() - 0.5) * math.pi * 6,
+      color: colors[rng.nextInt(colors.length)],
+      size: 4 + rng.nextDouble() * 8,
+    ));
   }
 
-  // --------------------------------------------------------------------------
-  // ВЫЧИСЛЯЕМЫЕ ПОКАЗАТЕЛИ
-  // --------------------------------------------------------------------------
-
-  DateTime get _today => DateTime.now();
-
-  DateTime get _monday {
-    final t = DateTime(_today.year, _today.month, _today.day);
-    return t.subtract(Duration(days: t.weekday - 1));
-  }
-
-  int _workoutsThisWeek(FitnessProvider f) {
-    final stats = f.getStats();
-    final fromStats = (stats['workoutsThisWeek'] as int?) ?? 0;
-    if (fromStats > 0) return fromStats;
-    var count = 0;
-    for (var i = 0; i < 7; i++) {
-      final d = _monday.add(Duration(days: i));
-      if (d.isAfter(_today)) break;
-      count += f.getLogsForDate(d).length;
-    }
-    return count;
-  }
-
-  List<bool> _weekMarks(FitnessProvider f) {
-    return List.generate(7, (i) {
-      final d = _monday.add(Duration(days: i));
-      if (d.isAfter(_today)) return false;
-      return f.getLogsForDate(d).isNotEmpty;
-    });
-  }
-
-  List<double> _weekVolumes(FitnessProvider f) {
-    return List.generate(7, (i) {
-      final d = _monday.add(Duration(days: i));
-      if (d.isAfter(_today)) return 0;
-      return f.getLogsForDate(d).fold<double>(0, (a, l) => a + l.volume);
-    });
-  }
-
-  int _streak(FitnessProvider f) => (f.getStats()['streak'] as int?) ?? 0;
-
-  int _totalWorkouts(FitnessProvider f) =>
-      (f.getStats()['totalWorkouts'] as int?) ?? f.logs.length;
-
-  double _totalVolume(FitnessProvider f) {
-    final v = f.getStats()['totalVolume'];
-    if (v is num) return v.toDouble();
-    return f.logs.fold<double>(0, (a, l) => a + l.volume);
-  }
-
-  int _level(int totalWorkouts) => 1 + (totalWorkouts ~/ 3);
-
-  // --------------------------------------------------------------------------
-  // КОНФЕТТИ
-  // --------------------------------------------------------------------------
-
-  void _runConfetti() {
-    if (!mounted) return;
-    HapticFeedback.heavyImpact();
-    final rnd = math.Random(DateTime.now().microsecondsSinceEpoch);
-    setState(() {
-      _particles = List.generate(70, (_) => _Particle.random(rnd));
-    });
-    _confetti.forward(from: 0);
-  }
-
-  // --------------------------------------------------------------------------
-  // REFRESH
-  // --------------------------------------------------------------------------
-
-  Future<void> _refresh() async {
+  Future<void> _openProfileScreen() async {
     HapticFeedback.mediumImpact();
-    final f = context.read<FitnessProvider>();
-    final n = context.read<NutritionProvider>();
-    final p = context.read<PedometerProvider>();
-    // Реальные провайдеры используют init(). Если добавите отдельный
-    // refresh() — замените вызовы ниже.
-    await Future.wait<void>([
-      f.init(),
-      n.init(),
-      p.init(),
-    ]);
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    if (mounted) setState(() {});
-  }
-
-  // --------------------------------------------------------------------------
-  // НАВИГАЦИЯ
-  // --------------------------------------------------------------------------
-
-  void _push(Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
-  }
-
-  Future<void> _openProfile({
-    required int level,
-    required int streak,
-    required int totalWorkouts,
-    required double totalVolume,
-  }) async {
-    HapticFeedback.selectionClick();
+    final fitness = context.read<FitnessProvider>();
+    final stats = fitness.getStats();
+    final level = _levelFromStats(stats);
+    final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
+    final totalWorkouts = ((stats['totalWorkouts'] ?? 0) as num).toInt();
+    final totalVolume = ((stats['totalVolume'] ?? 0.0) as num).toDouble();
     final result = await Navigator.push<ProfileResult>(
       context,
       MaterialPageRoute(
         builder: (_) => ProfileScreen(
-          initialName: _name,
-          initialEmoji: _emoji,
+          initialName: _profileName,
+          initialEmoji: _avatarEmoji,
           initialImagePath: _avatarImagePath,
           level: level,
           streak: streak,
@@ -271,2027 +554,1459 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     if (result == null || !mounted) return;
     setState(() {
-      _name = result.name;
-      _emoji = result.emoji;
+      _profileName = result.name;
+      _avatarEmoji = result.emoji;
       _avatarImagePath = result.imagePath;
     });
-    final prefs = _prefs;
-    if (prefs != null) {
-      await prefs.setString('profile_name', result.name);
-      await prefs.setString('avatar_emoji', result.emoji);
-      if (result.imagePath == null || result.imagePath!.isEmpty) {
-        await prefs.remove('avatar_image_path');
-      } else {
-        await prefs.setString('avatar_image_path', result.imagePath!);
-      }
-    }
-    HapticFeedback.lightImpact();
   }
 
-  Future<void> _showSettingsSheet({
-    required int level,
-    required int streak,
-    required int totalWorkouts,
-    required double totalVolume,
-  }) async {
-    HapticFeedback.selectionClick();
-    await showModalBottomSheet<void>(
+  Future<void> _openSettings() async {
+    HapticFeedback.mediumImpact();
+    final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _SettingsSheet(
-        onProfile: () {
-          Navigator.pop(context);
-          _openProfile(
-            level: level,
-            streak: streak,
-            totalWorkouts: totalWorkouts,
-            totalVolume: totalVolume,
-          );
-        },
-        onStyle: () {
-          Navigator.pop(context);
-          _showStyleSheet();
-        },
-        onBackground: () {
-          Navigator.pop(context);
-          _showBackgroundSheet();
-        },
+      builder: (ctx) => _SettingsSheet(
+        currentBg: _heroBgImage,
+        bgLabel: _heroBgLabels[_heroBgImage] ?? 'Природа',
+        styleLabel: _heroStyleNames[_heroStyle],
       ),
     );
+    if (action == null || !mounted) return;
+    if (action == 'profile') {
+      await _openProfileScreen();
+    } else if (action == 'style') {
+      await _openStylePicker();
+    } else if (action == 'background') {
+      await _openBackgroundPicker();
+    }
   }
 
-  Future<void> _showStyleSheet() async {
-    HapticFeedback.selectionClick();
-    final picked = await showModalBottomSheet<int>(
+  Future<void> _openStylePicker() async {
+    final r = _R(context);
+    final result = await showModalBottomSheet<int>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _PickerSheet(
-        title: 'Стиль шапки',
-        subtitle: 'Выберите вариант оформления Hero-блока',
-        child: GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.7,
-          children: List.generate(_heroStyles.length, (i) {
-            final s = _heroStyles[i];
-            final active = i == _heroStyle;
-            return _PickTile(
-              active: active,
-              label: s.name,
-              colors: [_P.green, const Color(0xFF1B4D38)],
-              onTap: () => Navigator.pop(context, i),
-              preview: Row(
-                mainAxisAlignment: s.centerText
-                    ? MainAxisAlignment.center
-                    : MainAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 22,
-                    height: 22,
+      builder: (ctx) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+        ),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(r.s(20), r.s(12), r.s(20), r.s(24)),
+          decoration: BoxDecoration(
+            color: _Palette.bg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(r.s(28))),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: r.s(38), height: r.s(5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      shape: s.circleAvatar
-                          ? BoxShape.circle
-                          : BoxShape.rectangle,
-                      borderRadius:
-                      s.circleAvatar ? null : BorderRadius.circular(6),
+                      color: _Palette.divider,
+                      borderRadius: BorderRadius.circular(r.s(3)),
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Column(
-                    crossAxisAlignment: s.centerText
-                        ? CrossAxisAlignment.center
-                        : CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(width: 34, height: 5, color: Colors.white),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 22,
-                        height: 4,
-                        color: Colors.white.withOpacity(0.7),
+                ),
+                SizedBox(height: r.s(20)),
+                Row(
+                  children: [
+                    Container(
+                      width: r.s(38), height: r.s(38),
+                      decoration: BoxDecoration(
+                        color: _Palette.pinkSoft,
+                        borderRadius: BorderRadius.circular(r.s(11)),
                       ),
-                    ],
+                      alignment: Alignment.center,
+                      child: Icon(Icons.dashboard_customize_rounded,
+                          color: _Palette.pink, size: r.s(19)),
+                    ),
+                    SizedBox(width: r.s(12)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Стиль шапки',
+                            style: GoogleFonts.inter(
+                              color: _Palette.text, fontSize: r.fs(18),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: r.s(2)),
+                          Text('${_heroStyleNames.length} вариантов · сохраняется на устройстве',
+                            style: GoogleFonts.inter(
+                              color: _Palette.textMuted, fontSize: r.fs(12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: r.s(18)),
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: r.s(10),
+                      crossAxisSpacing: r.s(10),
+                      childAspectRatio: 0.86,
+                      children: List.generate(_heroStyleNames.length, (i) {
+                        final isSelected = i == _heroStyle;
+                        return _TapScale(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(ctx, i);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(r.s(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(r.s(18)),
+                              border: Border.all(
+                                color: isSelected ? _Palette.green : Colors.white,
+                                width: isSelected ? 2.5 : 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                BoxShadow(
+                                  color: _Palette.green.withOpacity(0.22),
+                                  blurRadius: 14, spreadRadius: -2,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ]
+                                  : [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: _HeroStylePreview(style: i)),
+                                SizedBox(height: r.s(8)),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(_heroStyleNames[i],
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.inter(
+                                          color: _Palette.text,
+                                          fontSize: r.fs(13),
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      Icon(Icons.check_circle_rounded,
+                                          color: _Palette.green, size: r.s(16)),
+                                  ],
+                                ),
+                                SizedBox(height: r.s(2)),
+                                Text(_heroStyleDescriptions[i],
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.textMuted,
+                                    fontSize: r.fs(9.5), height: 1.25,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
                   ),
-                ],
-              ),
-            );
-          }),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
-    if (picked == null || !mounted) return;
-    setState(() => _heroStyle = picked);
-    await _prefs?.setInt('hero_style', picked);
-    HapticFeedback.lightImpact();
+    if (result != null && result != _heroStyle) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('hero_style', result);
+      if (mounted) setState(() => _heroStyle = result);
+      HapticFeedback.lightImpact();
+    }
   }
 
-  Future<void> _showBackgroundSheet() async {
-    HapticFeedback.selectionClick();
-    final picked = await showModalBottomSheet<int>(
+  Future<void> _openBackgroundPicker() async {
+    final r = _R(context);
+    final result = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _PickerSheet(
-        title: 'Фон главного экрана',
-        subtitle: 'Настройте атмосферу под себя',
-        child: GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 0.9,
-          children: List.generate(_heroBgs.length, (i) {
-            final bg = _heroBgs[i];
-            final active = i == _heroBg;
-            return _PickTile(
-              active: active,
-              label: bg.name,
-              colors: bg.colors,
-              onTap: () => Navigator.pop(context, i),
-              preview: Center(
-                child: Text(bg.emoji, style: const TextStyle(fontSize: 26)),
-              ),
-            );
-          }),
+      builder: (ctx) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+        ),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(r.s(20), r.s(12), r.s(20), r.s(24)),
+          decoration: BoxDecoration(
+            color: _Palette.bg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(r.s(28))),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: r.s(38), height: r.s(5),
+                    decoration: BoxDecoration(
+                      color: _Palette.divider,
+                      borderRadius: BorderRadius.circular(r.s(3)),
+                    ),
+                  ),
+                ),
+                SizedBox(height: r.s(20)),
+                Row(
+                  children: [
+                    Container(
+                      width: r.s(38), height: r.s(38),
+                      decoration: BoxDecoration(
+                        color: _Palette.greenSoft,
+                        borderRadius: BorderRadius.circular(r.s(11)),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(Icons.wallpaper_rounded,
+                          color: _Palette.green, size: r.s(19)),
+                    ),
+                    SizedBox(width: r.s(12)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Фон главного экрана',
+                            style: GoogleFonts.inter(
+                              color: _Palette.text, fontSize: r.fs(18),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: r.s(2)),
+                          Text('${_heroBackgrounds.length} вариантов на выбор',
+                            style: GoogleFonts.inter(
+                              color: _Palette.textMuted, fontSize: r.fs(12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: r.s(18)),
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: GridView.count(
+                      crossAxisCount: 3,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: r.s(10),
+                      crossAxisSpacing: r.s(10),
+                      childAspectRatio: 0.82,
+                      children: _heroBackgrounds.map((path) {
+                        final isSelected = path == _heroBgImage;
+                        final label = _heroBgLabels[path] ?? '';
+                        return _TapScale(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(ctx, path);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(r.s(16)),
+                              border: Border.all(
+                                color: isSelected
+                                    ? _Palette.green
+                                    : Colors.white.withOpacity(0.9),
+                                width: isSelected ? 3 : 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                BoxShadow(
+                                  color: _Palette.green.withOpacity(0.25),
+                                  blurRadius: 12, spreadRadius: -2,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                                  : null,
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  path,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [_Hero.bgTop, _Hero.bgBottom],
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(Icons.image_not_supported_rounded,
+                                        color: Colors.white.withOpacity(0.5),
+                                        size: r.s(22)),
+                                  ),
+                                ),
+                                Positioned.fill(
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0.0),
+                                          Colors.black.withOpacity(0.55),
+                                        ],
+                                        stops: const [0.4, 1.0],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: r.s(8), right: r.s(8), bottom: r.s(8),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.inter(
+                                            color: Colors.white,
+                                            fontSize: r.fs(10.5),
+                                            fontWeight: FontWeight.w700,
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.black.withOpacity(0.5),
+                                                blurRadius: 4,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Container(
+                                          width: r.s(18), height: r.s(18),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Icon(Icons.check_rounded,
+                                              color: _Palette.green, size: r.s(12)),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
-    if (picked == null || !mounted) return;
-    setState(() => _heroBg = picked);
-    await _prefs?.setInt('hero_bg_image', picked);
-    HapticFeedback.lightImpact();
+    if (result != null && result != _heroBgImage) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('hero_bg_image', result);
+      if (mounted) setState(() => _heroBgImage = result);
+      HapticFeedback.lightImpact();
+    }
   }
 
   Future<void> _cyclePedometerBg() async {
     HapticFeedback.selectionClick();
-    final next = (_pedometerBg + 1) % _pedometerBgs.length;
-    setState(() => _pedometerBg = next);
-    await _prefs?.setInt('pedometer_bg_index', next);
+    final next = (_pedometerBgIndex + 1) % _heroBackgrounds.length;
+    setState(() => _pedometerBgIndex = next);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_pedometerBgPrefsKey, next);
   }
-
-  void _showShoppingMode(NutritionProvider n) {
-    HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: _P.ink,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          content: Text(
-            'Режим покупок включён · ${n.pantry.length} поз. в кладовой',
-            style: _t(color: Colors.white, size: 13),
-          ),
-        ),
-      );
-  }
-
-  Future<void> _showAddPantrySheet() async {
-    HapticFeedback.selectionClick();
-    final ctrl = TextEditingController();
-    final name = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-          decoration: const BoxDecoration(
-            color: _P.bg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Добавить в кладовую',
-                  style: _t(size: 18, weight: FontWeight.w800)),
-              const SizedBox(height: 14),
-              TextField(
-                controller: ctrl,
-                autofocus: true,
-                style: _t(size: 15),
-                decoration: InputDecoration(
-                  hintText: 'Например: гречка',
-                  hintStyle: _t(color: _P.muted, weight: FontWeight.w500),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _P.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-                  child: Text('Добавить', style: _t(color: Colors.white)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (name == null || name.isEmpty || !mounted) return;
-    context.read<NutritionProvider>().addPantryItem(name);
-    HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: _P.ink,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Text(
-          '«$name» добавлено в кладовую',
-          style: _t(color: Colors.white, size: 13),
-        ),
-      ),
-    );
-  }
-
-  // --------------------------------------------------------------------------
-  // БЫСТРАЯ ТРЕНИРОВКА
-  // --------------------------------------------------------------------------
-
-  Future<void> _showQuickWorkoutSheet() async {
-    HapticFeedback.selectionClick();
-    final fitness = context.read<FitnessProvider>();
-    final selected = await showModalBottomSheet<List<Exercise>>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => FractionallySizedBox(
-        heightFactor: 0.85,
-        child: _QuickWorkoutSheet(exercises: fitness.exercises),
-      ),
-    );
-    if (selected == null || selected.isEmpty || !mounted) return;
-
-    final day = WorkoutDay(
-      id: 'quick_${DateTime.now().millisecondsSinceEpoch}',
-      programId: 'quick',
-      dayNumber: 1,
-      exercises: selected,
-    );
-    // Если в FitnessProvider метод называется иначе — поправьте здесь.
-    fitness.startQuickWorkout(day);
-    HapticFeedback.mediumImpact();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: fitness,
-          child: WorkoutExecutionScreen(day: day),
-        ),
-      ),
-    );
-  }
-
-  // --------------------------------------------------------------------------
-  // BUILD
-  // --------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     final fitness = context.watch<FitnessProvider>();
     final nutrition = context.watch<NutritionProvider>();
     final pedometer = context.watch<PedometerProvider>();
-    final wellness = context.watch<WellnessProvider>();
-
-    final totalWorkouts = _totalWorkouts(fitness);
-    final totalVolume = _totalVolume(fitness);
-    final streak = _streak(fitness);
-    final weekCount = _workoutsThisWeek(fitness);
-    final weekGoalMet = weekCount >= 7;
-    final level = _level(totalWorkouts);
-
-    if (weekGoalMet && !_weekGoalWasMet) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _runConfetti());
+    context.watch<WellnessProvider>();
+    final now = DateTime.now();
+    final thisWeek0 = _getThisWeek(fitness, now);
+    final completed = thisWeek0 >= kWeekGoal;
+    if (_wasCompleted == null) {
+      _wasCompleted = completed;
+    } else if (completed && _wasCompleted == false) {
+      _wasCompleted = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _confetti.forward(from: 0);
+      });
+    } else if (!completed) {
+      _wasCompleted = false;
     }
-    _weekGoalWasMet = weekGoalMet;
-
-    final summary = nutrition.getSummaryForDate(_today);
-    final goals = nutrition.getGoalsForDate(_today);
-
     return Scaffold(
-      backgroundColor: _P.bg,
+      backgroundColor: _Palette.bg,
       body: Stack(
         children: [
-          RefreshIndicator(
-            color: _P.green,
-            backgroundColor: Colors.white,
-            edgeOffset: 40,
-            onRefresh: _refresh,
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
-              ),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: _reveal(
-                    start: 0.0,
-                    child: _HeroHeader(
-                      name: _name,
-                      emoji: _emoji,
+          SafeArea(
+            top: false, bottom: false,
+            child: RefreshIndicator(
+              color: _Hero.accent,
+              backgroundColor: _Hero.bgTop,
+              onRefresh: () async {
+                HapticFeedback.mediumImpact();
+                setState(() {});
+                await Future.delayed(const Duration(milliseconds: 400));
+                HapticFeedback.lightImpact();
+              },
+              child: CustomScrollView(
+                controller: _scroll,
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
+                slivers: [
+                  // Шапка
+                  SliverToBoxAdapter(
+                    child: _HomeHero(
+                      style: _heroStyle,
+                      fitness: fitness,
+                      nutrition: nutrition,
+                      avatarEmoji: _avatarEmoji,
                       avatarImagePath: _avatarImagePath,
-                      background: _heroBgs[_heroBg],
-                      style: _heroStyles[_heroStyle],
-                      level: level,
-                      activeProgramName: nutrition.activeProgram?.name,
-                      calories: summary.calories,
-                      calorieGoal: goals.calories,
-                      steps: pedometer.steps,
-                      stepGoal: pedometer.goal,
-                      activeSessionName: fitness.activeSession?.programName,
-                      onSettings: () => _showSettingsSheet(
-                        level: level,
-                        streak: streak,
-                        totalWorkouts: totalWorkouts,
-                        totalVolume: totalVolume,
-                      ),
-                      onShopping: () => _showShoppingMode(nutrition),
-                      onAddPantry: _showAddPantrySheet,
+                      profileName: _profileName,
+                      bgImage: _heroBgImage,
+                      onSettings: _openSettings,
+                      onShopping: () => _openShoppingMode(context, nutrition),
+                      onPantry: () => _openAddPantry(context, nutrition),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: _reveal(
-                    start: 0.12,
-                    child: _section(
-                      title: 'Активность',
-                      accent: _P.green,
-                      actionLabel: 'Журнал',
-                      onAction: () => _push(const WorkoutLogScreen()),
-                      child: _ActivityBody(
-                        fitness: fitness,
-                        pedometer: pedometer,
-                        weekCount: weekCount,
-                        weekMarks: _weekMarks(fitness),
-                        weekVolumes: _weekVolumes(fitness),
-                        streak: streak,
-                        totalWorkouts: totalWorkouts,
-                        totalVolume: totalVolume,
-                        pedometerBg: _pedometerBg,
-                        onCyclePedometerBg: _cyclePedometerBg,
-                        onOpenJournal: () => _push(const WorkoutLogScreen()),
-                        onOpenDashboard: () => _push(const FitnessDashboard()),
-                        onOpenProgress: () => _push(const ProgressScreen()),
-                        onOpenPedometer: () => _push(const PedometerScreen()),
-                        onContinueSession: () {
-                          final active = fitness.activeSession;
-                          if (active == null) return;
-                          _push(
-                            ChangeNotifierProvider.value(
-                              value: fitness,
-                              child: const ActiveProgramScreen(),
-                            ),
-                          );
-                        },
-                        onOpenWellbeing: () => _push(const WellbeingScreen()),
-                        onQuickWorkout: _showQuickWorkoutSheet,
-                        onOpenTargets: () => _push(const FitnessTargetsScreen()),
-                        onOpenTarget: (t) => _push(
-                          FitnessTargetDetailsScreen(target: t),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _reveal(
-                    start: 0.24,
-                    child: _section(
-                      title: 'Питание',
-                      accent: _P.pink,
-                      actionLabel: 'Подробнее',
-                      onAction: () => _push(const FuelDashboardScreen()),
-                      child: _NutritionBody(
-                        nutrition: nutrition,
-                        summary: summary,
-                        goals: goals,
-                        onCreateProgram: () => _push(const ProgramsHubScreen()),
-                        onOpenProgram: () => _push(const PlanTrackerScreen()),
-                        onOpenFuel: () => _push(const FuelDashboardScreen()),
-                      ),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _reveal(
-                    start: 0.36,
-                    child: _section(
-                      title: 'Здоровье и знания',
-                      accent: _P.sage,
-                      actionLabel: 'База знаний',
-                      onAction: () => _push(
-                        MultiProvider(
-                          providers: [
-                            ChangeNotifierProvider<WellnessProvider>.value(
-                              value: wellness,
-                            ),
-                            ChangeNotifierProvider<NutritionProvider>.value(
-                              value: nutrition,
-                            ),
-                          ],
-                          child: const KnowledgeScreen(),
-                        ),
-                      ),
-                      child: SeasonVineCard(
-                        wellness: wellness,
-                        nutrition: nutrition,
-                      ),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _reveal(
-                    start: 0.48,
-                    child: _section(
-                      title: 'Быстрый старт',
-                      accent: _P.peach,
-                      child: _QuickStartRow(
-                        onStart: _showQuickWorkoutSheet,
-                        onJournal: () => _push(const WorkoutLogScreen()),
-                        onBase: () => _push(const ExerciseLibraryScreen()),
-                        onWellbeing: () => _push(const WellbeingScreen()),
-                        onTargets: () => _push(const FitnessTargetsScreen()),
-                      ),
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 40)),
-              ],
-            ),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _confetti,
-                builder: (_, __) {
-                  if (_particles.isEmpty || _confetti.value == 0) {
-                    return const SizedBox.shrink();
-                  }
-                  return CustomPaint(
-                    painter: _ConfettiPainter(_confetti.value, _particles),
-                    size: Size.infinite,
-                  );
-                },
-              ),
-            ),
-          ),
-          if (_loading)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: _P.bg,
-                child: Center(
-                  child: SizedBox(
-                    width: 26,
-                    height: 26,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: _P.green,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _reveal({required double start, required Widget child}) {
-    final curve = CurvedAnimation(
-      parent: _stagger,
-      curve: Interval(
-        start,
-        math.min(start + 0.5, 1.0),
-        curve: Curves.easeOutCubic,
-      ),
-    );
-    return FadeTransition(
-      opacity: curve,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.06),
-          end: Offset.zero,
-        ).animate(curve),
-        child: child,
-      ),
-    );
-  }
-
-  Widget _section({
-    required String title,
-    required Color accent,
-    required Widget child,
-    String? actionLabel,
-    VoidCallback? onAction,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 26, 16, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: accent,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: _t(size: 20, weight: FontWeight.w800),
-                ),
-              ),
-              if (actionLabel != null && onAction != null)
-                TextButton(
-                  onPressed: () {
-                    HapticFeedback.selectionClick();
-                    onAction();
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: accent,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                  child: Text(
-                    actionLabel,
-                    style:
-                    _t(size: 13, weight: FontWeight.w700, color: accent),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// HERO HEADER
-// ============================================================================
-
-class _HeroHeader extends StatelessWidget {
-  const _HeroHeader({
-    required this.name,
-    required this.emoji,
-    required this.avatarImagePath,
-    required this.background,
-    required this.style,
-    required this.level,
-    required this.activeProgramName,
-    required this.calories,
-    required this.calorieGoal,
-    required this.steps,
-    required this.stepGoal,
-    required this.activeSessionName,
-    required this.onSettings,
-    required this.onShopping,
-    required this.onAddPantry,
-  });
-
-  final String name;
-  final String emoji;
-  final String? avatarImagePath;
-  final _HeroBg background;
-  final _HeroStyle style;
-  final int level;
-  final String? activeProgramName;
-  final double calories;
-  final double calorieGoal;
-  final int steps;
-  final int stepGoal;
-  final String? activeSessionName;
-  final VoidCallback onSettings;
-  final VoidCallback onShopping;
-  final VoidCallback onAddPantry;
-
-  String get _greeting {
-    final h = DateTime.now().hour;
-    if (h < 6) return 'Доброй ночи';
-    if (h < 12) return 'Доброе утро';
-    if (h < 18) return 'Добрый день';
-    return 'Добрый вечер';
-  }
-
-  IconData get _greetingIcon {
-    final h = DateTime.now().hour;
-    if (h < 6) return Icons.nightlight_round;
-    if (h < 12) return Icons.wb_sunny_rounded;
-    if (h < 18) return Icons.wb_cloudy_rounded;
-    return Icons.nights_stay_rounded;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
-    final avatar = _buildAvatar();
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, topPad + 18, 20, 22),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: background.colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(30),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: background.colors.last.withOpacity(0.28),
-            blurRadius: 26,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -20,
-            top: -10,
-            child: Text(
-              background.emoji,
-              style: TextStyle(
-                fontSize: 130,
-                color: Colors.white.withOpacity(style.emojiOpacity),
-              ),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: style.centerText
-                ? CrossAxisAlignment.center
-                : CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: style.centerText
-                          ? CrossAxisAlignment.center
-                          : CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _greetingIcon,
-                              size: 16,
-                              color: Colors.white.withOpacity(0.85),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _greeting,
-                              style: _t(
-                                size: 13,
-                                weight: FontWeight.w600,
-                                color: Colors.white.withOpacity(0.85),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          name,
-                          style: _t(
-                            size: 26,
-                            weight: FontWeight.w800,
-                            color: Colors.white,
-                            height: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.16),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Уровень $level',
-                            style: _t(
-                              size: 12,
-                              weight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        onPressed: onSettings,
-                        icon: const Icon(Icons.tune_rounded,
-                            color: Colors.white),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.16),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      avatar,
-                    ],
-                  ),
+                  // 🆕 СЕКЦИЯ 1: 💪 АКТИВНОСТЬ (фитнес + шагомер + аналитика + достижения + цели)
+                  SliverToBoxAdapter(child: _entranceAt(0.20, _sectionFitness(fitness, pedometer))),
+                  // 🆕 СЕКЦИЯ 2: 🥗 ПИТАНИЕ (план + калории + вода)
+                  SliverToBoxAdapter(child: _entranceAt(0.45, _sectionNutrition(nutrition))),
+                  // 🆕 СЕКЦИЯ 3: 🌿 ЗДОРОВЬЕ (сезонное)
+                  SliverToBoxAdapter(child: _entranceAt(0.60, _sectionWellness(context))),
+                  // 🆕 СЕКЦИЯ 4: ⚡ БЫСТРЫЕ ДЕЙСТВИЯ
+                  SliverToBoxAdapter(child: _entranceAt(0.70, _sectionQuickDock(fitness))),
+                  const SliverToBoxAdapter(child: SizedBox(height: 110)),
                 ],
               ),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (activeSessionName != null)
-                    _heroChip(
-                        Icons.bolt_rounded, 'Тренировка: $activeSessionName'),
-                  if (activeProgramName != null)
-                    _heroChip(Icons.restaurant_rounded, activeProgramName!),
-                  _heroChip(
-                    Icons.local_fire_department_rounded,
-                    '${calories.round()} / ${calorieGoal.round()} ккал',
-                  ),
-                  _heroChip(
-                      Icons.directions_walk_rounded, '$steps шагов'),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _heroAction(
-                      icon: Icons.shopping_cart_outlined,
-                      label: 'Режим покупок',
-                      onTap: onShopping,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _heroAction(
-                      icon: Icons.add_circle_outline_rounded,
-                      label: 'В кладовую',
-                      onTap: onAddPantry,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvatar() {
-    final path = avatarImagePath;
-    final image = (path != null && path.isNotEmpty)
-        ? ClipRRect(
-      borderRadius:
-      BorderRadius.circular(style.circleAvatar ? 100 : 16),
-      child: CachedNetworkImage(
-        imageUrl: path,
-        width: 52,
-        height: 52,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => _emojiAvatar(),
-        errorWidget: (_, __, ___) => _emojiAvatar(),
-      ),
-    )
-        : _emojiAvatar();
-
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        shape: style.circleAvatar ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: style.circleAvatar ? null : BorderRadius.circular(18),
-        color: Colors.white.withOpacity(0.35),
-      ),
-      child: image,
-    );
-  }
-
-  Widget _emojiAvatar() {
-    return Container(
-      width: 52,
-      height: 52,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
-        shape: style.circleAvatar ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: style.circleAvatar ? null : BorderRadius.circular(16),
-      ),
-      child: Text(emoji, style: const TextStyle(fontSize: 26)),
-    );
-  }
-
-  Widget _heroChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.16),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style:
-              _t(size: 12, weight: FontWeight.w700, color: Colors.white),
             ),
           ),
+          Positioned.fill(child: IgnorePointer(child: _confettiLayer())),
         ],
       ),
     );
   }
 
-  Widget _heroAction({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white.withOpacity(0.16),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onTap();
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 16, color: Colors.white),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: _t(
-                    size: 12.5,
-                    weight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  Widget _confettiLayer() {
+    return AnimatedBuilder(
+      animation: _confetti,
+      builder: (_, __) {
+        if (_confetti.value == 0 || _confetti.value == 1) {
+          return const SizedBox.shrink();
+        }
+        return CustomPaint(
+          painter: _ConfettiPainter(
+              progress: _confetti.value, particles: _confettiParticles),
+          size: Size.infinite,
+        );
+      },
     );
   }
-}
 
-// ============================================================================
-// СЕКЦИЯ «АКТИВНОСТЬ»
-// ============================================================================
+  Widget _entranceAt(double delay, Widget child) {
+    return AnimatedBuilder(
+      animation: _entrance,
+      builder: (_, __) {
+        final span = (1.0 - delay).clamp(0.01, 1.0);
+        final t = ((_entrance.value - delay) / span).clamp(0.0, 1.0);
+        final eased = Curves.easeOutCubic.transform(t);
+        return Opacity(
+          opacity: eased.clamp(0.0, 1.0),
+          child: Transform.translate(
+              offset: Offset(0, 24 * (1 - eased)), child: child),
+        );
+      },
+    );
+  }
 
-class _ActivityBody extends StatelessWidget {
-  const _ActivityBody({
-    required this.fitness,
-    required this.pedometer,
-    required this.weekCount,
-    required this.weekMarks,
-    required this.weekVolumes,
-    required this.streak,
-    required this.totalWorkouts,
-    required this.totalVolume,
-    required this.pedometerBg,
-    required this.onCyclePedometerBg,
-    required this.onOpenJournal,
-    required this.onOpenDashboard,
-    required this.onOpenProgress,
-    required this.onOpenPedometer,
-    required this.onContinueSession,
-    required this.onOpenWellbeing,
-    required this.onQuickWorkout,
-    required this.onOpenTargets,
-    required this.onOpenTarget,
-  });
+  // ═════════════════════════════════════════════════════════
+  //  🆕 СЕКЦИЯ 1: 💪 АКТИВНОСТЬ
+  // ═════════════════════════════════════════════════════════
+  Widget _sectionFitness(FitnessProvider fitness, PedometerProvider pedometer) {
+    final r = _R(context);
+    final stats = fitness.getStats();
+    final badges = _getBadges(stats);
+    final prs = _getPRs(fitness);
+    final active = fitness.activeTargets;
 
-  final FitnessProvider fitness;
-  final PedometerProvider pedometer;
-  final int weekCount;
-  final List<bool> weekMarks;
-  final List<double> weekVolumes;
-  final int streak;
-  final int totalWorkouts;
-  final double totalVolume;
-  final int pedometerBg;
-  final VoidCallback onCyclePedometerBg;
-  final VoidCallback onOpenJournal;
-  final VoidCallback onOpenDashboard;
-  final VoidCallback onOpenProgress;
-  final VoidCallback onOpenPedometer;
-  final VoidCallback onContinueSession;
-  final VoidCallback onOpenWellbeing;
-  final VoidCallback onQuickWorkout;
-  final VoidCallback onOpenTargets;
-  final void Function(FitnessTarget) onOpenTarget;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return _SectionContainer(
+      emoji: '💪',
+      title: 'Активность',
+      subtitle: 'Тренировки, шаги и прогресс',
+      accentColor: _Palette.green,
+      actionLabel: 'Журнал',
+      onAction: () => _openWorkoutLog(context),
       children: [
-        _focusCard(),
-        const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: _weekCard(context)),
-            const SizedBox(width: 12),
-            Expanded(child: _streakCard(context)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _pedometerCard(context),
-        const SizedBox(height: 12),
-        _analyticsCard(context),
-        const SizedBox(height: 12),
-        _achievementsCard(context),
-        const SizedBox(height: 12),
-        _targetsCard(context),
+        // Фокус-карточка тренировки (на всю ширину)
+        _focusCard(fitness, inner: true),
+        SizedBox(height: r.s(14)),
+        // Bento: неделя + серия
+        _bentoTop(fitness, inner: true),
+        SizedBox(height: r.s(14)),
+        // Шагомер
+        _stepsCard(pedometer, inner: true),
+        SizedBox(height: r.s(14)),
+        // Аналитика недели
+        _unifiedRhythmVolumeCard(fitness, inner: true),
+        // Достижения + рекорды (если есть)
+        if (badges.isNotEmpty || prs.isNotEmpty) ...[
+          SizedBox(height: r.s(14)),
+          _achievementsAndPRs(fitness, r),
+        ],
+        // Цели
+        SizedBox(height: r.s(14)),
+        _targetsSection(fitness, inner: true),
       ],
     );
   }
 
-  Widget _focusCard() {
-    final session = fitness.activeSession;
-    if (session != null) {
-      return _card(
-        color: _P.green,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _pill('Активная сессия', Colors.white.withOpacity(0.2),
-                    Colors.white),
-                const Spacer(),
-                Text(
-                  '${(session.percent * 100).round()}%',
-                  style: _t(
-                      size: 22,
-                      weight: FontWeight.w800,
-                      color: Colors.white),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              session.programName,
-              style: _t(
-                  size: 19, weight: FontWeight.w800, color: Colors.white),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'День ${session.dayNumber}',
-              style:
-              _t(size: 13, weight: FontWeight.w600, color: Colors.white70),
-            ),
-            const SizedBox(height: 14),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: LinearProgressIndicator(
-                value: session.percent.clamp(0, 1),
-                minHeight: 8,
-                backgroundColor: Colors.white.withOpacity(0.2),
-                valueColor: const AlwaysStoppedAnimation(Colors.white),
-              ),
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () {
-                  HapticFeedback.mediumImpact();
-                  onContinueSession();
-                },
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: Text('Продолжить', style: _t(weight: FontWeight.w800)),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: _P.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+  // ═════════════════════════════════════════════════════════
+  //  🆕 СЕКЦИЯ 2: 🥗 ПИТАНИЕ
+  // ═════════════════════════════════════════════════════════
+  Widget _sectionNutrition(NutritionProvider nutrition) {
+    final r = _R(context);
+    return _SectionContainer(
+      emoji: '🥗',
+      title: 'Питание',
+      subtitle: 'Калории, вода и программа',
+      accentColor: _Palette.pink,
+      actionLabel: 'Подробнее',
+      onAction: () => _openNutrition(context),
+      children: [
+        // Фокус-карточка питания (на всю ширину)
+        _nutritionFocusCard(nutrition, inner: true),
+        SizedBox(height: r.s(14)),
+        // Bento: калории + вода
+        _bentoMid(nutrition, inner: true),
+      ],
+    );
+  }
 
-    if (!fitness.wellbeingChecked) {
-      return _card(
-        color: _P.card,
-        child: Row(
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: _P.sage.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.favorite_rounded, color: _P.sage),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Как самочувствие?',
-                      style: _t(size: 15, weight: FontWeight.w800)),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Отметьте состояние — подберём нагрузку',
-                    style: _t(
-                        size: 12, color: _P.muted, weight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                onOpenWellbeing();
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: _P.sage,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text('Отметить',
-                  style: _t(size: 12, color: Colors.white)),
-            ),
-          ],
+  // ═════════════════════════════════════════════════════════
+  //  🆕 СЕКЦИЯ 3: 🌿 ЗДОРОВЬЕ
+  // ═════════════════════════════════════════════════════════
+  Widget _sectionWellness(BuildContext context) {
+    final r = _R(context);
+    final wellness = context.watch<WellnessProvider>();
+    final nutrition = context.watch<NutritionProvider>();
+    return _SectionContainer(
+      emoji: '🌿',
+      title: 'Здоровье и знания',
+      subtitle: 'Сезонные советы и самочувствие',
+      accentColor: _Palette.sage,
+      actionLabel: 'База знаний',
+      onAction: () => _openKnowledge(context),
+      children: [
+        SeasonVineCard(
+          wellness: wellness,
+          nutrition: nutrition,
+          scale: r.scale,
+          onOpenKnowledge: () => _openKnowledge(context),
         ),
-      );
-    }
+      ],
+    );
+  }
 
-    return _card(
-      color: _P.card,
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: _P.green.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(Icons.bolt_rounded, color: _P.green),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Готовы к тренировке?',
-                    style: _t(size: 15, weight: FontWeight.w800)),
-                const SizedBox(height: 2),
-                Text(
-                  'Соберите быструю сессию за пару тапов',
-                  style: _t(
-                      size: 12, color: _P.muted, weight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          FilledButton(
-            onPressed: () {
-              HapticFeedback.selectionClick();
-              onQuickWorkout();
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: _P.green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text('Старт', style: _t(size: 12, color: Colors.white)),
-          ),
+  // ═════════════════════════════════════════════════════════
+  //  🆕 СЕКЦИЯ 4: ⚡ БЫСТРЫЕ ДЕЙСТВИЯ
+  // ═════════════════════════════════════════════════════════
+  Widget _sectionQuickDock(FitnessProvider fitness) {
+    return _SectionContainer(
+      emoji: '⚡',
+      title: 'Быстрый старт',
+      accentColor: _Palette.peach,
+      children: [
+        _quickDock(fitness, inner: true),
+      ],
+    );
+  }
+
+  void _openKnowledge(BuildContext context) {
+    HapticFeedback.selectionClick();
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: context.read<WellnessProvider>()),
+          ChangeNotifierProvider.value(value: context.read<NutritionProvider>()),
         ],
+        child: const KnowledgeScreen(),
       ),
-    );
+    ));
   }
 
-  Widget _weekCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onOpenDashboard();
-      },
-      child: _card(
-        color: _P.card,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text('Неделя',
-                    style:
-                    _t(size: 13, weight: FontWeight.w700, color: _P.muted)),
-                const Spacer(),
-                Text(
-                  '$weekCount/7',
-                  style:
-                  _t(size: 13, weight: FontWeight.w800, color: _P.green),
+  // ═════════════════════════════════════════════════════════
+  //  FOCUS CARD (Тренировки) — с флагом inner
+  // ═════════════════════════════════════════════════════════
+  Widget _focusCard(FitnessProvider fitness, {bool inner = false}) {
+    final r = _R(context);
+    final session = fitness.activeSession;
+    final wellbeing = fitness.getTodayWellbeing();
+    WorkoutProgram? activeProgram;
+    if (session != null) {
+      try {
+        activeProgram = fitness.programs.firstWhere((p) => p.id == session.programId);
+      } catch (_) {}
+    }
+    final coverUrl = activeProgram?.backgroundImage;
+    final hasCover = coverUrl != null && coverUrl.isNotEmpty;
+    String title = 'Сила в мягком темпе';
+    String subtitle = 'Ещё одна тренировка — и цель недели ближе.';
+    String tag = 'ФОКУС ДНЯ';
+    IconData icon = Icons.play_circle_fill_rounded;
+    VoidCallback onTap = () => _quickStartWorkout(context, fitness);
+    if (session != null) {
+      title = activeProgram?.name ?? 'Продолжить тренировку';
+      subtitle = 'День ${session.currentDayIndex + 1} · ${(session.progressPercent * 100).round()}%';
+      tag = 'АКТИВНАЯ ПРОГРАММА';
+      icon = Icons.play_arrow_rounded;
+      onTap = () {
+        HapticFeedback.lightImpact();
+        if (activeProgram != null) {
+          Navigator.push(context, MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: fitness,
+              child: ActiveProgramScreen(program: activeProgram!, isDark: false),
+            ),
+          ));
+        }
+      };
+    } else if (wellbeing == null) {
+      title = 'Как самочувствие?';
+      subtitle = 'Отметь состояние — влияет на готовность';
+      tag = 'СЕГОДНЯ';
+      icon = Icons.mood_rounded;
+      onTap = () => _openWellbeing(context);
+    }
+    // 🆕 Отступы зависят от того, внутри ли секции карточка
+    final outerPadding = inner
+        ? EdgeInsets.zero
+        : EdgeInsets.fromLTRB(r.s(20), r.s(20), r.s(20), r.s(20));
+    if (hasCover) {
+      return Padding(
+        padding: outerPadding,
+        child: _TapScale(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(r.s(28)),
+              boxShadow: [
+                BoxShadow(
+                  color: _Palette.green.withOpacity(0.10),
+                  blurRadius: 24, spreadRadius: -6,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: LinearProgressIndicator(
-                value: weekCount / 7,
-                minHeight: 6,
-                backgroundColor: _P.line,
-                valueColor: const AlwaysStoppedAnimation(_P.green),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(7, (i) {
-                final done = weekMarks[i];
-                return Column(
-                  children: [
-                    Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: done ? _P.green : _P.line,
-                        shape: BoxShape.circle,
-                      ),
-                      child: done
-                          ? const Icon(Icons.check,
-                          size: 12, color: Colors.white)
-                          : null,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _HomeScreenState._weekdayShort[i],
-                      style: _t(
-                        size: 9.5,
-                        weight: FontWeight.w600,
-                        color: _P.muted,
-                      ),
-                    ),
-                  ],
-                );
-              }),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _streakCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onOpenProgress();
-      },
-      child: _card(
-        color: _P.card,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Серия',
-                style:
-                _t(size: 13, weight: FontWeight.w700, color: _P.muted)),
-            const SizedBox(height: 10),
-            Row(
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
               children: [
                 SizedBox(
-                  width: 54,
-                  height: 54,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 54,
-                        height: 54,
-                        child: CircularProgressIndicator(
-                          value: (streak % 30) / 30,
-                          strokeWidth: 6,
-                          backgroundColor: _P.line,
-                          valueColor:
-                          const AlwaysStoppedAnimation(_P.peach),
-                        ),
+                  height: r.s(220), width: double.infinity,
+                  child: _AppImg(
+                    path: coverUrl, fit: BoxFit.cover,
+                    fallback: Container(color: _Palette.greenSoft),
+                  ),
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.10),
+                          Colors.black.withOpacity(0.35),
+                          Colors.black.withOpacity(0.82),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
                       ),
-                      Text(
-                        '$streak',
-                        style: _t(size: 16, weight: FontWeight.w800),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    streak == 0 ? 'Начните серию\nсегодня' : 'дней подряд',
-                    style:
-                    _t(size: 12, color: _P.muted, weight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _pedometerCard(BuildContext context) {
-    final bg = _pedometerBgs[pedometerBg % _pedometerBgs.length];
-    final remaining = math.max(0, pedometer.goal - pedometer.steps);
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onOpenPedometer();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: bg.colors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.directions_walk_rounded,
-                    color: Colors.white, size: 18),
-                const SizedBox(width: 6),
-                Text('Шаги',
-                    style: _t(
-                        size: 13, weight: FontWeight.w700, color: Colors.white)),
-                const Spacer(),
-                IconButton(
-                  onPressed: onCyclePedometerBg,
-                  icon: const Icon(Icons.palette_outlined,
-                      color: Colors.white, size: 18),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.16),
-                    minimumSize: const Size(32, 32),
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${pedometer.steps}',
-                  style: _t(
-                      size: 28, weight: FontWeight.w800, color: Colors.white),
-                ),
-                const SizedBox(width: 6),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    '/ ${pedometer.goal}',
-                    style: _t(
-                        size: 13,
-                        weight: FontWeight.w600,
-                        color: Colors.white70),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${pedometer.distanceKm.toStringAsFixed(1)} км',
-                  style: _t(
-                      size: 13, weight: FontWeight.w700, color: Colors.white),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: LinearProgressIndicator(
-                value: (pedometer.steps / pedometer.goal).clamp(0, 1),
-                minHeight: 7,
-                backgroundColor: Colors.white.withOpacity(0.22),
-                valueColor: const AlwaysStoppedAnimation(Colors.white),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Осталось $remaining шагов',
-              style: _t(
-                  size: 11.5, weight: FontWeight.w600, color: Colors.white70),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _analyticsCard(BuildContext context) {
-    final hasData = weekVolumes.any((v) => v > 0);
-    final maxV = weekVolumes.fold<double>(0, math.max);
-    final total = weekVolumes.fold<double>(0, (a, b) => a + b);
-    final activeDays = weekVolumes.where((v) => v > 0).length;
-    final bestIndex = weekVolumes.indexOf(maxV);
-    final bestDay = maxV > 0
-        ? '${_HomeScreenState._weekdayShort[bestIndex]} · ${maxV.round()} кг'
-        : '—';
-
-    return _card(
-      color: _P.card,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('Аналитика недели',
-                  style: _t(size: 15, weight: FontWeight.w800)),
-              const Spacer(),
-              if (hasData)
-                Text(
-                  '${total.round()} кг',
-                  style:
-                  _t(size: 13, weight: FontWeight.w800, color: _P.green),
-                ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          if (!hasData)
-            _empty(
-              icon: Icons.bar_chart_rounded,
-              title: 'Пока нет тренировок',
-              subtitle:
-              'Выполните первую тренировку, чтобы увидеть график.',
-            )
-          else ...[
-            SizedBox(
-              height: 110,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(7, (i) {
-                  final h = maxV == 0 ? 0.0 : (weekVolumes[i] / maxV) * 80;
-                  final isBest = i == bestIndex && maxV > 0;
-                  return Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          weekVolumes[i].round().toString(),
-                          style: _t(
-                            size: 9,
-                            color: isBest ? _P.green : _P.muted,
-                            weight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          height: math.max(h, 4),
-                          margin: const EdgeInsets.symmetric(horizontal: 5),
-                          decoration: BoxDecoration(
-                            color: isBest
-                                ? _P.green
-                                : _P.green.withOpacity(0.28),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          _HomeScreenState._weekdayShort[i],
-                          style: _t(
-                              size: 9.5,
-                              color: _P.muted,
-                              weight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _metric('Тоннаж', '${total.round()} кг'),
-                _metric('В среднем', '${(total / 7).round()} кг/д'),
-                _metric('Активных дней', '$activeDays/7'),
-                _metric('Лучший день', bestDay),
-                _metric('Серия', '$streak дн.'),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _achievementsCard(BuildContext context) {
-    final badges = <_Badge>[];
-    if (totalWorkouts >= 1) {
-      badges.add(const _Badge('🥇', 'Первая\nтренировка'));
-    }
-    if (totalWorkouts >= 7 || streak >= 7) {
-      badges.add(const _Badge('🔥', '7 дней\nсерии'));
-    }
-    if (totalWorkouts >= 10) {
-      badges.add(const _Badge('💪', '10\nтренировок'));
-    }
-    if (totalVolume >= 1000) {
-      badges.add(const _Badge('🏋️', 'Тонна\nобъёма'));
-    }
-    if (streak >= 30) {
-      badges.add(const _Badge('⭐', '30 дней\nсерии'));
-    }
-
-    final maxSingle = fitness.logs.isEmpty
-        ? 0.0
-        : fitness.logs.map((l) => l.volume).reduce(math.max);
-    final maxPerDay = <String, int>{};
-    for (final l in fitness.logs) {
-      final key = '${l.date.year}-${l.date.month}-${l.date.day}';
-      maxPerDay[key] = (maxPerDay[key] ?? 0) + 1;
-    }
-    final maxDayCount =
-    maxPerDay.values.isEmpty ? 0 : maxPerDay.values.reduce(math.max);
-
-    final records = <_Record>[
-      if (maxSingle > 0)
-        _Record('Макс. объём', '${maxSingle.round()} кг',
-            Icons.fitness_center_rounded),
-      if (maxDayCount > 0)
-        _Record('Тренировок в день', '$maxDayCount',
-            Icons.event_available_rounded),
-      if (totalWorkouts > 0)
-        _Record('Всего тренировок', '$totalWorkouts', Icons.repeat_rounded),
-      if (totalVolume > 0)
-        _Record('Общий тоннаж', '${totalVolume.round()} кг',
-            Icons.stacked_bar_chart_rounded),
-    ];
-
-    if (badges.isEmpty && records.isEmpty) return const SizedBox.shrink();
-
-    return _card(
-      color: _P.card,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Достижения и рекорды',
-              style: _t(size: 15, weight: FontWeight.w800)),
-          if (badges.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 92,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: badges.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (_, i) {
-                  final b = badges[i];
-                  return Container(
-                    width: 78,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: _P.peach.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(b.emoji,
-                            style: const TextStyle(fontSize: 24)),
-                        const SizedBox(height: 4),
-                        Text(
-                          b.label,
-                          textAlign: TextAlign.center,
-                          style: _t(size: 10, weight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-          if (records.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            SizedBox(
-              height: 74,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: records.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (_, i) {
-                  final r = records[i];
-                  return Container(
-                    width: 132,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _P.bg,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(r.icon, size: 16, color: _P.green),
-                        const Spacer(),
-                        Text(r.value,
-                            style:
-                            _t(size: 14, weight: FontWeight.w800)),
-                        Text(
-                          r.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: _t(
-                              size: 10,
-                              color: _P.muted,
-                              weight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _targetsCard(BuildContext context) {
-    final goals = fitness.goals.take(3).toList();
-    return _card(
-      color: _P.card,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('Цели', style: _t(size: 15, weight: FontWeight.w800)),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  HapticFeedback.selectionClick();
-                  onOpenTargets();
-                },
-                child: Text(
-                  goals.isEmpty ? 'Добавить' : 'Изменить',
-                  style:
-                  _t(size: 12.5, weight: FontWeight.w700, color: _P.green),
-                ),
-              ),
-            ],
-          ),
-          if (goals.isEmpty)
-            _empty(
-              icon: Icons.flag_rounded,
-              title: 'Целей пока нет',
-              subtitle: 'Поставьте цель и следите за прогрессом.',
-            )
-          else
-            ...goals.map((g) {
-              final progress =
-              g.target == 0 ? 0.0 : (g.current / g.target).clamp(0.0, 1.0);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    onOpenTarget(g);
-                  },
+                  padding: EdgeInsets.all(r.s(20)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              g.title,
-                              style: _t(size: 13, weight: FontWeight.w700),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: r.s(9), vertical: r.s(5)),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.94),
+                              borderRadius: BorderRadius.circular(r.s(8)),
                             ),
-                          ),
-                          Text(
-                            '${g.current.round()}/${g.target.round()} ${g.unit}',
-                            style: _t(
-                              size: 11.5,
-                              weight: FontWeight.w700,
-                              color: _P.muted,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(icon, color: _Palette.green, size: r.s(12)),
+                                SizedBox(width: r.s(4)),
+                                Text(tag,
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.green, fontSize: r.fs(9),
+                                    fontWeight: FontWeight.w700, letterSpacing: 0.6,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 6,
-                          backgroundColor: _P.line,
-                          valueColor: const AlwaysStoppedAnimation(_P.green),
+                      SizedBox(height: r.s(90)),
+                      Text(title,
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: Colors.white, fontSize: r.fs(22),
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.6, height: 1.15,
+                        ),
+                      ),
+                      SizedBox(height: r.s(4)),
+                      Text(subtitle,
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: r.fs(12),
+                        ),
+                      ),
+                      SizedBox(height: r.s(14)),
+                      SizedBox(
+                        width: double.infinity, height: r.s(46),
+                        child: ElevatedButton(
+                          onPressed: onTap,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: _Palette.text,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(r.s(24))),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(icon, size: r.s(18), color: _Palette.text),
+                              SizedBox(width: r.s(8)),
+                              Text(session != null ? 'Продолжить' : 'Начать',
+                                style: GoogleFonts.inter(
+                                  fontSize: r.fs(13),
+                                  fontWeight: FontWeight.w600,
+                                  color: _Palette.text,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
-  Widget _pill(String text, Color bg, Color fg) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child:
-      Text(text, style: _t(size: 11, weight: FontWeight.w700, color: fg)),
-    );
-  }
-
-  Widget _metric(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: _P.bg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label,
-              style:
-              _t(size: 9.5, color: _P.muted, weight: FontWeight.w600)),
-          const SizedBox(height: 2),
-          Text(value, style: _t(size: 12, weight: FontWeight.w800)),
-        ],
-      ),
-    );
-  }
-
-  Widget _empty({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _P.bg,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: _P.muted, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: _t(size: 13, weight: FontWeight.w700)),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: _t(
-                      size: 11.5, color: _P.muted, weight: FontWeight.w500),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// СЕКЦИЯ «ПИТАНИЕ»
-// ============================================================================
-
-class _NutritionBody extends StatelessWidget {
-  const _NutritionBody({
-    required this.nutrition,
-    required this.summary,
-    required this.goals,
-    required this.onCreateProgram,
-    required this.onOpenProgram,
-    required this.onOpenFuel,
-  });
-
-  final NutritionProvider nutrition;
-  final NutritionSummary summary;
-  final NutritionGoals goals;
-  final VoidCallback onCreateProgram;
-  final VoidCallback onOpenProgram;
-  final VoidCallback onOpenFuel;
-
-  @override
-  Widget build(BuildContext context) {
-    final program = nutrition.activeProgram;
-    final remaining = goals.calories - summary.calories;
-    final progress = goals.calories == 0
-        ? 0.0
-        : (summary.calories / goals.calories).clamp(0.0, 1.0);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (program == null)
-          _card(
-            color: _P.card,
-            child: Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: _P.pink.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.restaurant_menu_rounded,
-                      color: _P.pink),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Нет активной программы',
-                          style: _t(size: 15, weight: FontWeight.w800)),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Подберите питание под ваши цели',
-                        style: _t(
-                            size: 12,
-                            color: _P.muted,
-                            weight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    HapticFeedback.selectionClick();
-                    onCreateProgram();
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _P.pink,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child:
-                  Text('Создать', style: _t(size: 12, color: Colors.white)),
-                ),
-              ],
-            ),
-          )
-        else
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onOpenProgram();
-            },
-            child: _card(
-              color: _P.card,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+      );
+    }
+    return Padding(
+      padding: outerPadding,
+      child: _TapScale(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.all(r.s(20)),
+          decoration: BoxDecoration(
+            color: _Palette.greenSoft,
+            borderRadius: BorderRadius.circular(r.s(28)),
+            border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: Text(
-                          program.name,
-                          style: _t(size: 16, weight: FontWeight.w800),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: CircularProgressIndicator(
-                                value: progress,
-                                strokeWidth: 5,
-                                backgroundColor: _P.line,
-                                valueColor:
-                                const AlwaysStoppedAnimation(_P.pink),
-                              ),
-                            ),
-                            Text(
-                              '${(progress * 100).round()}%',
-                              style:
-                              _t(size: 10.5, weight: FontWeight.w800),
-                            ),
-                          ],
+                      Icon(icon, color: _Palette.green, size: r.s(16)),
+                      SizedBox(width: r.s(6)),
+                      Text(tag,
+                        style: GoogleFonts.inter(
+                          color: _Palette.green, fontSize: r.fs(10),
+                          fontWeight: FontWeight.w600, letterSpacing: 1,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${summary.calories.round()} / ${goals.calories.round()} ккал',
-                    style: _t(
-                        size: 12.5,
-                        color: _P.muted,
-                        weight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 7,
-                      backgroundColor: _P.line,
-                      valueColor: const AlwaysStoppedAnimation(_P.pink),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    remaining >= 0
-                        ? 'Осталось ${remaining.round()} ккал'
-                        : 'Перебор ${(-remaining).round()} ккал',
-                    style: _t(
-                      size: 11.5,
-                      weight: FontWeight.w700,
-                      color: remaining >= 0 ? _P.pink : Colors.redAccent,
+                  Text('25 мин · Дома',
+                    style: GoogleFonts.inter(
+                      color: _Palette.textMuted, fontSize: r.fs(11),
                     ),
                   ),
                 ],
               ),
-            ),
+              SizedBox(height: r.s(16)),
+              Text(title,
+                maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  color: _Palette.text, fontSize: r.fs(22),
+                  fontWeight: FontWeight.w400, letterSpacing: -0.8,
+                ),
+              ),
+              SizedBox(height: r.s(6)),
+              Text(subtitle,
+                maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  color: _Palette.textMuted, fontSize: r.fs(12), height: 1.4,
+                ),
+              ),
+              SizedBox(height: r.s(20)),
+              SizedBox(
+                width: double.infinity, height: r.s(48),
+                child: ElevatedButton(
+                  onPressed: onTap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _Palette.green,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(r.s(24))),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: r.s(18)),
+                      SizedBox(width: r.s(8)),
+                      Text(session != null ? 'Продолжить' : 'Начать тренировку',
+                        style: GoogleFonts.inter(
+                          fontSize: r.fs(13), fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onOpenFuel();
-                },
-                child: _card(
-                  color: _P.card,
+        ),
+      ),
+    );
+  }
+
+  // ═════════════════════════════════
+  //  NUTRITION FOCUS CARD — с флагом inner
+  // ═════════════════════════════════
+  Widget _nutritionFocusCard(NutritionProvider nutrition, {bool inner = false}) {
+    final r = _R(context);
+    final program = nutrition.activeProgram;
+    final today = DateTime.now();
+    final summary = nutrition.getSummaryForDate(today);
+    final goals = nutrition.getGoalsForDate(today);
+    final hasBg = program != null && program.backgroundImage != null && program.backgroundImage!.isNotEmpty;
+    final bgImage = program?.backgroundImage;
+    final outerPadding = inner
+        ? EdgeInsets.zero
+        : EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20));
+    if (program == null) {
+      return Padding(
+        padding: outerPadding,
+        child: _TapScale(
+          onTap: () => _openProgramsHub(context),
+          child: Container(
+            padding: EdgeInsets.all(r.s(20)),
+            decoration: BoxDecoration(
+              color: _Palette.pinkSoft,
+              borderRadius: BorderRadius.circular(r.s(28)),
+              border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: _Palette.pink.withOpacity(0.08),
+                  blurRadius: 20, spreadRadius: -6,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: r.s(52), height: r.s(52),
+                  decoration: BoxDecoration(
+                    color: _Palette.pink.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(r.s(16)),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.restaurant_menu_rounded,
+                      color: _Palette.pink, size: 26),
+                ),
+                SizedBox(width: r.s(16)),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Калории',
-                          style: _t(
-                              size: 12,
-                              color: _P.muted,
-                              weight: FontWeight.w700)),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${summary.calories.round()}',
-                        style: _t(size: 22, weight: FontWeight.w800),
-                      ),
-                      Text(
-                        'из ${goals.calories.round()} ккал',
-                        style: _t(
-                            size: 11,
-                            color: _P.muted,
-                            weight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 5,
-                          backgroundColor: _P.line,
-                          valueColor:
-                          const AlwaysStoppedAnimation(_P.pink),
+                      Text('План питания',
+                        style: GoogleFonts.inter(
+                          color: _Palette.text, fontSize: r.fs(16),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Остаток ${math.max(0, remaining).round()} ккал',
-                        style: _t(
-                            size: 10.5,
-                            weight: FontWeight.w700,
-                            color: _P.muted),
+                      SizedBox(height: r.s(4)),
+                      Text('Создай программу для отслеживания КБЖУ',
+                        style: GoogleFonts.inter(
+                          color: _Palette.textMuted, fontSize: r.fs(12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded,
+                    color: _Palette.textMuted, size: r.s(20)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    final kcalPct = goals.calories > 0
+        ? (summary.calories / goals.calories).clamp(0.0, 1.2) : 0.0;
+    final isOver = kcalPct > 1.05;
+    final accentColor = isOver ? _Palette.pink : _Palette.green;
+    final textColor = hasBg ? Colors.white : _Palette.text;
+    final mutedColor = hasBg ? Colors.white.withOpacity(0.7) : _Palette.textMuted;
+    final trackColor = hasBg ? Colors.white.withOpacity(0.2) : _Palette.divider;
+    return Padding(
+      padding: outerPadding,
+      child: _TapScale(
+        onTap: () => _openPlanTracker(context),
+        child: Container(
+          height: r.s(200),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(r.s(28)),
+            border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withOpacity(0.08),
+                blurRadius: 20, spreadRadius: -6,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              if (hasBg)
+                Positioned.fill(
+                  child: _AppImg(
+                    path: bgImage,
+                    fit: BoxFit.cover,
+                    fallback: Container(color: _Palette.surface),
+                  ),
+                ),
+              if (hasBg)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.1),
+                          Colors.black.withOpacity(0.75),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: EdgeInsets.all(r.s(20)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                width: r.s(42), height: r.s(42),
+                                decoration: BoxDecoration(
+                                  color: hasBg
+                                      ? Colors.white.withOpacity(0.2)
+                                      : (isOver ? _Palette.pinkSoft : _Palette.greenSoft),
+                                  borderRadius: BorderRadius.circular(r.s(12)),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(Icons.checklist_rtl_rounded,
+                                    color: hasBg ? Colors.white : accentColor, size: r.s(22)),
+                              ),
+                              SizedBox(width: r.s(12)),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('ПРОГРАММА',
+                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        color: mutedColor, fontSize: r.fs(10),
+                                        fontWeight: FontWeight.w700, letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                    Text(program.name,
+                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        color: textColor, fontSize: r.fs(16),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: r.s(8)),
+                        Icon(Icons.arrow_outward_rounded,
+                            color: mutedColor, size: r.s(18)),
+                      ],
+                    ),
+                    Spacer(),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text.rich(TextSpan(children: [
+                                TextSpan(
+                                  text: '${summary.calories.round()}',
+                                  style: GoogleFonts.inter(
+                                    color: textColor, fontSize: r.fs(28),
+                                    fontWeight: FontWeight.w600, letterSpacing: -1.3,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' / ${goals.calories.round()} ккал',
+                                  style: GoogleFonts.inter(
+                                    color: mutedColor, fontSize: r.fs(14),
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ])),
+                              SizedBox(height: r.s(6)),
+                              Text(
+                                isOver
+                                    ? 'Перебор на ${(-summary.calories + goals.calories).abs().round()} ккал'
+                                    : 'Осталось ${(goals.calories - summary.calories).round().clamp(0, 9999)} ккал',
+                                style: GoogleFonts.inter(
+                                  color: hasBg ? Colors.white : accentColor,
+                                  fontSize: r.fs(12),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: r.s(12)),
+                              _GlossyProgress(
+                                value: kcalPct.clamp(0.0, 1.0),
+                                height: r.s(6),
+                                gradient: isOver
+                                    ? const [_Vibrant.glowingPink, _Vibrant.vividPeach]
+                                    : const [_Vibrant.neonGreen, _Palette.green],
+                                track: hasBg ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.55),
+                                radius: 100,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: r.s(16)),
+                        SizedBox(
+                          width: r.s(72), height: r.s(72),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox(
+                                width: r.s(72), height: r.s(72),
+                                child: TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0.0, end: kcalPct.clamp(0.0, 1.0)),
+                                  duration: const Duration(milliseconds: 1200),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (_, anim, __) => CircularProgressIndicator(
+                                    value: anim,
+                                    strokeWidth: r.s(6),
+                                    backgroundColor: trackColor,
+                                    valueColor: AlwaysStoppedAnimation(hasBg ? Colors.white : accentColor),
+                                  ),
+                                ),
+                              ),
+                              Text('${(kcalPct * 100).round()}%',
+                                style: GoogleFonts.inter(
+                                  color: textColor, fontSize: r.fs(15),
+                                  fontWeight: FontWeight.w700,
+                                  fontFeatures: const [FontFeature.tabularFigures()],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  BENTO TOP — с флагом inner
+  // ═════════════════════════════════════════════════════════
+  Widget _bentoTop(FitnessProvider fitness, {bool inner = false}) {
+    final r = _R(context);
+    final stats = fitness.getStats();
+    final thisWeek = _getThisWeek(fitness, DateTime.now());
+    final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
+    final today = DateTime.now();
+    final weekData = _buildWeekData(fitness, today, today.weekday - 1);
+    final todayIdx = today.weekday - 1;
+    final passedDays = todayIdx + 1;
+    final weekProgress = (passedDays / 7).clamp(0.0, 1.0);
+    final outerPadding = inner
+        ? EdgeInsets.zero
+        : EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20));
+    return Padding(
+      padding: outerPadding,
+      child: SizedBox(
+        height: r.s(240),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 5,
+              child: _TapScale(
+                onTap: () => _openFitness(context),
+                child: Container(
+                  padding: EdgeInsets.all(r.s(16)),
+                  decoration: BoxDecoration(
+                    color: _Palette.greenSoft,
+                    borderRadius: BorderRadius.circular(r.s(28)),
+                    border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Фитнес',
+                            style: GoogleFonts.inter(
+                              color: _Palette.text, fontSize: r.fs(13),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Icon(Icons.arrow_outward_rounded,
+                              color: _Palette.textMuted, size: r.s(16)),
+                        ],
+                      ),
+                      SizedBox(height: r.s(10)),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text('$thisWeek',
+                            style: GoogleFonts.inter(
+                              color: _Palette.text, fontSize: r.fs(32),
+                              fontWeight: FontWeight.w400, letterSpacing: -1.3,
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                          SizedBox(width: r.s(4)),
+                          Text('/ 7',
+                            style: GoogleFonts.inter(
+                              color: _Palette.textMuted, fontSize: r.fs(15),
+                              letterSpacing: -1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text('тренировок на этой неделе',
+                        style: GoogleFonts.inter(
+                          color: _Palette.textMuted, fontSize: r.fs(11),
+                        ),
+                      ),
+                      SizedBox(height: r.s(14)),
+                      _GlossyProgress(
+                        value: weekProgress,
+                        height: r.s(8),
+                        gradient: const [_Vibrant.neonGreen, _Palette.green],
+                        track: Colors.white.withOpacity(0.55),
+                        radius: r.s(6),
+                      ),
+                      SizedBox(height: r.s(10)),
+                      _WeekDaysRow(
+                        weekData: weekData,
+                        todayIdx: todayIdx,
+                        scale: r.scale,
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: r.s(12)),
             Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onOpenFuel();
-                },
-                child: _card(
-                  color: _P.card,
+              flex: 4,
+              child: _TapScale(
+                onTap: () => _openProgress(context),
+                child: Container(
+                  padding: EdgeInsets.all(r.s(16)),
+                  decoration: BoxDecoration(
+                    color: _Palette.peachSoft,
+                    borderRadius: BorderRadius.circular(r.s(28)),
+                    border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Серия',
+                            style: GoogleFonts.inter(
+                              color: _Palette.text, fontSize: r.fs(13),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Icon(Icons.arrow_outward_rounded,
+                              color: _Palette.textMuted, size: r.s(16)),
+                        ],
+                      ),
+                      SizedBox(height: r.s(8)),
+                      Expanded(
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            AspectRatio(
+                              aspectRatio: 1,
+                              child: CircularProgressIndicator(
+                                value: (streak / 14).clamp(0.0, 1.0),
+                                strokeWidth: r.s(6),
+                                backgroundColor: Colors.white.withOpacity(0.5),
+                                valueColor: const AlwaysStoppedAnimation(_Palette.peach),
+                              ),
+                            ),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('$streak',
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.text, fontSize: r.fs(36),
+                                    fontWeight: FontWeight.w500, letterSpacing: -1.5,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                                Text('дней',
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.textMuted, fontSize: r.fs(11),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: r.s(6)),
+                      Text('До рекорда — 2 дня',
+                        style: GoogleFonts.inter(
+                          color: _Palette.textMuted, fontSize: r.fs(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  BENTO MID — с флагом inner
+  // ═════════════════════════════════════════════════════════
+  Widget _bentoMid(NutritionProvider nutrition, {bool inner = false}) {
+    final r = _R(context);
+    final today = DateTime.now();
+    final summary = nutrition.getSummaryForDate(today);
+    final goals = nutrition.getGoalsForDate(today);
+    final kcalPct = goals.calories > 0
+        ? (summary.calories / goals.calories).clamp(0.0, 1.0) : 0.0;
+    final waterPct = goals.waterMl > 0
+        ? (summary.waterMl / goals.waterMl).clamp(0.0, 1.0) : 0.0;
+    final outerPadding = inner
+        ? EdgeInsets.zero
+        : EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20));
+    return Padding(
+      padding: outerPadding,
+      child: SizedBox(
+        height: r.s(206),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 5,
+              child: _TapScale(
+                onTap: () => _openNutrition(context),
+                child: Container(
+                  padding: EdgeInsets.all(r.s(16)),
+                  decoration: BoxDecoration(
+                    color: _Palette.pinkSoft,
+                    borderRadius: BorderRadius.circular(r.s(28)),
+                    border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Вода',
-                          style: _t(
-                              size: 12,
-                              color: _P.muted,
-                              weight: FontWeight.w700)),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${summary.water.toStringAsFixed(1)} л',
-                        style: _t(size: 22, weight: FontWeight.w800),
-                      ),
-                      Text(
-                        'из ${goals.water.toStringAsFixed(1)} л',
-                        style: _t(
-                            size: 11,
-                            color: _P.muted,
-                            weight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 10),
                       Row(
-                        children: List.generate(5, (i) {
-                          final filled = summary.water >=
-                              (goals.water * (i + 1) / 5).clamp(0, goals.water);
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 3),
-                              child: Icon(
-                                Icons.local_drink_rounded,
-                                size: 16,
-                                color: filled ? _P.blue : _P.line,
-                              ),
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Питание',
+                            style: GoogleFonts.inter(
+                              color: _Palette.text, fontSize: r.fs(13),
+                              fontWeight: FontWeight.w500,
                             ),
-                          );
+                          ),
+                          Icon(Icons.arrow_outward_rounded,
+                              color: _Palette.textMuted, size: r.s(16)),
+                        ],
+                      ),
+                      SizedBox(height: r.s(14)),
+                      Text('${summary.calories.round()}',
+                        style: GoogleFonts.inter(
+                          color: _Palette.text, fontSize: r.fs(28),
+                          fontWeight: FontWeight.w400, letterSpacing: -1.3,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      Text('из ${goals.calories.round()} ккал',
+                        style: GoogleFonts.inter(
+                          color: _Palette.textMuted, fontSize: r.fs(11),
+                        ),
+                      ),
+                      SizedBox(height: r.s(14)),
+                      _GlossyProgress(
+                        value: kcalPct,
+                        height: r.s(6),
+                        gradient: const [_Vibrant.glowingPink, _Vibrant.vividPeach],
+                        track: Colors.white.withOpacity(0.55),
+                        radius: 100,
+                      ),
+                      SizedBox(height: r.s(10)),
+                      Text(
+                        'Осталось ${(goals.calories - summary.calories).round().clamp(0, 9999)} ккал',
+                        style: GoogleFonts.inter(
+                          color: _Palette.textMuted, fontSize: r.fs(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: r.s(12)),
+            Expanded(
+              flex: 4,
+              child: _TapScale(
+                onTap: () => _openNutrition(context),
+                child: Container(
+                  padding: EdgeInsets.all(r.s(16)),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.72),
+                    borderRadius: BorderRadius.circular(r.s(28)),
+                    border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Вода',
+                            style: GoogleFonts.inter(
+                              color: _Palette.text, fontSize: r.fs(13),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Icon(Icons.arrow_outward_rounded,
+                              color: _Palette.textMuted, size: r.s(16)),
+                        ],
+                      ),
+                      SizedBox(height: r.s(14)),
+                      Text.rich(TextSpan(children: [
+                        TextSpan(
+                          text: '${(summary.waterMl / 1000).toStringAsFixed(1)} ',
+                          style: GoogleFonts.inter(
+                            color: _Palette.text, fontSize: r.fs(28),
+                            fontWeight: FontWeight.w400, letterSpacing: -1.3,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        TextSpan(
+                          text: '/ ${(goals.waterMl / 1000).toStringAsFixed(0)} л',
+                          style: GoogleFonts.inter(
+                            color: _Palette.textMuted, fontSize: r.fs(14),
+                            letterSpacing: -1,
+                          ),
+                        ),
+                      ])),
+                      Text('Хороший темп',
+                        style: GoogleFonts.inter(
+                          color: _Palette.textMuted, fontSize: r.fs(11),
+                        ),
+                      ),
+                      SizedBox(height: r.s(14)),
+                      Wrap(
+                        spacing: r.s(4), runSpacing: r.s(4),
+                        children: List.generate(8, (i) {
+                          final filled = (i / 8) < waterPct;
+                          return Icon(Icons.water_drop_rounded,
+                              size: r.s(14),
+                              color: filled ? _Palette.green : _Palette.divider);
                         }),
                       ),
                     ],
@@ -2301,997 +2016,1331 @@ class _NutritionBody extends StatelessWidget {
             ),
           ],
         ),
-      ],
+      ),
     );
   }
-}
 
-// ============================================================================
-// SEASON VINE CARD
-// ============================================================================
-
-class SeasonVineCard extends StatelessWidget {
-  const SeasonVineCard({
-    super.key,
-    required this.wellness,
-    required this.nutrition,
-  });
-
-  final WellnessProvider wellness;
-  final NutritionProvider nutrition;
-
-  @override
-  Widget build(BuildContext context) {
-    final tips = wellness.seasonalTips;
-    final tip = tips.isNotEmpty
-        ? tips.first
-        : 'Следите за водным балансом и добавляйте сезонные овощи в рацион.';
-    final program = nutrition.activeProgram;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _P.sage.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _P.sage.withOpacity(0.25)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 46,
-            height: 46,
+  // ═════════════════════════════════════════════════════════
+  //  STEPS CARD — с флагом inner
+  // ═════════════════════════════════════════════════════════
+  Widget _stepsCard(PedometerProvider pedo, {bool inner = false}) {
+    final r = _R(context);
+    final pct = pedo.progress;
+    final outerPadding = inner
+        ? EdgeInsets.zero
+        : EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20));
+    return Padding(
+      padding: outerPadding,
+      child: GestureDetector(
+        onTap: () => _openPedometer(context),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(r.s(28)),
+          child: Container(
+            height: r.s(180),
             decoration: BoxDecoration(
-              color: _P.sage.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(Icons.spa_rounded, color: _P.sage),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Сезонный совет',
-                    style: _t(size: 14, weight: FontWeight.w800)),
-                const SizedBox(height: 4),
-                Text(
-                  tip,
-                  style: _t(
-                      size: 12.5, color: _P.ink, weight: FontWeight.w500),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 18, offset: const Offset(0, 8),
                 ),
-                if (program != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    'Рекомендация по программе «${program.name}» доступна в базе знаний.',
-                    style: _t(
-                        size: 11, color: _P.muted, weight: FontWeight.w600),
-                  ),
-                ],
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// БЫСТРЫЙ СТАРТ
-// ============================================================================
-
-class _QuickStartRow extends StatelessWidget {
-  const _QuickStartRow({
-    required this.onStart,
-    required this.onJournal,
-    required this.onBase,
-    required this.onWellbeing,
-    required this.onTargets,
-  });
-
-  final VoidCallback onStart;
-  final VoidCallback onJournal;
-  final VoidCallback onBase;
-  final VoidCallback onWellbeing;
-  final VoidCallback onTargets;
-
-  @override
-  Widget build(BuildContext context) {
-    final items = <_QuickItem>[
-      _QuickItem(Icons.play_arrow_rounded, 'Старт', onStart),
-      _QuickItem(Icons.receipt_long_rounded, 'Журнал', onJournal),
-      _QuickItem(Icons.menu_book_rounded, 'База', onBase),
-      _QuickItem(Icons.favorite_rounded, 'Настрой', onWellbeing),
-      _QuickItem(Icons.flag_rounded, 'Цели', onTargets),
-    ];
-    return Row(
-      children: List.generate(items.length, (i) {
-        final it = items[i];
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: i == items.length - 1 ? 0 : 8),
-            child: Material(
-              color: _P.card,
-              borderRadius: BorderRadius.circular(16),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  it.onTap();
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  _heroBackgrounds[_pedometerBgIndex],
+                  key: ValueKey(_pedometerBgIndex),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(color: _Palette.green),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft, end: Alignment.centerRight,
+                      colors: [
+                        Colors.black.withOpacity(0.75),
+                        Colors.black.withOpacity(0.45),
+                        Colors.black.withOpacity(0.1),
+                      ],
+                      stops: const [0.0, 0.55, 1.0],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(r.s(20), r.s(16), r.s(20), r.s(16)),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: _P.peach.withOpacity(0.16),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(it.icon, size: 18, color: _P.peach),
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(r.s(8)),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(r.s(12)),
+                              border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.8),
+                            ),
+                            child: const Icon(Icons.directions_walk_rounded, color: Colors.white, size: 20),
+                          ),
+                          SizedBox(width: r.s(12)),
+                          Expanded(
+                            child: Text('ШАГОМЕР',
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.jetBrainsMono(
+                                color: Colors.white, fontSize: r.s(12),
+                                fontWeight: FontWeight.w700, letterSpacing: 2.0,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: r.s(8)),
+                          GestureDetector(
+                            onTap: _cyclePedometerBg,
+                            child: Container(
+                              padding: EdgeInsets.all(r.s(8)),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(100),
+                                border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.8),
+                              ),
+                              child: const Icon(Icons.wallpaper_rounded, color: Colors.white, size: 18),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        it.label,
-                        style: _t(size: 10.5, weight: FontWeight.w700),
+                      Spacer(),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('${_fmtNum(pedo.steps)}',
+                            style: GoogleFonts.inter(
+                              color: Colors.white, fontSize: r.s(36),
+                              fontWeight: FontWeight.w800, letterSpacing: -1.5,
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                          SizedBox(width: r.s(8)),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: r.s(6)),
+                            child: Text('/ ${_fmtNum(pedo.goal)} шагов',
+                              style: GoogleFonts.inter(
+                                color: Colors.white.withOpacity(0.7), fontSize: r.s(14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: r.s(8)),
+                      Text('${pedo.distanceKm.toStringAsFixed(1)} км · Ещё ${_fmtNum(pedo.remaining)} до цели',
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withOpacity(0.8), fontSize: r.s(12),
+                        ),
+                      ),
+                      SizedBox(height: r.s(12)),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(100),
+                        child: LinearProgressIndicator(
+                          value: pct,
+                          minHeight: r.s(6),
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          valueColor: const AlwaysStoppedAnimation(_Vibrant.neonGreen),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
-
-// ============================================================================
-// ШТОРКА «БЫСТРАЯ ТРЕНИРОВКА»
-// ============================================================================
-
-class _QuickWorkoutSheet extends StatefulWidget {
-  const _QuickWorkoutSheet({required this.exercises});
-
-  final List<Exercise> exercises;
-
-  @override
-  State<_QuickWorkoutSheet> createState() => _QuickWorkoutSheetState();
-}
-
-class _QuickWorkoutSheetState extends State<_QuickWorkoutSheet> {
-  final _search = TextEditingController();
-  final _selected = <String>{};
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
-  List<Exercise> get _filtered {
-    final q = _search.text.trim().toLowerCase();
-    if (q.isEmpty) return widget.exercises;
-    return widget.exercises
-        .where((e) => e.name.toLowerCase().contains(q))
-        .toList();
-  }
-
-  List<Exercise> get _selectedExercises =>
-      widget.exercises.where((e) => _selected.contains(e.id)).toList();
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = _filtered;
-    return Container(
-      decoration: const BoxDecoration(
-        color: _P.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          Container(
-            width: 44,
-            height: 4,
-            decoration: BoxDecoration(
-              color: _P.line,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text('Быстрая тренировка',
-                      style: _t(size: 18, weight: FontWeight.w800)),
-                ),
-                Text(
-                  '${_selected.length} выбрано',
-                  style: _t(
-                      size: 12, weight: FontWeight.w700, color: _P.green),
-                ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              controller: _search,
-              onChanged: (_) => setState(() {}),
-              style: _t(size: 14),
-              decoration: InputDecoration(
-                hintText: 'Поиск упражнения…',
-                hintStyle: _t(color: _P.muted, weight: FontWeight.w500),
-                prefixIcon: const Icon(Icons.search_rounded, color: _P.muted),
-                suffixIcon: _search.text.isEmpty
-                    ? null
-                    : IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  onPressed: () {
-                    _search.clear();
-                    setState(() {});
-                  },
+        ),
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  🆕 ОБЪЕДИНЁННЫЕ ДОСТИЖЕНИЯ + РЕКОРДЫ
+  // ═════════════════════════════════════════════════════════
+  Widget _achievementsAndPRs(FitnessProvider fitness, _R r) {
+    final stats = fitness.getStats();
+    final badges = _getBadges(stats);
+    final prs = _getPRs(fitness);
+    return Container(
+      padding: EdgeInsets.all(r.s(16)),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(r.s(24)),
+        border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Бейджи
+          if (badges.isNotEmpty) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Маленькие победы',
+                  style: GoogleFonts.inter(
+                    color: _Palette.text, fontSize: r.fs(14),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
+                Text('${badges.length}',
+                  style: GoogleFonts.inter(
+                    color: _Palette.green, fontSize: r.fs(11),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+              ],
+            ),
+            SizedBox(height: r.s(10)),
+            SizedBox(
+              height: r.s(120),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: badges.length,
+                separatorBuilder: (_, __) => SizedBox(width: r.s(8)),
+                itemBuilder: (_, i) {
+                  final b = badges[i];
+                  return Container(
+                    width: r.s(115),
+                    padding: EdgeInsets.all(r.s(12)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(r.s(18)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: r.s(36), height: r.s(36),
+                          decoration: BoxDecoration(
+                            color: b.color.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(b.emoji, style: TextStyle(fontSize: r.fs(18))),
+                        ),
+                        const Spacer(),
+                        Text(b.label,
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            color: _Palette.text, fontSize: r.fs(11),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: r.s(2)),
+                        Text(b.subtitle,
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            color: _Palette.textMuted, fontSize: r.fs(9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Stack(
+            if (prs.isNotEmpty) SizedBox(height: r.s(16)),
+            if (prs.isNotEmpty) Container(height: 1, color: _Palette.divider.withOpacity(0.5)),
+            if (prs.isNotEmpty) SizedBox(height: r.s(16)),
+          ],
+          // Рекорды
+          if (prs.isNotEmpty) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                filtered.isEmpty
-                    ? Center(
-                  child: Text(
-                    'Ничего не найдено',
-                    style:
-                    _t(color: _P.muted, weight: FontWeight.w600),
+                Text('Рекорды',
+                  style: GoogleFonts.inter(
+                    color: _Palette.text, fontSize: r.fs(14),
+                    fontWeight: FontWeight.w600,
                   ),
-                )
-                    : ListView.separated(
-                  padding:
-                  const EdgeInsets.fromLTRB(20, 8, 20, 110),
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, __) =>
-                  const SizedBox(height: 8),
-                  itemBuilder: (_, i) {
-                    final e = filtered[i];
-                    final active = _selected.contains(e.id);
-                    return Material(
-                      color: active
-                          ? _P.green.withOpacity(0.1)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() {
-                            if (active) {
-                              _selected.remove(e.id);
-                            } else {
-                              _selected.add(e.id);
-                            }
-                          });
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 14),
-                          child: Row(
+                ),
+                Text('${prs.length}',
+                  style: GoogleFonts.inter(
+                    color: _Palette.peach, fontSize: r.fs(11),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: r.s(10)),
+            SizedBox(
+              height: r.s(96),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: prs.length,
+                separatorBuilder: (_, __) => SizedBox(width: r.s(8)),
+                itemBuilder: (_, i) {
+                  final pr = prs[i];
+                  return Container(
+                    width: r.s(100),
+                    padding: EdgeInsets.all(r.s(10)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(r.s(16)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: r.s(26), height: r.s(26),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: pr.color.withOpacity(0.12),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(pr.emoji, style: TextStyle(fontSize: r.fs(13))),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(pr.value,
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                color: _Palette.text, fontSize: r.fs(18),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.8, height: 1,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                            SizedBox(height: r.s(2)),
+                            Text(pr.label,
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                color: _Palette.textMuted, fontSize: r.fs(9),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  UNIFIED RHYTHM & VOLUME CARD — с флагом inner
+  // ═════════════════════════════════════════════════════════
+  Widget _unifiedRhythmVolumeCard(FitnessProvider fitness, {bool inner = false}) {
+    final r = _R(context);
+    final today = DateTime.now();
+    final todayIdx = today.weekday - 1;
+    final weekData = _buildWeekData(fitness, today, todayIdx);
+    final volumes = weekData.map((d) => d.volume).toList();
+    final hasAnyData = weekData.any((d) => d.workouts > 0);
+    final totalVol = volumes.fold<double>(0, (s, v) => s + v);
+    final activeDays = weekData.where((d) => d.workouts > 0).length;
+    final maxVol = volumes.fold<double>(0, (a, b) => math.max(a, b));
+    final avgPerDay = totalVol / 7;
+    int bestIdx = -1;
+    double bestVol = 0;
+    for (int i = 0; i < volumes.length; i++) {
+      if (volumes[i] > bestVol) { bestVol = volumes[i]; bestIdx = i; }
+    }
+    const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    final stats = fitness.getStats();
+    final streak = ((stats['currentStreak'] ?? 0) as num).toInt();
+    final totalWorkouts = weekData.fold<int>(0, (sum, d) => sum + d.workouts);
+    final consistencyScore = (activeDays / 7 * 100).round();
+
+    final outerPadding = inner
+        ? EdgeInsets.zero
+        : EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20));
+    return Padding(
+      padding: outerPadding,
+      child: Container(
+        padding: EdgeInsets.all(r.s(20)),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1B2027), Color(0xFF2A3A32)],
+          ),
+          borderRadius: BorderRadius.circular(r.s(28)),
+          border: Border.all(color: Colors.white.withOpacity(0.08), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 20, spreadRadius: -4,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(r.s(9)),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(r.s(11)),
+                  ),
+                  child: const Icon(Icons.insights_rounded, color: _Vibrant.neonGreen, size: 20),
+                ),
+                SizedBox(width: r.s(10)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('АНАЛИТИКА НЕДЕЛИ',
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withOpacity(0.6), fontSize: r.s(10),
+                          fontWeight: FontWeight.w700, letterSpacing: 1.2,
+                        ),
+                      ),
+                      Text('Детальный обзор',
+                        style: GoogleFonts.inter(
+                          color: Colors.white, fontSize: r.fs(16),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (streak > 0)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: r.s(10), vertical: r.s(6)),
+                    decoration: BoxDecoration(
+                      color: _Palette.peach.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(r.s(10)),
+                    ),
+                    child: Text('🔥 $streak',
+                      style: GoogleFonts.inter(
+                        color: _Palette.peach, fontSize: r.s(12),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(height: r.s(16)),
+            // Метрики
+            Row(
+              children: [
+                Expanded(
+                  child: _metricCard(
+                    r: r,
+                    icon: '🏋️',
+                    value: _formatKg(totalVol),
+                    label: 'Тоннаж',
+                    color: _Vibrant.neonGreen,
+                  ),
+                ),
+                SizedBox(width: r.s(8)),
+                Expanded(
+                  child: _metricCard(
+                    r: r,
+                    icon: '📊',
+                    value: _formatKg(avgPerDay),
+                    label: 'Среднее',
+                    color: _Vibrant.electricBlue,
+                  ),
+                ),
+                SizedBox(width: r.s(8)),
+                Expanded(
+                  child: _metricCard(
+                    r: r,
+                    icon: '📅',
+                    value: '$activeDays/7',
+                    label: 'Дней',
+                    color: _Vibrant.vividPeach,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: r.s(16)),
+            // График
+            if (!hasAnyData)
+              _rhythmEmptyDark(r)
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: r.s(150),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          width: r.s(36),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: active
-                                      ? _P.green
-                                      : _P.green.withOpacity(0.12),
-                                  borderRadius:
-                                  BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  active
-                                      ? Icons.check
-                                      : Icons.fitness_center,
-                                  size: 18,
-                                  color: active
-                                      ? Colors.white
-                                      : _P.green,
+                              Padding(
+                                padding: EdgeInsets.only(bottom: r.s(24)),
+                                child: Text(_shortKg(maxVol),
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white.withOpacity(0.5), fontSize: r.s(8.5),
+                                    fontWeight: FontWeight.w500,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  e.name,
-                                  style: _t(
-                                      size: 14,
-                                      weight: FontWeight.w700),
+                              Padding(
+                                padding: EdgeInsets.only(bottom: r.s(24)),
+                                child: Text(_shortKg(maxVol / 2),
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white.withOpacity(0.5), fontSize: r.s(8.5),
+                                    fontWeight: FontWeight.w500,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(bottom: r.s(24)),
+                                child: Text('0',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white.withOpacity(0.5), fontSize: r.s(8.5),
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                Positioned(
-                  left: 20,
-                  right: 20,
-                  bottom: 16,
-                  child: SafeArea(
-                    top: false,
-                    child: FilledButton(
-                      onPressed: _selected.isEmpty
-                          ? null
-                          : () {
-                        HapticFeedback.mediumImpact();
-                        Navigator.pop(context, _selectedExercises);
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _P.green,
-                        disabledBackgroundColor: _P.line,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        SizedBox(width: r.s(6)),
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              if (avgPerDay > 0 && maxVol > 0)
+                                Positioned(
+                                  left: 0, right: 0,
+                                  bottom: r.s(36) + (r.s(100) * (avgPerDay / maxVol)),
+                                  child: CustomPaint(
+                                    painter: _DashedLinePainter(
+                                      color: Colors.white.withOpacity(0.2),
+                                    ),
+                                    size: Size.infinite,
+                                  ),
+                                ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: List.generate(7, (i) {
+                                  final vol = volumes[i];
+                                  final isToday = i == todayIdx;
+                                  final isFuture = i > todayIdx;
+                                  final hasWorkout = weekData[i].workouts > 0;
+                                  final isBest = i == bestIdx && bestVol > 0;
+                                  final hFrac = maxVol > 0 ? (vol / maxVol).clamp(0.0, 1.0) : 0.0;
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: r.s(2.5)),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          SizedBox(
+                                            height: r.s(16),
+                                            child: vol > 0
+                                                ? Flexible(
+                                              child: FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: Text(_shortKg(vol),
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: r.s(8),
+                                                    fontWeight: isBest ? FontWeight.w800 : FontWeight.w500,
+                                                    color: isBest ? _Palette.peach : Colors.white.withOpacity(0.7),
+                                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                                : null,
+                                          ),
+                                          SizedBox(height: r.s(2)),
+                                          TweenAnimationBuilder<double>(
+                                            tween: Tween(begin: 0.0, end: hFrac),
+                                            duration: Duration(milliseconds: 600 + i * 80),
+                                            curve: Curves.easeOutCubic,
+                                            builder: (_, anim, __) {
+                                              final isEmpty = !hasWorkout && !isToday;
+                                              return Container(
+                                                height: r.s(100) * anim,
+                                                constraints: BoxConstraints(
+                                                  minHeight: hasWorkout ? r.s(4) : 0,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  gradient: isToday
+                                                      ? const LinearGradient(
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                    colors: [_Vibrant.vividPeach, _Palette.peach],
+                                                  )
+                                                      : (isBest
+                                                      ? const LinearGradient(
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                    colors: [_Vibrant.neonGreen, _Palette.green],
+                                                  )
+                                                      : null),
+                                                  color: !isToday && !isBest
+                                                      ? (isEmpty
+                                                      ? Colors.white.withOpacity(0.1)
+                                                      : Colors.white.withOpacity(0.25))
+                                                      : null,
+                                                  borderRadius: BorderRadius.vertical(
+                                                    top: Radius.circular(r.s(5)),
+                                                    bottom: Radius.circular(r.s(2)),
+                                                  ),
+                                                  border: isFuture
+                                                      ? Border.all(color: Colors.white.withOpacity(0.1), width: 1)
+                                                      : null,
+                                                  boxShadow: isToday
+                                                      ? [
+                                                    BoxShadow(
+                                                      color: _Vibrant.vividPeach.withOpacity(0.4),
+                                                      blurRadius: r.s(8),
+                                                      spreadRadius: 0,
+                                                      offset: Offset(0, r.s(2)),
+                                                    ),
+                                                  ]
+                                                      : (isBest
+                                                      ? [
+                                                    BoxShadow(
+                                                      color: _Vibrant.neonGreen.withOpacity(0.3),
+                                                      blurRadius: r.s(6),
+                                                      offset: Offset(0, r.s(2)),
+                                                    ),
+                                                  ]
+                                                      : null),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          SizedBox(height: r.s(6)),
+                                          Text(dayNames[i],
+                                            style: GoogleFonts.inter(
+                                              color: isToday
+                                                  ? _Palette.peach
+                                                  : isFuture
+                                                  ? Colors.white.withOpacity(0.4)
+                                                  : Colors.white.withOpacity(0.7),
+                                              fontSize: r.s(9),
+                                              fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        _selected.isEmpty
-                            ? 'Выберите упражнения'
-                            : 'Начать тренировку · ${_selected.length}',
-                        style: _t(
-                          size: 14,
-                          weight: FontWeight.w800,
-                          color: _selected.isEmpty ? _P.muted : Colors.white,
-                        ),
-                      ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// ШТОРКИ НАСТРОЕК
-// ============================================================================
-
-class _SettingsSheet extends StatelessWidget {
-  const _SettingsSheet({
-    required this.onProfile,
-    required this.onStyle,
-    required this.onBackground,
-  });
-
-  final VoidCallback onProfile;
-  final VoidCallback onStyle;
-  final VoidCallback onBackground;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-      decoration: const BoxDecoration(
-        color: _P.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 44,
-            height: 4,
-            decoration: BoxDecoration(
-              color: _P.line,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Text('Настройки', style: _t(size: 18, weight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _tile(Icons.person_outline_rounded, 'Профиль', onProfile),
-          _tile(Icons.style_outlined, 'Стиль шапки', onStyle),
-          _tile(Icons.wallpaper_rounded, 'Фон главного экрана', onBackground),
-        ],
-      ),
-    );
-  }
-
-  Widget _tile(IconData icon, String label, VoidCallback onTap) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: _P.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: _P.green, size: 20),
+                  SizedBox(height: r.s(12)),
+                  Container(
+                    padding: EdgeInsets.all(r.s(10)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(r.s(12)),
+                      border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.trending_up_rounded, color: _Vibrant.neonGreen, size: r.s(14)),
+                        SizedBox(width: r.s(8)),
+                        Expanded(
+                          child: Text(
+                            bestIdx >= 0
+                                ? 'Лучший день: ${dayNames[bestIdx]} · ${_shortKg(bestVol)} кг'
+                                : 'Тренировок за неделю: $totalWorkouts · Постоянство $consistencyScore%',
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: r.s(10.5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: Text(label,
-                      style: _t(size: 14, weight: FontWeight.w700))),
-              const Icon(Icons.chevron_right_rounded, color: _P.muted),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
-}
 
-class _PickerSheet extends StatelessWidget {
-  const _PickerSheet({
-    required this.title,
-    required this.subtitle,
-    required this.child,
-  });
-
-  final String title;
-  final String subtitle;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _metricCard({
+    required _R r,
+    required String icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-      ),
-      decoration: const BoxDecoration(
-        color: _P.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      padding: EdgeInsets.all(r.s(10)),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(r.s(14)),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: _P.line,
-                borderRadius: BorderRadius.circular(4),
+          Row(
+            children: [
+              Text(icon, style: TextStyle(fontSize: r.s(13))),
+              SizedBox(width: r.s(4)),
+              Expanded(
+                child: Text(value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: r.s(14),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.4,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(title, style: _t(size: 18, weight: FontWeight.w800)),
-          const SizedBox(height: 4),
-          Text(subtitle,
-              style:
-              _t(size: 12, color: _P.muted, weight: FontWeight.w500)),
-          const SizedBox(height: 16),
-          Flexible(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: child,
+          SizedBox(height: r.s(2)),
+          Text(label,
+            style: GoogleFonts.inter(
+              color: Colors.white.withOpacity(0.55),
+              fontSize: r.s(9),
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class _PickTile extends StatelessWidget {
-  const _PickTile({
-    required this.active,
-    required this.label,
-    required this.colors,
-    required this.onTap,
-    required this.preview,
-  });
-
-  final bool active;
-  final String label;
-  final List<Color> colors;
-  final VoidCallback onTap;
-  final Widget preview;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: active ? _P.green : _P.line,
-            width: active ? 2 : 1,
-          ),
-        ),
+  Widget _rhythmEmptyDark(_R r) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: r.s(20)),
+      child: Center(
         child: Column(
           children: [
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: colors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: preview,
+            Text('🌱', style: TextStyle(fontSize: r.s(28))),
+            SizedBox(height: r.s(8)),
+            Text('Пока нет тренировок',
+              style: GoogleFonts.inter(
+                color: Colors.white, fontSize: r.s(13),
+                fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: _t(size: 10.5, weight: FontWeight.w700),
+            SizedBox(height: r.s(3)),
+            Text('Начни первую — статистика появится здесь',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                color: Colors.white.withOpacity(0.6), fontSize: r.s(10), height: 1.4,
+              ),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-// ============================================================================
-// КОНФЕТТИ
-// ============================================================================
-
-class _Particle {
-  const _Particle({
-    required this.x,
-    required this.y,
-    required this.vy,
-    required this.size,
-    required this.rotation,
-    required this.vr,
-    required this.sway,
-    required this.phase,
-    required this.color,
-  });
-
-  final double x;
-  final double y;
-  final double vy;
-  final double size;
-  final double rotation;
-  final double vr;
-  final double sway;
-  final double phase;
-  final Color color;
-
-  factory _Particle.random(math.Random r) {
-    const palette = [
-      Color(0xFF2F7D5B),
-      Color(0xFFE06A8B),
-      Color(0xFFF0A05A),
-      Color(0xFF8FA98A),
-      Color(0xFF5B8DEF),
-      Color(0xFFF2D06B),
-      Color(0xFFB983FF),
+  // ═════════════════════════════════════════════════════════
+  //  QUICK DOCK — с флагом inner
+  // ═════════════════════════════════════════════════════════
+  Widget _quickDock(FitnessProvider fitness, {bool inner = false}) {
+    final r = _R(context);
+    final items = [
+      (Icons.play_arrow_rounded, 'Старт', _Palette.green,
+          () => _quickStartWorkout(context, fitness)),
+      (Icons.history_rounded, 'Журнал', _Palette.peach,
+          () => _openWorkoutLog(context)),
+      (Icons.fitness_center_rounded, 'База', _Palette.sage,
+          () => _openExerciseLibrary(context)),
+      (Icons.self_improvement_rounded, 'Настрой', _Palette.pink,
+          () => _openWellbeing(context)),
+      (Icons.flag_rounded, 'Цели', _Palette.yellow,
+          () => _openTargets(context)),
     ];
-    return _Particle(
-      x: r.nextDouble(),
-      y: -0.1 - r.nextDouble() * 0.25,
-      vy: 0.75 + r.nextDouble() * 0.95,
-      size: 5 + r.nextDouble() * 7,
-      rotation: r.nextDouble() * math.pi,
-      vr: (r.nextDouble() - 0.5) * 7,
-      sway: 2 + r.nextDouble() * 3,
-      phase: r.nextDouble() * math.pi * 2,
-      color: palette[r.nextInt(palette.length)],
+    final outerPadding = inner
+        ? EdgeInsets.zero
+        : EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(24));
+    return Padding(
+      padding: outerPadding,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: r.s(14), horizontal: r.s(8)),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.72),
+          borderRadius: BorderRadius.circular(r.s(24)),
+          border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: _Palette.green.withOpacity(0.05),
+              blurRadius: 18, spreadRadius: -4,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: items.map((it) {
+            return Expanded(
+              child: _TapScale(
+                onTap: it.$4,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: r.s(48), height: r.s(48),
+                      decoration: BoxDecoration(
+                        color: it.$3.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(r.s(16)),
+                      ),
+                      child: Icon(it.$1, color: it.$3, size: r.s(22)),
+                    ),
+                    SizedBox(height: r.s(6)),
+                    Text(it.$2,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        color: _Palette.text, fontSize: r.fs(10),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
-}
 
-class _ConfettiPainter extends CustomPainter {
-  _ConfettiPainter(this.t, this.particles);
+  // ═════════════════════════════════════════════════════════
+  //  TARGETS — с флагом inner
+  // ═════════════════════════════════════════════════════════
+  Widget _targetsSection(FitnessProvider fitness, {bool inner = false}) {
+    final r = _R(context);
+    final active = fitness.activeTargets;
+    final outerPadding = inner
+        ? EdgeInsets.zero
+        : EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20));
+    return Padding(
+      padding: outerPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!inner)
+            Padding(
+              padding: EdgeInsets.only(bottom: r.s(12)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Мои ориентиры',
+                    style: GoogleFonts.inter(
+                      color: _Palette.text, fontSize: r.fs(16),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  _TapScale(
+                    onTap: () => _openTargets(context),
+                    child: Text('Изменить',
+                      style: GoogleFonts.inter(
+                        color: _Palette.green, fontSize: r.fs(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (active.isEmpty)
+            _emptyTarget(r)
+          else
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: r.s(12), vertical: r.s(4)),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.72),
+                borderRadius: BorderRadius.circular(r.s(24)),
+                border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+              ),
+              child: Column(
+                children: active.take(3).map((t) => _targetRow(t, fitness, r)).toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-  final double t;
-  final List<_Particle> particles;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final fade = (1 - (t - 0.7).clamp(0, 0.3) / 0.3).clamp(0.0, 1.0);
-    for (final p in particles) {
-      final dx = (p.x + math.sin(t * p.sway + p.phase) * 0.05) * size.width;
-      final dy = (p.y + p.vy * t) * size.height;
-      if (dy < -30 || dy > size.height + 30) continue;
-      paint.color = p.color.withOpacity(fade);
-      canvas.save();
-      canvas.translate(dx, dy);
-      canvas.rotate(p.rotation + p.vr * t);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset.zero,
-            width: p.size,
-            height: p.size * 0.6,
-          ),
-          const Radius.circular(2),
-        ),
-        paint,
-      );
-      canvas.restore();
+  Widget _targetRow(FitnessTarget target, FitnessProvider fitness, _R r) {
+    Exercise? exercise;
+    if (target.exerciseId != null && target.exerciseId!.isNotEmpty) {
+      try {
+        exercise = fitness.exercises.firstWhere((e) => e.id == target.exerciseId);
+      } catch (_) {}
     }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConfettiPainter old) =>
-      old.t != t || old.particles != particles;
-}
-
-// ============================================================================
-// МЕЛКИЕ МОДЕЛИ ДЛЯ UI
-// ============================================================================
-
-class _HeroBg {
-  const _HeroBg(this.name, this.colors, this.emoji);
-  final String name;
-  final List<Color> colors;
-  final String emoji;
-}
-
-class _HeroStyle {
-  const _HeroStyle({
-    required this.name,
-    this.circleAvatar = true,
-    this.centerText = false,
-    this.emojiOpacity = 0.10,
-  });
-  final String name;
-  final bool circleAvatar;
-  final bool centerText;
-  final double emojiOpacity;
-}
-
-class _Badge {
-  const _Badge(this.emoji, this.label);
-  final String emoji;
-  final String label;
-}
-
-class _Record {
-  const _Record(this.label, this.value, this.icon);
-  final String label;
-  final String value;
-  final IconData icon;
-}
-
-class _QuickItem {
-  const _QuickItem(this.icon, this.label, this.onTap);
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-}
-
-const List<_HeroBg> _heroBgs = [
-  _HeroBg('Лес', [Color(0xFF2F7D5B), Color(0xFF1B4D38)], '🌲'),
-  _HeroBg('Океан', [Color(0xFF2D6CDF), Color(0xFF163A7A)], '🌊'),
-  _HeroBg('Закат', [Color(0xFFF08A5D), Color(0xFFB83B5E)], '🌅'),
-  _HeroBg('Лаванда', [Color(0xFF9B7EDE), Color(0xFF5E4B8B)], '💜'),
-  _HeroBg('Мята', [Color(0xFF4DB6AC), Color(0xFF1E6B63)], '🌿'),
-  _HeroBg('Песок', [Color(0xFFD9A566), Color(0xFF9C6B3F)], '🏜️'),
-  _HeroBg('Ночь', [Color(0xFF2B2D42), Color(0xFF141522)], '🌙'),
-  _HeroBg('Роза', [Color(0xFFE06A8B), Color(0xFF8E2A52)], '🌹'),
-  _HeroBg('Небо', [Color(0xFF6FB1FC), Color(0xFF2B5FA8)], '☁️'),
-  _HeroBg('Осень', [Color(0xFFD97A3A), Color(0xFF8A3F1D)], '🍁'),
-  _HeroBg('Хвоя', [Color(0xFF3F6B57), Color(0xFF20382D)], '🌲'),
-  _HeroBg('Коралл', [Color(0xFFFF8A80), Color(0xFFB23A48)], '🪸'),
-  _HeroBg('Ирис', [Color(0xFF6C5CE7), Color(0xFF3B2E8C)], '💠'),
-  _HeroBg('Туман', [Color(0xFF8FA98A), Color(0xFF4F6650)], '🌫️'),
-  _HeroBg('Золото', [Color(0xFFE8B84B), Color(0xFF9A6B12)], '🌞'),
-  _HeroBg('Лёд', [Color(0xFF8FD3E8), Color(0xFF3F8CA8)], '❄️'),
-  _HeroBg('Гранат', [Color(0xFFB23A48), Color(0xFF5C1220)], '🍎'),
-  _HeroBg('Бамбук', [Color(0xFF7CB342), Color(0xFF33691E)], '🎋'),
-  _HeroBg('Море', [Color(0xFF1D7874), Color(0xFF0B3C3A)], '🐚'),
-  _HeroBg('Сакура', [Color(0xFFF8BBD0), Color(0xFFC2185B)], '🌸'),
-  _HeroBg('Вулкан', [Color(0xFFE64A19), Color(0xFF5D1A0A)], '🌋'),
-];
-
-const List<_HeroStyle> _heroStyles = [
-  _HeroStyle(name: 'Классика'),
-  _HeroStyle(name: 'Прямоугольник', circleAvatar: false),
-  _HeroStyle(name: 'По центру', centerText: true, emojiOpacity: 0.08),
-  _HeroStyle(name: 'Минимал', emojiOpacity: 0.03),
-  _HeroStyle(name: 'Крупный эмодзи', emojiOpacity: 0.22),
-  _HeroStyle(name: 'Центр + квадрат', circleAvatar: false, centerText: true),
-  _HeroStyle(name: 'Тихий фон', emojiOpacity: 0.0),
-  _HeroStyle(name: 'Мягкий', emojiOpacity: 0.12),
-  _HeroStyle(name: 'Контраст', emojiOpacity: 0.16),
-  _HeroStyle(name: 'Плавный', centerText: true, emojiOpacity: 0.05),
-  _HeroStyle(name: 'Строгий', circleAvatar: false, emojiOpacity: 0.02),
-  _HeroStyle(name: 'Воздушный', emojiOpacity: 0.14),
-];
-
-const List<_HeroBg> _pedometerBgs = [
-  _HeroBg('Зелёный', [Color(0xFF2F7D5B), Color(0xFF1B4D38)], ''),
-  _HeroBg('Синий', [Color(0xFF3A7BD5), Color(0xFF1B3F7A)], ''),
-  _HeroBg('Персик', [Color(0xFFF0A05A), Color(0xFFB85C2E)], ''),
-  _HeroBg('Роза', [Color(0xFFE06A8B), Color(0xFF8E2A52)], ''),
-  _HeroBg('Графит', [Color(0xFF3E4A46), Color(0xFF1E2A24)], ''),
-];
-
-// ============================================================================
-// ЗАГЛУШКИ: МОДЕЛИ И ЭКРАНЫ
-// ============================================================================
-//
-// ⚠️ Эти классы нужны только пока нет реальных файлов. Как только
-// появятся настоящие модели/экраны — удалите соответствующий стаб
-// и добавьте импорт, иначе получите конфликт имён.
-//
-// ПРОВАЙДЕРЫ (FitnessProvider, NutritionProvider, PedometerProvider,
-// WellnessProvider) больше НЕ стабируются — используются реальные
-// из features/*/providers/*.
-
-class WorkoutLog {
-  WorkoutLog({required this.date, this.volume = 0, this.programName});
-  final DateTime date;
-  final double volume;
-  final String? programName;
-}
-
-class Exercise {
-  Exercise({required this.id, required this.name});
-  final String id;
-  final String name;
-}
-
-class ActiveSession {
-  ActiveSession({
-    required this.programName,
-    required this.dayNumber,
-    required this.percent,
-  });
-  final String programName;
-  final int dayNumber;
-  final double percent;
-}
-
-class FitnessTarget {
-  FitnessTarget({
-    required this.id,
-    required this.title,
-    required this.current,
-    required this.target,
-    required this.unit,
-  });
-  final String id;
-  final String title;
-  final double current;
-  final double target;
-  final String unit;
-}
-
-class WorkoutDay {
-  WorkoutDay({
-    required this.id,
-    required this.programId,
-    required this.dayNumber,
-    this.exercises = const [],
-  });
-  final String id;
-  final String programId;
-  final int dayNumber;
-  final List<Exercise> exercises;
-}
-
-class NutritionProgram {
-  NutritionProgram({required this.id, required this.name});
-  final String id;
-  final String name;
-}
-
-class NutritionSummary {
-  NutritionSummary({this.calories = 0, this.water = 0});
-  final double calories;
-  final double water;
-}
-
-class NutritionGoals {
-  NutritionGoals({this.calories = 2200, this.water = 2.5});
-  final double calories;
-  final double water;
-}
-
-class ProfileResult {
-  ProfileResult({
-    required this.name,
-    required this.emoji,
-    this.imagePath,
-  });
-  final String name;
-  final String emoji;
-  final String? imagePath;
-}
-
-// --- Экраны-заглушки (замените реальными) ---
-
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({
-    super.key,
-    required this.initialName,
-    required this.initialEmoji,
-    required this.initialImagePath,
-    required this.level,
-    required this.streak,
-    required this.totalWorkouts,
-    required this.totalVolume,
-  });
-
-  final String initialName;
-  final String initialEmoji;
-  final String? initialImagePath;
-  final int level;
-  final int streak;
-  final int totalWorkouts;
-  final double totalVolume;
-
-  @override
-  Widget build(BuildContext context) => _StubScaffold(
-    title: 'Профиль',
-    body:
-    'Имя: $initialName\nУровень: $level\nСерия: $streak\nТренировок: $totalWorkouts\nТоннаж: ${totalVolume.round()} кг',
-  );
-}
-
-class WorkoutLogScreen extends StatelessWidget {
-  const WorkoutLogScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const _StubScaffold(title: 'Журнал тренировок');
-}
-
-class ActiveProgramScreen extends StatelessWidget {
-  const ActiveProgramScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const _StubScaffold(title: 'Активная программа');
-}
-
-class WellbeingScreen extends StatelessWidget {
-  const WellbeingScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const _StubScaffold(title: 'Самочувствие');
-}
-
-class FitnessDashboard extends StatelessWidget {
-  const FitnessDashboard({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const _StubScaffold(title: 'Fitness Dashboard');
-}
-
-class ProgressScreen extends StatelessWidget {
-  const ProgressScreen({super.key});
-  @override
-  Widget build(BuildContext context) => const _StubScaffold(title: 'Прогресс');
-}
-
-class PedometerScreen extends StatelessWidget {
-  const PedometerScreen({super.key});
-  @override
-  Widget build(BuildContext context) => const _StubScaffold(title: 'Шагомер');
-}
-
-class FitnessTargetsScreen extends StatelessWidget {
-  const FitnessTargetsScreen({super.key});
-  @override
-  Widget build(BuildContext context) => const _StubScaffold(title: 'Цели');
-}
-
-class FitnessTargetDetailsScreen extends StatelessWidget {
-  const FitnessTargetDetailsScreen({super.key, required this.target});
-  final FitnessTarget target;
-  @override
-  Widget build(BuildContext context) =>
-      _StubScaffold(title: 'Цель: ${target.title}');
-}
-
-class FuelDashboardScreen extends StatelessWidget {
-  const FuelDashboardScreen({super.key});
-  @override
-  Widget build(BuildContext context) => const _StubScaffold(title: 'Питание');
-}
-
-class ProgramsHubScreen extends StatelessWidget {
-  const ProgramsHubScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const _StubScaffold(title: 'Программы питания');
-}
-
-class PlanTrackerScreen extends StatelessWidget {
-  const PlanTrackerScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const _StubScaffold(title: 'План питания');
-}
-
-class KnowledgeScreen extends StatelessWidget {
-  const KnowledgeScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const _StubScaffold(title: 'База знаний');
-}
-
-class ExerciseLibraryScreen extends StatelessWidget {
-  const ExerciseLibraryScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const _StubScaffold(title: 'База упражнений');
-}
-
-class WorkoutExecutionScreen extends StatelessWidget {
-  const WorkoutExecutionScreen({super.key, required this.day});
-  final WorkoutDay day;
-  @override
-  Widget build(BuildContext context) =>
-      _StubScaffold(title: 'Тренировка · ${day.id}');
-}
-
-class _StubScaffold extends StatelessWidget {
-  const _StubScaffold({required this.title, this.body});
-  final String title;
-  final String? body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _P.bg,
-      appBar: AppBar(
-        backgroundColor: _P.bg,
-        elevation: 0,
-        foregroundColor: _P.ink,
-        title: Text(title, style: _t(size: 16, weight: FontWeight.w800)),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            body ?? 'Экран-заглушка.\nЗамените реальной реализацией.',
-            textAlign: TextAlign.center,
-            style: _t(color: _P.muted, weight: FontWeight.w600),
+    final imageUrl = exercise?.imageUrl;
+    final hasImage = imageUrl != null && imageUrl.isNotEmpty;
+    final emoji = exercise?.exerciseType.emoji ?? target.type.emoji;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider.value(
+            value: fitness,
+            child: FitnessTargetDetailsScreen(target: target, isDark: false),
           ),
+        ));
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: r.s(12)),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: r.s(48), height: r.s(48),
+                  decoration: BoxDecoration(
+                    color: target.accentColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(r.s(14)),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  alignment: Alignment.center,
+                  child: hasImage
+                      ? _AppImg(
+                      path: imageUrl,
+                      fallback: Text(emoji, style: TextStyle(fontSize: r.fs(22))))
+                      : Text(emoji, style: TextStyle(fontSize: r.fs(22))),
+                ),
+                SizedBox(width: r.s(12)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(target.name,
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: _Palette.text, fontSize: r.fs(12),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text('Прогресс · ${(target.progressPercent * 100).round()}%',
+                        style: GoogleFonts.inter(
+                          color: _Palette.textMuted, fontSize: r.fs(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded,
+                    color: _Palette.textMuted, size: r.s(18)),
+              ],
+            ),
+            SizedBox(height: r.s(8)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(100),
+              child: LinearProgressIndicator(
+                value: target.progressPercent.clamp(0.0, 1.0),
+                minHeight: r.s(3),
+                backgroundColor: _Palette.divider,
+                valueColor: AlwaysStoppedAnimation(target.accentColor),
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _emptyTarget(_R r) {
+    return _TapScale(
+      onTap: () => _openTargets(context),
+      child: Container(
+        padding: EdgeInsets.all(r.s(16)),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.72),
+          borderRadius: BorderRadius.circular(r.s(24)),
+          border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: r.s(48), height: r.s(48),
+              decoration: BoxDecoration(
+                color: _Palette.green.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.add_rounded, color: _Palette.green, size: r.s(22)),
+            ),
+            SizedBox(width: r.s(12)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Поставить первую цель',
+                    style: GoogleFonts.inter(
+                      color: _Palette.text, fontSize: r.fs(13),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text('Например, жим 100 кг',
+                    style: GoogleFonts.inter(
+                      color: _Palette.textMuted, fontSize: r.fs(11),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: _Palette.textMuted, size: r.s(20)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  QUICK START WORKOUT
+  // ═════════════════════════════════════════════════════════
+  void _quickStartWorkout(BuildContext context, FitnessProvider provider) {
+    final r = _R(context);
+    HapticFeedback.mediumImpact();
+    final quickDay = WorkoutDay(
+      id: 'quick_${DateTime.now().millisecondsSinceEpoch}',
+      programId: 'quick',
+      dayNumber: 1,
+      exercises: [],
+    );
+    final searchCtrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final query = searchCtrl.text.trim().toLowerCase();
+          final filtered = provider.exercises
+              .where((e) => query.isEmpty || e.name.toLowerCase().contains(query))
+              .toList();
+          return Container(
+            height: MediaQuery.of(ctx).size.height * 0.85,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(r.s(28))),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.fromLTRB(r.s(20), r.s(12), r.s(20), r.s(20)),
+            child: Column(
+              children: [
+                Container(
+                  width: r.s(36),
+                  height: r.s(4),
+                  decoration: BoxDecoration(
+                    color: _Palette.divider,
+                    borderRadius: BorderRadius.circular(r.s(2)),
+                  ),
+                ),
+                SizedBox(height: r.s(16)),
+                Row(
+                  children: [
+                    Container(
+                      width: r.s(36),
+                      height: r.s(36),
+                      decoration: BoxDecoration(
+                        color: _Palette.greenSoft,
+                        borderRadius: BorderRadius.circular(r.s(10)),
+                      ),
+                      child: Icon(Icons.bolt_rounded, color: _Palette.green, size: r.s(20)),
+                    ),
+                    SizedBox(width: r.s(10)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Быстрая тренировка',
+                            style: GoogleFonts.inter(
+                              color: _Palette.text,
+                              fontSize: r.fs(17),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          SizedBox(height: r.s(1)),
+                          Text('Выберите упражнения',
+                            style: GoogleFonts.inter(
+                              color: _Palette.textMuted,
+                              fontSize: r.fs(11),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: r.s(14)),
+                TextField(
+                  controller: searchCtrl,
+                  onChanged: (_) => setSheetState(() {}),
+                  style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(14)),
+                  decoration: InputDecoration(
+                    hintText: 'Поиск...',
+                    hintStyle: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13)),
+                    prefixIcon: const Icon(Icons.search_rounded, color: _Palette.textMuted, size: 20),
+                    filled: true,
+                    fillColor: _Palette.bg,
+                    contentPadding: EdgeInsets.symmetric(horizontal: r.s(14), vertical: r.s(10)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(r.s(12)),
+                      borderSide: BorderSide(color: _Palette.divider, width: 1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(r.s(12)),
+                      borderSide: BorderSide(color: _Palette.divider, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(r.s(12)),
+                      borderSide: BorderSide(color: _Palette.green.withOpacity(0.4), width: 1.5),
+                    ),
+                  ),
+                ),
+                SizedBox(height: r.s(10)),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? Center(
+                      child: Text('Ничего не найдено',
+                          style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13))))
+                      : ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.only(bottom: r.s(80)),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => SizedBox(height: r.s(8)),
+                    itemBuilder: (context, index) {
+                      final exercise = filtered[index];
+                      final added = quickDay.exercises.any((item) => item.exerciseId == exercise.id);
+                      final color = exercise.muscleGroups.isNotEmpty
+                          ? exercise.muscleGroups.first.color
+                          : _Palette.green;
+                      final hasImage = exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty;
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: _Palette.bg,
+                          borderRadius: BorderRadius.circular(r.s(14)),
+                          border: Border.all(
+                            color: added ? _Palette.green.withOpacity(0.3) : _Palette.divider,
+                            width: added ? 1.2 : 0.6,
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(horizontal: r.s(12), vertical: r.s(4)),
+                          leading: Container(
+                            width: r.s(40),
+                            height: r.s(40),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(r.s(11)),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: hasImage
+                                ? _AppImg(
+                                path: exercise.imageUrl,
+                                fallback: Center(
+                                    child: Text(exercise.exerciseType.emoji, style: TextStyle(fontSize: r.fs(18)))))
+                                : Center(
+                                child: Text(exercise.exerciseType.emoji, style: TextStyle(fontSize: r.fs(18)))),
+                          ),
+                          title: Text(exercise.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              color: _Palette.text,
+                              fontWeight: FontWeight.w600,
+                              fontSize: r.fs(14),
+                            ),
+                          ),
+                          trailing: GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setSheetState(() {
+                                if (added) {
+                                  quickDay.exercises.removeWhere((item) => item.exerciseId == exercise.id);
+                                } else {
+                                  quickDay.exercises.add(WorkoutExercise(
+                                    id: 'quick_ex_${quickDay.exercises.length}',
+                                    exerciseId: exercise.id,
+                                    order: quickDay.exercises.length,
+                                    sets: [ExerciseSet(setNumber: 1, reps: 10, weight: 0)],
+                                  ));
+                                }
+                              });
+                            },
+                            child: Container(
+                              width: r.s(30),
+                              height: r.s(30),
+                              decoration: BoxDecoration(
+                                color: added ? _Palette.greenSoft : Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                added ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+                                color: added ? _Palette.green : _Palette.divider,
+                                size: r.s(26),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (quickDay.exercises.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: r.s(12)),
+                    child: Center(
+                      child: SizedBox(
+                        width: MediaQuery.of(ctx).size.width * 0.35,
+                        height: r.s(50),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => ChangeNotifierProvider.value(
+                                value: provider,
+                                child: WorkoutExecutionScreen(day: quickDay, isDark: false),
+                              ),
+                            ));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _Palette.green,
+                            foregroundColor: Colors.white,
+                            elevation: 4,
+                            shadowColor: _Palette.green.withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(r.s(16))),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.play_arrow_rounded, size: 20),
+                              SizedBox(width: r.s(6)),
+                              Text(
+                                'НАЧАТЬ · ${quickDay.exercises.length}',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: r.fs(13),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  NAVIGATION
+  // ═════════════════════════════════════════════════════════
+  void _openShoppingMode(BuildContext context, NutritionProvider nutrition) {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ChangeNotifierProvider.value(
+        value: nutrition,
+        child: const ShoppingModeScreen(),
+      ),
+    ));
+  }
+
+  void _openAddPantry(BuildContext context, NutritionProvider nutrition) {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ChangeNotifierProvider.value(
+        value: nutrition,
+        child: const AddPantryScreen(),
+      ),
+    ));
+  }
+
+  void _openFitness(BuildContext context) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<FitnessProvider>(),
+          child: const FitnessDashboard(isDark: true))));
+
+  void _openNutrition(BuildContext context) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<NutritionProvider>(),
+          child: const FuelDashboardScreen(isDark: true))));
+
+  void _openWorkoutLog(BuildContext context) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<FitnessProvider>(),
+          child: const WorkoutLogScreen(isDark: true))));
+
+  void _openTargets(BuildContext context) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<FitnessProvider>(),
+          child: const FitnessTargetsScreen(isDark: true))));
+
+  void _openExerciseLibrary(BuildContext context) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<FitnessProvider>(),
+          child: const ExerciseLibraryScreen(isDark: true))));
+
+  void _openWellbeing(BuildContext context) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<FitnessProvider>(),
+          child: const WellbeingScreen(isDark: true))));
+
+  void _openProgress(BuildContext context) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<FitnessProvider>(),
+          child: const ProgressScreen(isDark: true))));
+
+  void _openPedometer(BuildContext context) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<PedometerProvider>(),
+          child: const PedometerScreen(isDark: true))));
+
+  void _openProgramsHub(BuildContext context) {
+    HapticFeedback.selectionClick();
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ChangeNotifierProvider.value(
+        value: context.read<NutritionProvider>(),
+        child: const ProgramsHubScreen(),
+      ),
+    ));
+  }
+
+  void _openPlanTracker(BuildContext context) {
+    HapticFeedback.selectionClick();
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ChangeNotifierProvider.value(
+        value: context.read<NutritionProvider>(),
+        child: const PlanTrackerScreen(),
+      ),
+    ));
   }
 }
