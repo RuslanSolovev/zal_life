@@ -1,12 +1,10 @@
 // features/nutrition/ui/screens/food_search_screen.dart
 import 'dart:async';
 import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
 import '../../models/nutrition_models.dart';
 import '../../providers/nutrition_provider.dart';
 import '../../providers/wellness_provider.dart';
@@ -23,7 +21,6 @@ class _P {
   static const textMuted = Color(0xFF7C818A);
   static const divider = Color(0xFFE9EBEF);
   static const elevated = Color(0xFFF0F1F4);
-
   static const peachSoft = Color(0xFFFBEDE4);
   static const peachDeep = Color(0xFFEF9563);
   static const greenDeep = Color(0xFF6C9E88);
@@ -48,24 +45,37 @@ class _T {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  SCREEN
+//  SCREEN — тонкая обёртка (используется при открытии отдельно)
 // ═══════════════════════════════════════════════════════════════════
-enum FoodSortMode { name, caloriesAsc, caloriesDesc, proteinDesc }
-
-class FoodSearchScreen extends StatefulWidget {
+class FoodSearchScreen extends StatelessWidget {
   final bool isDark;
   const FoodSearchScreen({super.key, this.isDark = true});
 
   @override
-  State<FoodSearchScreen> createState() => _FoodSearchScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _P.bg,
+      body: SafeArea(bottom: false, child: const FoodSearchContent()),
+    );
+  }
 }
 
-class _FoodSearchScreenState extends State<FoodSearchScreen> {
+// ═══════════════════════════════════════════════════════════════════
+//  CONTENT — переиспользуемый контент (встраивается в FoodLibraryScreen)
+// ═══════════════════════════════════════════════════════════════════
+enum FoodSortMode { name, caloriesAsc, caloriesDesc, proteinDesc }
+
+class FoodSearchContent extends StatefulWidget {
+  const FoodSearchContent({super.key});
+  @override
+  State<FoodSearchContent> createState() => _FoodSearchScreenState();
+}
+
+class _FoodSearchScreenState extends State<FoodSearchContent> {
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
   final _scrollController = ScrollController();
   Timer? _debounceTimer;
-
   String _rawQuery = ''; // immediate — used for clear button
   String _query = '';    // debounced — used for filtering
   String? _selectedCategory;
@@ -180,83 +190,76 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
     final showShimmer =
         _initialLoad && products.isEmpty && _query.isEmpty &&
             _selectedCategory == null && !_favoritesOnly && !_seasonalOnly;
-
     final sortActive = _sortMode != FoodSortMode.name;
 
-    return Scaffold(
-      backgroundColor: _P.bg,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            CustomScrollView(
-              controller: _scrollController,
-              physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics()),
-              slivers: [
-                // §1 sticky header
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _StickyHeaderDelegate(
-                    count: products.length,
-                    sortActive: sortActive,
-                    reduceMotion: _reduceMotion,
-                    onBack: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.pop(context);
-                    },
-                    onSearchFocus: _focusSearch,
-                    onSort: _showSortSheet,
-                  ),
-                ),
-                SliverToBoxAdapter(child: _buildSearchField()),
-                SliverToBoxAdapter(child: _buildFilters(
-                  categories,
-                  hasFavorites: hasFavorites,
-                  hasSeasonal: hasSeasonal,
-                )),
-                SliverToBoxAdapter(
-                  child: _buildSectionHeader(products.length),
-                ),
-                if (showShimmer)
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                          (_, i) => Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                        child: SizedBox(height: 72, child: _ShimmerBox()),
-                      ),
-                      childCount: 4,
-                    ),
-                  )
-                else if (products.isEmpty)
-                  SliverToBoxAdapter(child: _buildEmpty(provider))
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                          (_, i) {
-                        final p = products[i];
-                        return KeyedSubtree(
-                          key: ValueKey('row_${p.id}'),
-                          child: _staggered(
-                              i, _buildProductRow(p, inDiary, wellness)),
-                        );
-                      },
-                      childCount: products.length,
-                    ),
-                  ),
-                const SliverToBoxAdapter(child: SizedBox(height: 120)),
-              ],
+    return Stack(
+      children: [
+        CustomScrollView(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics()),
+          slivers: [
+            // §1 sticky header
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyHeaderDelegate(
+                count: products.length,
+                sortActive: sortActive,
+                reduceMotion: _reduceMotion,
+                onBack: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.pop(context);
+                },
+                onSearchFocus: _focusSearch,
+                onSort: _showSortSheet,
+              ),
             ),
-            // §8 bottom action bar
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: RepaintBoundary(child: _buildActionBar(provider)),
+            SliverToBoxAdapter(child: _buildSearchField()),
+            SliverToBoxAdapter(child: _buildFilters(
+              categories,
+              hasFavorites: hasFavorites,
+              hasSeasonal: hasSeasonal,
+            )),
+            SliverToBoxAdapter(
+              child: _buildSectionHeader(products.length),
             ),
+            if (showShimmer)
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (_, i) => Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                    child: SizedBox(height: 72, child: _ShimmerBox()),
+                  ),
+                  childCount: 4,
+                ),
+              )
+            else if (products.isEmpty)
+              SliverToBoxAdapter(child: _buildEmpty(provider))
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (_, i) {
+                    final p = products[i];
+                    return KeyedSubtree(
+                      key: ValueKey('row_${p.id}'),
+                      child: _staggered(
+                          i, _buildProductRow(p, inDiary, wellness)),
+                    );
+                  },
+                  childCount: products.length,
+                ),
+              ),
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
         ),
-      ),
+        // §8 bottom action bar
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: RepaintBoundary(child: _buildActionBar(provider)),
+        ),
+      ],
     );
   }
 
@@ -756,10 +759,9 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 5,
-          height: 5,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 2),
         Text(
           value.round().toString(),
@@ -777,7 +779,6 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   // §6 long-press to favorite
   void _toggleFavorite(FoodProduct p) {
     HapticFeedback.mediumImpact();
-    widget.isDark; // no-op, kept for API
     context.read<NutritionProvider>().toggleFavorite(p.id);
     final wasFav = p.isFavorite;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -822,11 +823,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         _selectedCategory != null ||
         _favoritesOnly ||
         _seasonalOnly;
-
     final IconData icon;
     final String title;
     final String subtitle;
     final Color accent;
+
     if (_favoritesOnly) {
       icon = Icons.favorite_border_rounded;
       title = 'Избранное пусто';
@@ -1141,6 +1142,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       ),
     );
     if (createdName == null || !mounted) return;
+
     final provider = context.read<NutritionProvider>();
     FoodProduct? created;
     for (final p in provider.products) {
@@ -1181,9 +1183,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         _cacheProductsId == productsId) {
       return _cacheFiltered!;
     }
+
     List<FoodProduct> r = _query.isEmpty
         ? List<FoodProduct>.from(provider.products)
         : List<FoodProduct>.from(provider.searchProducts(_query));
+
     if (_favoritesOnly) r = r.where((p) => p.isFavorite).toList();
     if (_seasonalOnly) {
       final wellness = context.read<WellnessProvider>();
@@ -1192,6 +1196,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
     if (_selectedCategory != null) {
       r = r.where((p) => p.category == _selectedCategory).toList();
     }
+
     switch (_sortMode) {
       case FoodSortMode.name:
         r.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
@@ -1206,6 +1211,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         r.sort((a, b) => b.protein.compareTo(a.protein));
         break;
     }
+
     _cacheFiltered = r;
     _cacheQuery = _query;
     _cacheCategory = _selectedCategory;
@@ -1273,7 +1279,6 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   double get minExtent => 52;
-
   @override
   double get maxExtent => 80;
 
@@ -1435,6 +1440,7 @@ class _ProductDetailSheet extends StatefulWidget {
   final WellnessProvider wellness;
   final DateTime date;
   final bool reduceMotion;
+
   const _ProductDetailSheet({
     required this.product,
     required this.provider,
@@ -1483,6 +1489,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
 
     final beforeIds =
     widget.provider.getEntriesForDate(widget.date).map((e) => e.id).toSet();
+
     await widget.provider.addEntry(
       product: _current,
       grams: grams,
@@ -1502,6 +1509,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
 
     final messenger = ScaffoldMessenger.of(context);
     final mealName = _meal.displayName.toLowerCase();
+
     Navigator.pop(context);
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(SnackBar(
@@ -1529,6 +1537,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
     final grams = double.tryParse(_gramsCtrl.text) ?? 0;
     final liveMacros = product.forGrams(grams > 0 ? grams : 0);
     final canAdd = grams > 0;
+
     // 🌱 знания о продукте (может быть null)
     final knowledge = widget.wellness.knowledgeFor(product);
 
@@ -1552,7 +1561,6 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
               children: [
                 Center(child: _grabber()),
                 const SizedBox(height: 18),
-
                 // header row
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1614,8 +1622,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                                             color: _P.greenDeep,
                                             fontSize: 9,
                                             fontWeight: FontWeight.w700,
-                                            letterSpacing: 0.6,
-                                          )),
+                                            letterSpacing: 0.6,)),
                                     ],
                                   ),
                                 ),
@@ -1656,7 +1663,6 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                   ],
                 ),
                 const SizedBox(height: 22),
-
                 // НА 100 Г — 4 macro boxes
                 Text('НА 100 Г', style: _T.overline),
                 const SizedBox(height: 10),
@@ -1676,10 +1682,8 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                   ],
                 ),
                 const SizedBox(height: 22),
-
                 Container(height: 1, color: _P.divider),
                 const SizedBox(height: 18),
-
                 // КОЛИЧЕСТВО
                 Text('КОЛИЧЕСТВО', style: _T.overline),
                 const SizedBox(height: 10),
@@ -1845,7 +1849,6 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                   ),
                 ),
                 const SizedBox(height: 22),
-
                 // ПРИЁМ ПИЩИ
                 Text('ПРИЁМ ПИЩИ', style: _T.overline),
                 const SizedBox(height: 10),
@@ -1890,7 +1893,6 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                     },
                   ),
                 ),
-
                 // 🌱 Знания о продукте — Богат, полезен, осторожно
                 if (knowledge != null) ...[
                   const SizedBox(height: 14),
@@ -1954,9 +1956,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                     ),
                   ),
                 ],
-
                 const SizedBox(height: 22),
-
                 // CTA
                 SizedBox(
                   width: double.infinity,
@@ -2154,6 +2154,7 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
 class _CustomProductSheet extends StatefulWidget {
   final NutritionProvider provider;
   final bool reduceMotion;
+
   const _CustomProductSheet({
     required this.provider,
     required this.reduceMotion,
@@ -2169,7 +2170,6 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
   final _proCtrl = TextEditingController();
   final _fatCtrl = TextEditingController();
   final _carbCtrl = TextEditingController();
-
   String _category = 'other';
   String? _nameError;
   String? _calError;
@@ -2200,6 +2200,7 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
     final cal = _num(_calCtrl);
     final nameErr = name.isEmpty ? 'Введите название' : null;
     final calErr = cal <= 0 ? 'Укажите калории' : null;
+
     if (nameErr != null || calErr != null) {
       HapticFeedback.lightImpact();
       setState(() {
@@ -2208,6 +2209,7 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
       });
       return;
     }
+
     setState(() => _saving = true);
     HapticFeedback.mediumImpact();
     try {
@@ -2258,7 +2260,6 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
                 const SizedBox(height: 4),
                 Text('Создать', style: _T.title2),
                 const SizedBox(height: 20),
-
                 Text('ОСНОВНОЕ', style: _T.overline),
                 const SizedBox(height: 8),
                 Container(
@@ -2332,7 +2333,6 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
                   ],
                 ),
                 const SizedBox(height: 22),
-
                 Text('НА 100 Г', style: _T.overline),
                 const SizedBox(height: 10),
                 Row(
@@ -2361,7 +2361,6 @@ class _CustomProductSheetState extends State<_CustomProductSheet> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 10),
@@ -2641,14 +2640,12 @@ class _Press extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   const _Press({super.key, required this.child, this.onTap, this.onLongPress});
-
   @override
   State<_Press> createState() => _PressState();
 }
 
 class _PressState extends State<_Press> {
   bool _down = false;
-
   void _set(bool v) {
     if (_down != v) setState(() => _down = v);
   }

@@ -10,7 +10,7 @@ import '../../models/nutrition_models.dart';
 import '../../providers/nutrition_provider.dart';
 
 // ═══════════════════════════════════════════════════════════════════
-//  DESIGN SYSTEM
+// DESIGN SYSTEM
 // ═══════════════════════════════════════════════════════════════════
 class _Palette {
   static const bg = Color(0xFFF6F5F1);
@@ -65,26 +65,23 @@ class _HeroTheme {
   final Color bottom;
   final Color accent;
   const _HeroTheme({
-    required this.id, required this.label, required this.emoji,
-    required this.top, required this.bottom, required this.accent,
+    required this.id,
+    required this.label,
+    required this.emoji,
+    required this.top,
+    required this.bottom,
+    required this.accent,
   });
 }
 
 const List<_HeroTheme> _heroThemes = [
-  _HeroTheme(id: 'current', label: 'Текущий', emoji: '✨',
-      top: Color(0xFF2B3A32), bottom: Color(0xFF1B2027), accent: Color(0xFF6C9E88)),
-  _HeroTheme(id: 'forest', label: 'Лесной', emoji: '🌲',
-      top: Color(0xFF2D4A3E), bottom: Color(0xFF1B3529), accent: Color(0xFF8CAB93)),
-  _HeroTheme(id: 'sunset', label: 'Закат', emoji: '🌇',
-      top: Color(0xFF5A2D3E), bottom: Color(0xFF2D1B2A), accent: Color(0xFFEF9563)),
-  _HeroTheme(id: 'ocean', label: 'Морской', emoji: '🌊',
-      top: Color(0xFF1B3A4F), bottom: Color(0xFF0F2537), accent: Color(0xFF7EA8C6)),
-  _HeroTheme(id: 'desert', label: 'Пустыня', emoji: '🏜️',
-      top: Color(0xFF4A3A28), bottom: Color(0xFF2A241B), accent: Color(0xFFE7D9B8)),
-  _HeroTheme(id: 'taiga', label: 'Тайга', emoji: '🌲',
-      top: Color(0xFF1E3530), bottom: Color(0xFF0E1F1B), accent: Color(0xFF6C9E88)),
-  _HeroTheme(id: 'dawn', label: 'Рассвет', emoji: '🌅',
-      top: Color(0xFF4A2D3A), bottom: Color(0xFF2D1B28), accent: Color(0xFFE899A8)),
+  _HeroTheme(id: 'current', label: 'Текущий', emoji: '✨', top: Color(0xFF2B3A32), bottom: Color(0xFF1B2027), accent: Color(0xFF6C9E88)),
+  _HeroTheme(id: 'forest', label: 'Лесной', emoji: '🌲', top: Color(0xFF2D4A3E), bottom: Color(0xFF1B3529), accent: Color(0xFF8CAB93)),
+  _HeroTheme(id: 'sunset', label: 'Закат', emoji: '🌇', top: Color(0xFF5A2D3E), bottom: Color(0xFF2D1B2A), accent: Color(0xFFEF9563)),
+  _HeroTheme(id: 'ocean', label: 'Морской', emoji: '🌊', top: Color(0xFF1B3A4F), bottom: Color(0xFF0F2537), accent: Color(0xFF7EA8C6)),
+  _HeroTheme(id: 'desert', label: 'Пустыня', emoji: '🏜️', top: Color(0xFF4A3A28), bottom: Color(0xFF2A241B), accent: Color(0xFFE7D9B8)),
+  _HeroTheme(id: 'taiga', label: 'Тайга', emoji: '🌲', top: Color(0xFF1E3530), bottom: Color(0xFF0E1F1B), accent: Color(0xFF6C9E88)),
+  _HeroTheme(id: 'dawn', label: 'Рассвет', emoji: '🌅', top: Color(0xFF4A2D3A), bottom: Color(0xFF2D1B28), accent: Color(0xFFE899A8)),
 ];
 
 const List<String> _heroBackgrounds = [
@@ -149,7 +146,8 @@ String _categoryToAisle(String category) {
     case 'meat': return 'Мясо';
     case 'fish': return 'Рыба';
     case 'dairy': return 'Молочка';
-    case 'bakery': case 'grains': return 'Бакалея';
+    case 'bakery':
+    case 'grains': return 'Бакалея';
     case 'drinks': return 'Напитки';
     case 'sweets': return 'Сладости';
     case 'sauces': return 'Соусы';
@@ -159,12 +157,18 @@ String _categoryToAisle(String category) {
 
 String _aisleEmoji(String aisle) {
   switch (aisle) {
-    case 'Овощи': return '🥬'; case 'Фрукты': return '🍎';
-    case 'Мясо': return '🥩'; case 'Рыба': return '🐟';
-    case 'Молочка': return '🥛'; case 'Хлеб': return '🥐';
-    case 'Бакалея': return '🌾'; case 'Заморозка': return '🧊';
-    case 'Напитки': return '☕'; case 'Сладости': return '🍫';
-    case 'Соусы': return '🧂'; default: return '🍽️';
+    case 'Овощи': return '🥬';
+    case 'Фрукты': return '🍎';
+    case 'Мясо': return '🥩';
+    case 'Рыба': return '🐟';
+    case 'Молочка': return '🥛';
+    case 'Хлеб': return '🥐';
+    case 'Бакалея': return '🌾';
+    case 'Заморозка': return '🧊';
+    case 'Напитки': return '☕';
+    case 'Сладости': return '🍫';
+    case 'Соусы': return '🧂';
+    default: return '🍽️';
   }
 }
 
@@ -186,7 +190,7 @@ Color _aisleAccent(String aisle) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  MAIN SCREEN
+// MAIN SCREEN
 // ═══════════════════════════════════════════════════════════════════
 class ShoppingModeScreen extends StatefulWidget {
   const ShoppingModeScreen({super.key});
@@ -194,11 +198,18 @@ class ShoppingModeScreen extends StatefulWidget {
   State<ShoppingModeScreen> createState() => _ShoppingModeScreenState();
 }
 
-class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProviderStateMixin {
+class _ShoppingModeScreenState extends State<ShoppingModeScreen>
+    with TickerProviderStateMixin {
   late final AnimationController _entrance = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1100))..forward();
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..forward();
+
   late final AnimationController _ringAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1400))..forward();
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..forward();
+
   String _heroBg = 'current';
 
   @override
@@ -235,7 +246,9 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
         return Opacity(
           opacity: eased.clamp(0.0, 1.0),
           child: Transform.translate(
-              offset: Offset(0, 24 * (1 - eased)), child: child),
+            offset: Offset(0, 24 * (1 - eased)),
+            child: child,
+          ),
         );
       },
     );
@@ -251,7 +264,8 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
 
     final byAisle = <String, List<ShoppingItem>>{};
     for (final item in active) {
-      final product = provider.products.where((p) => p.id == item.productId).firstOrNull;
+      final product =
+          provider.products.where((p) => p.id == item.productId).firstOrNull;
       String aisle = 'Другое';
       if (item.category != null && item.category!.isNotEmpty) {
         aisle = item.category!;
@@ -260,26 +274,67 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
       }
       byAisle.putIfAbsent(aisle, () => []).add(item);
     }
-    final sortedAisles = _storeAisles.where((a) => byAisle.containsKey(a)).toList();
+
+    final sortedAisles =
+    _storeAisles.where((a) => byAisle.containsKey(a)).toList();
     final totalBudget = active.fold<double>(0, (s, i) => s + i.totalPrice);
     final progress = allItems.isEmpty ? 0.0 : bought.length / allItems.length;
-    final recentBought = [...bought]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final recentBought = [...bought]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final recentPreview = recentBought.take(3).toList();
 
     return Scaffold(
       backgroundColor: _Palette.bg,
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         slivers: [
-          SliverToBoxAdapter(child: _hero(allItems, active, bought, totalBudget, progress, provider)),
-          SliverToBoxAdapter(child: _entranceAt(0.20, _statsBento(active, bought, totalBudget, sortedAisles, r))),
+          SliverToBoxAdapter(
+            child: _hero(
+              allItems,
+              active,
+              bought,
+              totalBudget,
+              progress,
+              provider,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: _entranceAt(
+              0.20,
+              _statsBento(active, bought, totalBudget, sortedAisles, r),
+            ),
+          ),
           if (recentPreview.isNotEmpty)
-            SliverToBoxAdapter(child: _entranceAt(0.25, _recentOperationsSection(recentBought, provider, r))),
+            SliverToBoxAdapter(
+              child: _entranceAt(
+                0.25,
+                _recentOperationsSection(recentBought, provider, r),
+              ),
+            ),
           if (bought.isNotEmpty)
-            SliverToBoxAdapter(child: _entranceAt(0.28, _quickRebuy(allItems, provider, r))),
+            SliverToBoxAdapter(
+              child: _entranceAt(0.28, _quickRebuy(allItems, provider, r)),
+            ),
           if (sortedAisles.isNotEmpty) ...[
-            SliverToBoxAdapter(child: _entranceAt(0.30, _sectionHeader('Отделы магазина', Icons.storefront_rounded, _Palette.green, r))),
-            SliverToBoxAdapter(child: _entranceAt(0.35, _darkPremiumAislesBlock(sortedAisles, byAisle, provider, r))),
+            SliverToBoxAdapter(
+              child: _entranceAt(
+                0.30,
+                _sectionHeader(
+                  'Отделы магазина',
+                  Icons.storefront_rounded,
+                  _Palette.green,
+                  r,
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _entranceAt(
+                0.35,
+                _darkPremiumAislesBlock(sortedAisles, byAisle, provider, r),
+              ),
+            ),
           ],
           if (sortedAisles.isEmpty && active.isEmpty)
             SliverToBoxAdapter(child: _entranceAt(0.35, _emptyState(r))),
@@ -297,22 +352,38 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
         children: [
           Container(
             padding: EdgeInsets.all(r.s(6)),
-            decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(r.s(8))),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(r.s(8)),
+            ),
             child: Icon(icon, size: r.s(16), color: color),
           ),
           SizedBox(width: r.s(10)),
-          Text(title.toUpperCase(),
-              style: GoogleFonts.inter(fontSize: r.fs(11), fontWeight: FontWeight.w700, color: _Palette.text, letterSpacing: 1.2)),
+          Text(
+            title.toUpperCase(),
+            style: GoogleFonts.inter(
+              fontSize: r.fs(11),
+              fontWeight: FontWeight.w700,
+              color: _Palette.text,
+              letterSpacing: 1.2,
+            ),
+          ),
         ],
       ),
     );
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  HERO
+  // HERO
   // ═══════════════════════════════════════════════════════════════
-  Widget _hero(List<ShoppingItem> all, List<ShoppingItem> active, List<ShoppingItem> bought,
-      double totalBudget, double progress, NutritionProvider provider) {
+  Widget _hero(
+      List<ShoppingItem> all,
+      List<ShoppingItem> active,
+      List<ShoppingItem> bought,
+      double totalBudget,
+      double progress,
+      NutritionProvider provider,
+      ) {
     final r = _R(context);
     final ringSize = r.s(240);
     final isImage = _isImagePath(_heroBg);
@@ -331,11 +402,14 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 ? Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(_heroBg, fit: BoxFit.cover,
+                Image.asset(
+                  _heroBg,
+                  fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                         colors: [theme.top, theme.bottom],
                       ),
                     ),
@@ -344,7 +418,8 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                       colors: [
                         Colors.black.withOpacity(0.45),
                         Colors.black.withOpacity(0.15),
@@ -359,7 +434,8 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 : DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                   colors: [theme.top, theme.bottom],
                 ),
               ),
@@ -367,21 +443,29 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
           ),
           if (!isImage)
             Positioned(
-              top: r.s(40), right: -r.s(60),
+              top: r.s(40),
+              right: -r.s(60),
               child: IgnorePointer(
                 child: Container(
-                  width: r.s(260), height: r.s(260),
+                  width: r.s(260),
+                  height: r.s(260),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
-                      colors: [accent.withOpacity(0.25), accent.withOpacity(0)],
+                      colors: [
+                        accent.withOpacity(0.25),
+                        accent.withOpacity(0),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
           Positioned(
-            left: 0, right: 0, bottom: 0, height: r.s(150),
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: r.s(150),
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -412,23 +496,54 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 children: [
                   Row(
                     children: [
-                      _glassPill(Icons.arrow_back_rounded, () => Navigator.pop(context), r),
+                      _glassPill(
+                        Icons.arrow_back_rounded,
+                            () => Navigator.pop(context),
+                        r,
+                      ),
                       SizedBox(width: r.s(10)),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('РЕЖИМ МАГАЗИНА',
-                                style: GoogleFonts.inter(color: Colors.white.withOpacity(0.6), fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.4)),
-                            Text('Список покупок',
-                                style: GoogleFonts.inter(color: Colors.white, fontSize: r.fs(18), fontWeight: FontWeight.w600, letterSpacing: -0.3,
-                                    shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 6)])),
+                            Text(
+                              'РЕЖИМ МАГАЗИНА',
+                              style: GoogleFonts.inter(
+                                color: Colors.white.withOpacity(0.6),
+                                fontSize: r.fs(10),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.4,
+                              ),
+                            ),
+                            Text(
+                              'Список покупок',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: r.fs(18),
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.3,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      _glassPill(Icons.share_rounded, () => _shareList(context), r),
+                      _glassPill(
+                        Icons.share_rounded,
+                            () => _shareList(context),
+                        r,
+                      ),
                       SizedBox(width: r.s(8)),
-                      _glassPill(Icons.palette_rounded, () => _openThemePicker(), r),
+                      _glassPill(
+                        Icons.palette_rounded,
+                            () => _openThemePicker(),
+                        r,
+                      ),
                     ],
                   ),
                   SizedBox(height: r.s(24)),
@@ -438,10 +553,13 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.black.withOpacity(0.15),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
                       ),
                       child: SizedBox(
-                        width: ringSize, height: ringSize,
+                        width: ringSize,
+                        height: ringSize,
                         child: AnimatedBuilder(
                           animation: _ringAnim,
                           builder: (_, __) => CustomPaint(
@@ -461,12 +579,33 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                   SizedBox(height: r.s(22)),
                   Wrap(
                     alignment: WrapAlignment.center,
-                    spacing: r.s(8), runSpacing: r.s(8),
+                    spacing: r.s(8),
+                    runSpacing: r.s(8),
                     children: [
-                      _heroLegendChip(accent, 'Прогресс', '${(progress * 100).round()}%', r),
-                      _heroLegendChip(_Vibrant.neonGreen, 'Куплено', '${bought.length}', r),
-                      _heroLegendChip(_Vibrant.vividPeach, 'Осталось', '${active.length}', r),
-                      _heroLegendChip(_Palette.yellow, 'Бюджет', '${totalBudget.round()}₽', r),
+                      _heroLegendChip(
+                        accent,
+                        'Прогресс',
+                        '${(progress * 100).round()}%',
+                        r,
+                      ),
+                      _heroLegendChip(
+                        _Vibrant.neonGreen,
+                        'Куплено',
+                        '${bought.length}',
+                        r,
+                      ),
+                      _heroLegendChip(
+                        _Vibrant.vividPeach,
+                        'Осталось',
+                        '${active.length}',
+                        r,
+                      ),
+                      _heroLegendChip(
+                        _Palette.yellow,
+                        'Бюджет',
+                        '${totalBudget.round()}₽',
+                        r,
+                      ),
                     ],
                   ),
                 ],
@@ -489,12 +628,29 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: r.s(6), height: r.s(6),
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+            width: r.s(6),
+            height: r.s(6),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
           SizedBox(width: r.s(6)),
-          Text(label, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: r.fs(10), fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: r.fs(10),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           SizedBox(width: r.s(4)),
-          Text(value, style: TextStyle(color: Colors.white, fontSize: r.fs(11), fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: r.fs(11),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -522,7 +678,9 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => Container(
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.88),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.88,
+        ),
         padding: EdgeInsets.fromLTRB(r.s(20), r.s(12), r.s(20), r.s(24)),
         decoration: BoxDecoration(
           color: _Palette.bg,
@@ -536,29 +694,53 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
             children: [
               Center(
                 child: Container(
-                  width: r.s(38), height: r.s(5),
-                  decoration: BoxDecoration(color: _Palette.divider, borderRadius: BorderRadius.circular(r.s(3))),
+                  width: r.s(38),
+                  height: r.s(5),
+                  decoration: BoxDecoration(
+                    color: _Palette.divider,
+                    borderRadius: BorderRadius.circular(r.s(3)),
+                  ),
                 ),
               ),
               SizedBox(height: r.s(20)),
               Row(
                 children: [
                   Container(
-                    width: r.s(38), height: r.s(38),
-                    decoration: BoxDecoration(color: _Palette.greenSoft, borderRadius: BorderRadius.circular(r.s(11))),
+                    width: r.s(38),
+                    height: r.s(38),
+                    decoration: BoxDecoration(
+                      color: _Palette.greenSoft,
+                      borderRadius: BorderRadius.circular(r.s(11)),
+                    ),
                     alignment: Alignment.center,
-                    child: Icon(Icons.wallpaper_rounded, color: _Palette.green, size: r.s(19)),
+                    child: Icon(
+                      Icons.wallpaper_rounded,
+                      color: _Palette.green,
+                      size: r.s(19),
+                    ),
                   ),
                   SizedBox(width: r.s(12)),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Фон экрана',
-                            style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(18), fontWeight: FontWeight.w600, letterSpacing: -0.3)),
+                        Text(
+                          'Фон экрана',
+                          style: GoogleFonts.inter(
+                            color: _Palette.text,
+                            fontSize: r.fs(18),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
                         SizedBox(height: r.s(2)),
-                        Text('Цветовые темы и фотографии природы',
-                            style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(12))),
+                        Text(
+                          'Цветовые темы и фотографии природы',
+                          style: GoogleFonts.inter(
+                            color: _Palette.textMuted,
+                            fontSize: r.fs(12),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -573,10 +755,21 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.palette_outlined, size: r.s(13), color: _Palette.textMuted),
+                          Icon(
+                            Icons.palette_outlined,
+                            size: r.s(13),
+                            color: _Palette.textMuted,
+                          ),
                           SizedBox(width: r.s(6)),
-                          Text('ЦВЕТОВЫЕ ТЕМЫ',
-                              style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                          Text(
+                            'ЦВЕТОВЫЕ ТЕМЫ',
+                            style: GoogleFonts.inter(
+                              color: _Palette.textMuted,
+                              fontSize: r.fs(10),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: r.s(10)),
@@ -588,7 +781,8 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                         crossAxisSpacing: r.s(8),
                         childAspectRatio: 0.9,
                         children: _heroThemes.map((theme) {
-                          final isSelected = !_isImagePath(_heroBg) && theme.id == _heroBg;
+                          final isSelected =
+                              !_isImagePath(_heroBg) && theme.id == _heroBg;
                           return _TapScale(
                             onTap: () {
                               HapticFeedback.selectionClick();
@@ -598,11 +792,21 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(r.s(14)),
                                 border: Border.all(
-                                  color: isSelected ? _Palette.green : Colors.white.withOpacity(0.9),
+                                  color: isSelected
+                                      ? _Palette.green
+                                      : Colors.white.withOpacity(0.9),
                                   width: isSelected ? 3 : 1,
                                 ),
                                 boxShadow: isSelected
-                                    ? [BoxShadow(color: _Palette.green.withOpacity(0.25), blurRadius: 10, spreadRadius: -2, offset: const Offset(0, 3))]
+                                    ? [
+                                  BoxShadow(
+                                    color:
+                                    _Palette.green.withOpacity(0.25),
+                                    blurRadius: 10,
+                                    spreadRadius: -2,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ]
                                     : null,
                               ),
                               clipBehavior: Clip.antiAlias,
@@ -619,13 +823,18 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                                     ),
                                   ),
                                   Positioned(
-                                    top: r.s(8), right: r.s(8),
+                                    top: r.s(8),
+                                    right: r.s(8),
                                     child: Container(
-                                      width: r.s(18), height: r.s(18),
+                                      width: r.s(18),
+                                      height: r.s(18),
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         gradient: RadialGradient(
-                                          colors: [theme.accent.withOpacity(0.7), theme.accent.withOpacity(0)],
+                                          colors: [
+                                            theme.accent.withOpacity(0.7),
+                                            theme.accent.withOpacity(0),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -636,33 +845,62 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                                         gradient: LinearGradient(
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
-                                          colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.5)],
+                                          colors: [
+                                            Colors.black.withOpacity(0.0),
+                                            Colors.black.withOpacity(0.5),
+                                          ],
                                           stops: const [0.4, 1.0],
                                         ),
                                       ),
                                     ),
                                   ),
                                   Positioned(
-                                    left: r.s(6), top: r.s(6),
-                                    child: Text(theme.emoji, style: TextStyle(fontSize: r.s(16))),
+                                    left: r.s(6),
+                                    top: r.s(6),
+                                    child: Text(
+                                      theme.emoji,
+                                      style: TextStyle(fontSize: r.s(16)),
+                                    ),
                                   ),
                                   Positioned(
-                                    left: r.s(6), right: r.s(6), bottom: r.s(6),
+                                    left: r.s(6),
+                                    right: r.s(6),
+                                    bottom: r.s(6),
                                     child: Row(
                                       children: [
                                         Expanded(
-                                          child: Text(theme.label,
-                                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.inter(
-                                                  color: Colors.white, fontSize: r.fs(9.5), fontWeight: FontWeight.w700,
-                                                  shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 3)])),
+                                          child: Text(
+                                            theme.label,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: r.fs(9.5),
+                                              fontWeight: FontWeight.w700,
+                                              shadows: [
+                                                Shadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.5),
+                                                  blurRadius: 3,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                         if (isSelected)
                                           Container(
-                                            width: r.s(14), height: r.s(14),
-                                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                            width: r.s(14),
+                                            height: r.s(14),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
                                             alignment: Alignment.center,
-                                            child: Icon(Icons.check_rounded, color: _Palette.green, size: r.s(9)),
+                                            child: Icon(
+                                              Icons.check_rounded,
+                                              color: _Palette.green,
+                                              size: r.s(9),
+                                            ),
                                           ),
                                       ],
                                     ),
@@ -676,13 +914,30 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                       SizedBox(height: r.s(20)),
                       Row(
                         children: [
-                          Icon(Icons.landscape_rounded, size: r.s(13), color: _Palette.textMuted),
+                          Icon(
+                            Icons.landscape_rounded,
+                            size: r.s(13),
+                            color: _Palette.textMuted,
+                          ),
                           SizedBox(width: r.s(6)),
-                          Text('ФОТО ПРИРОДЫ',
-                              style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                          Text(
+                            'ФОТО ПРИРОДЫ',
+                            style: GoogleFonts.inter(
+                              color: _Palette.textMuted,
+                              fontSize: r.fs(10),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
                           const Spacer(),
-                          Text('${_heroBackgrounds.length}',
-                              style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(10), fontWeight: FontWeight.w600)),
+                          Text(
+                            '${_heroBackgrounds.length}',
+                            style: GoogleFonts.inter(
+                              color: _Palette.textMuted,
+                              fontSize: r.fs(10),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: r.s(10)),
@@ -694,7 +949,8 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                         crossAxisSpacing: r.s(10),
                         childAspectRatio: 0.82,
                         children: _heroBackgrounds.map((path) {
-                          final isSelected = _isImagePath(_heroBg) && _heroBg == path;
+                          final isSelected =
+                              _isImagePath(_heroBg) && _heroBg == path;
                           final label = _heroBgLabels[path] ?? '';
                           return _TapScale(
                             onTap: () {
@@ -705,28 +961,47 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(r.s(16)),
                                 border: Border.all(
-                                  color: isSelected ? _Palette.green : Colors.white.withOpacity(0.9),
+                                  color: isSelected
+                                      ? _Palette.green
+                                      : Colors.white.withOpacity(0.9),
                                   width: isSelected ? 3 : 1,
                                 ),
                                 boxShadow: isSelected
-                                    ? [BoxShadow(color: _Palette.green.withOpacity(0.25), blurRadius: 12, spreadRadius: -2, offset: const Offset(0, 4))]
+                                    ? [
+                                  BoxShadow(
+                                    color:
+                                    _Palette.green.withOpacity(0.25),
+                                    blurRadius: 12,
+                                    spreadRadius: -2,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
                                     : null,
                               ),
                               clipBehavior: Clip.antiAlias,
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  Image.asset(path, fit: BoxFit.cover,
+                                  Image.asset(
+                                    path,
+                                    fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => Container(
                                       decoration: const BoxDecoration(
                                         gradient: LinearGradient(
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
-                                          colors: [Color(0xFF2B3A32), Color(0xFF1B2027)],
+                                          colors: [
+                                            Color(0xFF2B3A32),
+                                            Color(0xFF1B2027),
+                                          ],
                                         ),
                                       ),
                                       alignment: Alignment.center,
-                                      child: Icon(Icons.image_not_supported_rounded, color: Colors.white.withOpacity(0.5), size: r.s(22)),
+                                      child: Icon(
+                                        Icons.image_not_supported_rounded,
+                                        color: Colors.white.withOpacity(0.5),
+                                        size: r.s(22),
+                                      ),
                                     ),
                                   ),
                                   Positioned.fill(
@@ -735,29 +1010,54 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                                         gradient: LinearGradient(
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
-                                          colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.55)],
+                                          colors: [
+                                            Colors.black.withOpacity(0.0),
+                                            Colors.black.withOpacity(0.55),
+                                          ],
                                           stops: const [0.4, 1.0],
                                         ),
                                       ),
                                     ),
                                   ),
                                   Positioned(
-                                    left: r.s(8), right: r.s(8), bottom: r.s(8),
+                                    left: r.s(8),
+                                    right: r.s(8),
+                                    bottom: r.s(8),
                                     child: Row(
                                       children: [
                                         Expanded(
-                                          child: Text(label,
-                                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.inter(
-                                                  color: Colors.white, fontSize: r.fs(10.5), fontWeight: FontWeight.w700,
-                                                  shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)])),
+                                          child: Text(
+                                            label,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: r.fs(10.5),
+                                              fontWeight: FontWeight.w700,
+                                              shadows: [
+                                                Shadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.5),
+                                                  blurRadius: 4,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                         if (isSelected)
                                           Container(
-                                            width: r.s(18), height: r.s(18),
-                                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                            width: r.s(18),
+                                            height: r.s(18),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
                                             alignment: Alignment.center,
-                                            child: Icon(Icons.check_rounded, color: _Palette.green, size: r.s(12)),
+                                            child: Icon(
+                                              Icons.check_rounded,
+                                              color: _Palette.green,
+                                              size: r.s(12),
+                                            ),
                                           ),
                                       ],
                                     ),
@@ -777,6 +1077,7 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
         ),
       ),
     );
+
     if (result != null && result != _heroBg) {
       await _saveBg(result);
       if (mounted) {
@@ -787,10 +1088,15 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  STATS BENTO
+  // STATS BENTO
   // ═══════════════════════════════════════════════════════════════
-  Widget _statsBento(List<ShoppingItem> active, List<ShoppingItem> bought,
-      double totalBudget, List<String> aisles, _R r) {
+  Widget _statsBento(
+      List<ShoppingItem> active,
+      List<ShoppingItem> bought,
+      double totalBudget,
+      List<String> aisles,
+      _R r,
+      ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(20)),
       child: SizedBox(
@@ -805,17 +1111,30 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 decoration: BoxDecoration(
                   color: _Palette.peachSoft,
                   borderRadius: BorderRadius.circular(r.s(28)),
-                  border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.9),
+                    width: 1,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.account_balance_wallet_rounded, color: _Palette.peach, size: r.s(16)),
+                        Icon(
+                          Icons.account_balance_wallet_rounded,
+                          color: _Palette.peach,
+                          size: r.s(16),
+                        ),
                         SizedBox(width: r.s(6)),
-                        Text('Бюджет',
-                            style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(13), fontWeight: FontWeight.w500)),
+                        Text(
+                          'Бюджет',
+                          style: GoogleFonts.inter(
+                            color: _Palette.text,
+                            fontSize: r.fs(13),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                     SizedBox(height: r.s(12)),
@@ -823,19 +1142,44 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
-                        Text('${totalBudget.round()}',
-                            style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(32), fontWeight: FontWeight.w400, letterSpacing: -1.3, fontFeatures: const [FontFeature.tabularFigures()])),
+                        Text(
+                          '${totalBudget.round()}',
+                          style: GoogleFonts.inter(
+                            color: _Palette.text,
+                            fontSize: r.fs(32),
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: -1.3,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
                         SizedBox(width: r.s(4)),
-                        Text('₽', style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(18), letterSpacing: -1)),
+                        Text(
+                          '₽',
+                          style: GoogleFonts.inter(
+                            color: _Palette.textMuted,
+                            fontSize: r.fs(18),
+                            letterSpacing: -1,
+                          ),
+                        ),
                       ],
                     ),
-                    Text('на ${active.length} товаров',
-                        style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(11))),
+                    Text(
+                      'на ${active.length} товаров',
+                      style: GoogleFonts.inter(
+                        color: _Palette.textMuted,
+                        fontSize: r.fs(11),
+                      ),
+                    ),
                     const Spacer(),
                     _GlossyProgress(
                       value: (totalBudget / 5000).clamp(0.0, 1.0),
                       height: r.s(6),
-                      gradient: const [_Vibrant.vividPeach, _Palette.peach],
+                      gradient: const [
+                        _Vibrant.vividPeach,
+                        _Palette.peach,
+                      ],
                       track: Colors.white.withOpacity(0.6),
                       radius: 100,
                     ),
@@ -851,36 +1195,67 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 decoration: BoxDecoration(
                   color: _Palette.greenSoft,
                   borderRadius: BorderRadius.circular(r.s(28)),
-                  border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.9),
+                    width: 1,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.grid_view_rounded, color: _Palette.green, size: r.s(16)),
+                        Icon(
+                          Icons.grid_view_rounded,
+                          color: _Palette.green,
+                          size: r.s(16),
+                        ),
                         SizedBox(width: r.s(6)),
-                        Text('Отделы',
-                            style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(13), fontWeight: FontWeight.w500)),
+                        Text(
+                          'Отделы',
+                          style: GoogleFonts.inter(
+                            color: _Palette.text,
+                            fontSize: r.fs(13),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                     SizedBox(height: r.s(12)),
-                    Text('${aisles.length}',
-                        style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(36), fontWeight: FontWeight.w400, letterSpacing: -1.5, fontFeatures: const [FontFeature.tabularFigures()])),
-                    Text('отделов посетить',
-                        style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(11))),
+                    Text(
+                      '${aisles.length}',
+                      style: GoogleFonts.inter(
+                        color: _Palette.text,
+                        fontSize: r.fs(36),
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -1.5,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    Text(
+                      'отделов посетить',
+                      style: GoogleFonts.inter(
+                        color: _Palette.textMuted,
+                        fontSize: r.fs(11),
+                      ),
+                    ),
                     const Spacer(),
                     Wrap(
-                      spacing: r.s(4), runSpacing: r.s(4),
+                      spacing: r.s(4),
+                      runSpacing: r.s(4),
                       children: aisles.take(6).map((a) {
                         return Container(
-                          width: r.s(22), height: r.s(22),
+                          width: r.s(22),
+                          height: r.s(22),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(r.s(7)),
                           ),
                           alignment: Alignment.center,
-                          child: Text(_aisleEmoji(a), style: TextStyle(fontSize: r.s(12))),
+                          child: Text(
+                            _aisleEmoji(a),
+                            style: TextStyle(fontSize: r.s(12)),
+                          ),
                         );
                       }).toList(),
                     ),
@@ -894,8 +1269,13 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     );
   }
 
-  Widget _recentOperationsSection(List<ShoppingItem> recentBought, NutritionProvider provider, _R r) {
-    final totalSpent = recentBought.fold<double>(0, (s, i) => s + i.totalPrice);
+  Widget _recentOperationsSection(
+      List<ShoppingItem> recentBought,
+      NutritionProvider provider,
+      _R r,
+      ) {
+    final totalSpent =
+    recentBought.fold<double>(0, (s, i) => s + i.totalPrice);
     final preview = recentBought.take(3).toList();
 
     return Padding(
@@ -910,7 +1290,12 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
           ),
           borderRadius: BorderRadius.circular(r.s(24)),
           boxShadow: [
-            BoxShadow(color: _Palette.green.withOpacity(0.25), blurRadius: 18, spreadRadius: -4, offset: const Offset(0, 8)),
+            BoxShadow(
+              color: _Palette.green.withOpacity(0.25),
+              blurRadius: 18,
+              spreadRadius: -4,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
         child: Column(
@@ -926,21 +1311,43 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(r.s(10)),
                     ),
-                    child: Icon(Icons.history_rounded, color: Colors.white, size: r.s(18)),
+                    child: Icon(
+                      Icons.history_rounded,
+                      color: Colors.white,
+                      size: r.s(18),
+                    ),
                   ),
                   SizedBox(width: r.s(12)),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ПОСЛЕДНИЕ ПОКУПКИ',
-                            style: GoogleFonts.inter(color: Colors.white.withOpacity(0.75), fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.2)),
-                        Text('${preview.length} последних · ${totalSpent.round()} ₽',
-                            style: GoogleFonts.inter(color: Colors.white, fontSize: r.fs(14), fontWeight: FontWeight.w600, letterSpacing: -0.3)),
+                        Text(
+                          'ПОСЛЕДНИЕ ПОКУПКИ',
+                          style: GoogleFonts.inter(
+                            color: Colors.white.withOpacity(0.75),
+                            fontSize: r.fs(10),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        Text(
+                          '${preview.length} последних · ${totalSpent.round()} ₽',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: r.fs(14),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  Icon(Icons.arrow_forward_ios_rounded, color: Colors.white.withOpacity(0.6), size: r.s(12)),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.white.withOpacity(0.6),
+                    size: r.s(12),
+                  ),
                 ],
               ),
             ),
@@ -959,10 +1366,20 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Открыть полную историю',
-                        style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: r.fs(11), fontWeight: FontWeight.w600)),
+                    Text(
+                      'Открыть полную историю',
+                      style: GoogleFonts.inter(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: r.fs(11),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     SizedBox(width: r.s(4)),
-                    Icon(Icons.arrow_forward_rounded, color: Colors.white.withOpacity(0.85), size: r.s(13)),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white.withOpacity(0.85),
+                      size: r.s(13),
+                    ),
                   ],
                 ),
               ),
@@ -973,9 +1390,15 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     );
   }
 
-  Widget _recentItemTile(ShoppingItem item, NutritionProvider provider, _R r) {
-    final product = provider.products.where((p) => p.id == item.productId).firstOrNull;
-    final accent = _aisleAccent(_categoryToAisle(product?.category ?? 'other'));
+  Widget _recentItemTile(
+      ShoppingItem item,
+      NutritionProvider provider,
+      _R r,
+      ) {
+    final product =
+        provider.products.where((p) => p.id == item.productId).firstOrNull;
+    final accent =
+    _aisleAccent(_categoryToAisle(product?.category ?? 'other'));
 
     return Container(
       margin: EdgeInsets.only(bottom: r.s(6)),
@@ -988,43 +1411,71 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
       child: Row(
         children: [
           Container(
-            width: r.s(32), height: r.s(32),
+            width: r.s(32),
+            height: r.s(32),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(r.s(9)),
             ),
             alignment: Alignment.center,
-            child: Text(product?.categoryEmoji ?? '📦', style: TextStyle(fontSize: r.s(16))),
+            child: Text(
+              product?.categoryEmoji ?? '📦',
+              style: TextStyle(fontSize: r.s(16)),
+            ),
           ),
           SizedBox(width: r.s(10)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.displayName,
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(color: Colors.white, fontSize: r.fs(12), fontWeight: FontWeight.w600)),
+                Text(
+                  item.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: r.fs(12),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 SizedBox(height: r.s(2)),
-                Text('${_fmtNum(item.quantity)} ${item.unit} · ${_formatDate(item.createdAt)}',
-                    style: GoogleFonts.inter(color: Colors.white.withOpacity(0.7), fontSize: r.fs(10))),
+                Text(
+                  '${_fmtNum(item.quantity)} ${item.unit} · ${_formatDate(item.createdAt)}',
+                  style: GoogleFonts.inter(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: r.fs(10),
+                  ),
+                ),
               ],
             ),
           ),
           if (item.totalPrice > 0)
             Padding(
               padding: EdgeInsets.only(right: r.s(8)),
-              child: Text('${item.totalPrice.round()} ₽',
-                  style: GoogleFonts.inter(color: _Vibrant.neonGreen, fontSize: r.fs(11), fontWeight: FontWeight.w700, fontFeatures: const [FontFeature.tabularFigures()])),
+              child: Text(
+                '${item.totalPrice.round()} ₽',
+                style: GoogleFonts.inter(
+                  color: _Vibrant.neonGreen,
+                  fontSize: r.fs(11),
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
             ),
           _TapScale(
             onTap: () => _confirmDeleteItem(item, provider),
             child: Container(
-              width: r.s(28), height: r.s(28),
+              width: r.s(28),
+              height: r.s(28),
               decoration: BoxDecoration(
                 color: _Palette.pink.withOpacity(0.25),
                 borderRadius: BorderRadius.circular(r.s(8)),
               ),
-              child: Icon(Icons.close_rounded, color: Colors.white, size: r.s(14)),
+              child: Icon(
+                Icons.close_rounded,
+                color: Colors.white,
+                size: r.s(14),
+              ),
             ),
           ),
         ],
@@ -1032,42 +1483,75 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     );
   }
 
-  Future<void> _confirmDeleteItem(ShoppingItem item, NutritionProvider provider) async {
+  Future<void> _confirmDeleteItem(
+      ShoppingItem item,
+      NutritionProvider provider,
+      ) async {
     final r = _R(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: _Palette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(20))),
-        title: Text('Удалить «${item.displayName}»?',
-            style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(16), fontWeight: FontWeight.w600)),
-        content: Text('Товар будет удалён из истории покупок.',
-            style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(r.s(20)),
+        ),
+        title: Text(
+          'Удалить «${item.displayName}»?',
+          style: GoogleFonts.inter(
+            color: _Palette.text,
+            fontSize: r.fs(16),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Товар будет удалён из истории покупок.',
+          style: GoogleFonts.inter(
+            color: _Palette.textMuted,
+            fontSize: r.fs(13),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: Text('Отмена', style: GoogleFonts.inter(color: _Palette.textMuted))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Отмена',
+              style: GoogleFonts.inter(color: _Palette.textMuted),
+            ),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: _Palette.pink),
-            child: const Text('Удалить', style: TextStyle(fontWeight: FontWeight.w600)),
+            child: const Text(
+              'Удалить',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
     );
+
     if (confirm == true) {
       await provider.deleteShoppingItem(item.id);
       if (!mounted) return;
       HapticFeedback.mediumImpact();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('🗑️ «${item.displayName}» удалён из истории'),
-        backgroundColor: _Palette.pink,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(14))),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('🗑️ «${item.displayName}» удалён из истории'),
+          backgroundColor: _Palette.pink,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(r.s(14)),
+          ),
+        ),
+      );
     }
   }
 
-  Widget _quickRebuy(List<ShoppingItem> allItems, NutritionProvider provider, _R r) {
+  Widget _quickRebuy(
+      List<ShoppingItem> allItems,
+      NutritionProvider provider,
+      _R r,
+      ) {
     final bought = allItems.where((i) => i.isBought).toList();
     final Map<String, ShoppingItem> unique = {};
     for (final item in bought) {
@@ -1085,7 +1569,15 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
             children: [
               Icon(Icons.flash_on_rounded, size: r.s(16), color: _Palette.peach),
               SizedBox(width: r.s(6)),
-              Text('БЫСТРЫЙ ПОВТОР', style: GoogleFonts.inter(fontSize: r.fs(11), fontWeight: FontWeight.w700, color: _Palette.text, letterSpacing: 1.0)),
+              Text(
+                'БЫСТРЫЙ ПОВТОР',
+                style: GoogleFonts.inter(
+                  fontSize: r.fs(11),
+                  fontWeight: FontWeight.w700,
+                  color: _Palette.text,
+                  letterSpacing: 1.0,
+                ),
+              ),
             ],
           ),
         ),
@@ -1099,9 +1591,22 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
             separatorBuilder: (_, __) => SizedBox(width: r.s(10)),
             itemBuilder: (context, index) {
               final item = quickItems[index];
-              final product = provider.products.firstWhere((p) => p.id == item.productId,
-                  orElse: () => FoodProduct(id: '', name: '', category: 'other', calories: 0, protein: 0, fat: 0, carbs: 0));
-              final accent = product.category == 'other' ? _Palette.green : _aisleAccent(_categoryToAisle(product.category));
+              final product = provider.products.firstWhere(
+                    (p) => p.id == item.productId,
+                orElse: () => FoodProduct(
+                  id: '',
+                  name: '',
+                  category: 'other',
+                  calories: 0,
+                  protein: 0,
+                  fat: 0,
+                  carbs: 0,
+                ),
+              );
+              final accent = product.category == 'other'
+                  ? _Palette.green
+                  : _aisleAccent(_categoryToAisle(product.category));
+
               return _TapScale(
                 onTap: () {
                   provider.addShoppingItem(
@@ -1120,9 +1625,17 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                   decoration: BoxDecoration(
                     color: _Palette.surface,
                     borderRadius: BorderRadius.circular(r.s(16)),
-                    border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.9),
+                      width: 1,
+                    ),
                     boxShadow: [
-                      BoxShadow(color: _Palette.green.withOpacity(0.05), blurRadius: 12, spreadRadius: -4, offset: const Offset(0, 4)),
+                      BoxShadow(
+                        color: _Palette.green.withOpacity(0.05),
+                        blurRadius: 12,
+                        spreadRadius: -4,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
                   child: Column(
@@ -1131,30 +1644,57 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                       Row(
                         children: [
                           Container(
-                            width: r.s(28), height: r.s(28),
+                            width: r.s(28),
+                            height: r.s(28),
                             decoration: BoxDecoration(
                               color: accent.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(r.s(8)),
                             ),
                             alignment: Alignment.center,
-                            child: Text(product.categoryEmoji.isEmpty ? '📦' : product.categoryEmoji, style: TextStyle(fontSize: r.s(14))),
+                            child: Text(
+                              product.categoryEmoji.isEmpty
+                                  ? '📦'
+                                  : product.categoryEmoji,
+                              style: TextStyle(fontSize: r.s(14)),
+                            ),
                           ),
                           const Spacer(),
                           Container(
                             padding: EdgeInsets.all(r.s(3)),
-                            decoration: BoxDecoration(color: _Palette.greenSoft, borderRadius: BorderRadius.circular(r.s(6))),
-                            child: Icon(Icons.add_rounded, size: r.s(12), color: _Palette.green),
+                            decoration: BoxDecoration(
+                              color: _Palette.greenSoft,
+                              borderRadius: BorderRadius.circular(r.s(6)),
+                            ),
+                            child: Icon(
+                              Icons.add_rounded,
+                              size: r.s(12),
+                              color: _Palette.green,
+                            ),
                           ),
                         ],
                       ),
                       SizedBox(height: r.s(6)),
                       Expanded(
-                        child: Text(item.displayName,
-                            maxLines: 2, overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(11), fontWeight: FontWeight.w600, height: 1.2)),
+                        child: Text(
+                          item.displayName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            color: _Palette.text,
+                            fontSize: r.fs(11),
+                            fontWeight: FontWeight.w600,
+                            height: 1.2,
+                          ),
+                        ),
                       ),
-                      Text('${_fmtNum(item.quantity)} ${item.unit}',
-                          style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(9), fontWeight: FontWeight.w500)),
+                      Text(
+                        '${_fmtNum(item.quantity)} ${item.unit}',
+                        style: GoogleFonts.inter(
+                          color: _Palette.textMuted,
+                          fontSize: r.fs(9),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1167,11 +1707,16 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  🌑 ТЁМНЫЙ ПРЕМИУМ БЛОК ОТДЕЛОВ (iPhone Dark Mode)
+  // DARK PREMIUM AISLES
   // ═══════════════════════════════════════════════════════════════
-  Widget _darkPremiumAislesBlock(List<String> sortedAisles, Map<String, List<ShoppingItem>> byAisle,
-      NutritionProvider provider, _R r) {
-    final totalItems = sortedAisles.fold<int>(0, (s, a) => s + byAisle[a]!.length);
+  Widget _darkPremiumAislesBlock(
+      List<String> sortedAisles,
+      Map<String, List<ShoppingItem>> byAisle,
+      NutritionProvider provider,
+      _R r,
+      ) {
+    final totalItems =
+    sortedAisles.fold<int>(0, (s, a) => s + byAisle[a]!.length);
     final totalBudget = sortedAisles.fold<double>(0, (s, a) {
       return s + byAisle[a]!.fold<double>(0, (ss, i) => ss + i.totalPrice);
     });
@@ -1206,26 +1751,26 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🎨 Премиальный header с glass-эффектом
             Container(
               padding: EdgeInsets.all(r.s(18)),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    _Dark.surface.withOpacity(0.8),
-                    _Dark.bgTop,
-                  ],
+                  colors: [_Dark.surface.withOpacity(0.8), _Dark.bgTop],
                 ),
                 border: Border(
-                  bottom: BorderSide(color: _Dark.border.withOpacity(0.5), width: 1),
+                  bottom: BorderSide(
+                    color: _Dark.border.withOpacity(0.5),
+                    width: 1,
+                  ),
                 ),
               ),
               child: Row(
                 children: [
                   Container(
-                    width: r.s(52), height: r.s(52),
+                    width: r.s(52),
+                    height: r.s(52),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -1236,57 +1781,84 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                         ],
                       ),
                       borderRadius: BorderRadius.circular(r.s(15)),
-                      border: Border.all(color: _Vibrant.neonGreen.withOpacity(0.4), width: 1.5),
+                      border: Border.all(
+                        color: _Vibrant.neonGreen.withOpacity(0.4),
+                        width: 1.5,
+                      ),
                       boxShadow: [
-                        BoxShadow(color: _Vibrant.neonGreen.withOpacity(0.25), blurRadius: 12, offset: const Offset(0, 4)),
+                        BoxShadow(
+                          color: _Vibrant.neonGreen.withOpacity(0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
                     ),
                     alignment: Alignment.center,
-                    child: Icon(Icons.storefront_rounded, color: Colors.white, size: r.s(26)),
+                    child: Icon(
+                      Icons.storefront_rounded,
+                      color: Colors.white,
+                      size: r.s(26),
+                    ),
                   ),
                   SizedBox(width: r.s(14)),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Маршрут по магазину',
-                            style: GoogleFonts.inter(
-                              color: _Dark.text,
-                              fontSize: r.fs(16),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.4,
-                            )),
+                        Text(
+                          'Маршрут по магазину',
+                          style: GoogleFonts.inter(
+                            color: _Dark.text,
+                            fontSize: r.fs(16),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
                         SizedBox(height: r.s(3)),
                         Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: r.s(8), vertical: r.s(3)),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: r.s(8),
+                                vertical: r.s(3),
+                              ),
                               decoration: BoxDecoration(
                                 color: _Vibrant.neonGreen.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(r.s(7)),
-                                border: Border.all(color: _Vibrant.neonGreen.withOpacity(0.3)),
+                                border: Border.all(
+                                  color: _Vibrant.neonGreen.withOpacity(0.3),
+                                ),
                               ),
-                              child: Text('${sortedAisles.length} ${_aislesWord(sortedAisles.length)}',
-                                  style: GoogleFonts.inter(
-                                    color: _Vibrant.neonGreen,
-                                    fontSize: r.fs(10),
-                                    fontWeight: FontWeight.w700,
-                                  )),
+                              child: Text(
+                                '${sortedAisles.length} ${_aislesWord(sortedAisles.length)}',
+                                style: GoogleFonts.inter(
+                                  color: _Vibrant.neonGreen,
+                                  fontSize: r.fs(10),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
                             SizedBox(width: r.s(6)),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: r.s(8), vertical: r.s(3)),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: r.s(8),
+                                vertical: r.s(3),
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(r.s(7)),
-                                border: Border.all(color: Colors.white.withOpacity(0.15)),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.15),
+                                ),
                               ),
-                              child: Text('$totalItems ${_itemsWord(totalItems)}',
-                                  style: GoogleFonts.inter(
-                                    color: _Dark.text,
-                                    fontSize: r.fs(10),
-                                    fontWeight: FontWeight.w700,
-                                  )),
+                              child: Text(
+                                '$totalItems ${_itemsWord(totalItems)}',
+                                style: GoogleFonts.inter(
+                                  color: _Dark.text,
+                                  fontSize: r.fs(10),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -1295,7 +1867,10 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                   ),
                   if (totalBudget > 0)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: r.s(12), vertical: r.s(8)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: r.s(12),
+                        vertical: r.s(8),
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -1304,41 +1879,60 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                           ],
                         ),
                         borderRadius: BorderRadius.circular(r.s(12)),
-                        border: Border.all(color: _Vibrant.amber.withOpacity(0.4), width: 1.5),
+                        border: Border.all(
+                          color: _Vibrant.amber.withOpacity(0.4),
+                          width: 1.5,
+                        ),
                         boxShadow: [
-                          BoxShadow(color: _Vibrant.amber.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 3)),
+                          BoxShadow(
+                            color: _Vibrant.amber.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
                         ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('ИТОГО',
-                              style: GoogleFonts.inter(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: r.fs(9),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                              )),
-                          Text('${totalBudget.toStringAsFixed(0)} ₽',
-                              style: GoogleFonts.inter(
-                                color: _Vibrant.amber,
-                                fontSize: r.fs(14),
-                                fontWeight: FontWeight.w800,
-                                fontFeatures: const [FontFeature.tabularFigures()],
-                              )),
+                          Text(
+                            'ИТОГО',
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: r.fs(9),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          Text(
+                            '${totalBudget.toStringAsFixed(0)} ₽',
+                            style: GoogleFonts.inter(
+                              color: _Vibrant.amber,
+                              fontSize: r.fs(14),
+                              fontWeight: FontWeight.w800,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
                 ],
               ),
             ),
-            // 📋 Список отделов как секций
             ...sortedAisles.asMap().entries.map((entry) {
               final aisle = entry.value;
               final items = byAisle[aisle]!;
               final isFirst = entry.key == 0;
               final isLast = entry.key == sortedAisles.length - 1;
-              return _darkAisleSection(aisle, items, provider, r, isFirst: isFirst, isLast: isLast);
+              return _darkAisleSection(
+                aisle,
+                items,
+                provider,
+                r,
+                isFirst: isFirst,
+                isLast: isLast,
+              );
             }),
           ],
         ),
@@ -1346,18 +1940,20 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  🎯 СЕКЦИЯ ОТДЕЛА (тёмная тема с цветным акцентом)
-  // ═══════════════════════════════════════════════════════════════
-  Widget _darkAisleSection(String aisle, List<ShoppingItem> items, NutritionProvider provider, _R r,
-      {required bool isFirst, required bool isLast}) {
+  Widget _darkAisleSection(
+      String aisle,
+      List<ShoppingItem> items,
+      NutritionProvider provider,
+      _R r, {
+        required bool isFirst,
+        required bool isLast,
+      }) {
     final accent = _aisleAccent(aisle);
     final aisleTotal = items.fold<double>(0, (s, i) => s + i.totalPrice);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Заголовок отдела с толстым цветным бордером слева
         _TapScale(
           onTap: () => _showAisleFocusMode(aisle, items, provider),
           child: Container(
@@ -1365,14 +1961,19 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(color: accent, width: r.s(4)),
-                top: isFirst ? BorderSide.none : BorderSide(color: _Dark.border.withOpacity(0.4), width: 0.5),
+                top: isFirst
+                    ? BorderSide.none
+                    : BorderSide(
+                  color: _Dark.border.withOpacity(0.4),
+                  width: 0.5,
+                ),
               ),
             ),
             child: Row(
               children: [
-                // Эмодзи в круглом контейнере с градиентом
                 Container(
-                  width: r.s(44), height: r.s(44),
+                  width: r.s(44),
+                  height: r.s(44),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
@@ -1384,50 +1985,66 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                       ],
                     ),
                     boxShadow: [
-                      BoxShadow(color: accent.withOpacity(0.25), blurRadius: 10, offset: const Offset(0, 3)),
+                      BoxShadow(
+                        color: accent.withOpacity(0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: Text(_aisleEmoji(aisle), style: TextStyle(fontSize: r.s(22))),
+                  child: Text(
+                    _aisleEmoji(aisle),
+                    style: TextStyle(fontSize: r.s(22)),
+                  ),
                 ),
                 SizedBox(width: r.s(12)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(aisle,
-                          style: GoogleFonts.inter(
-                            color: _Dark.text,
-                            fontSize: r.fs(15),
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
-                          )),
+                      Text(
+                        aisle,
+                        style: GoogleFonts.inter(
+                          color: _Dark.text,
+                          fontSize: r.fs(15),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
                       SizedBox(height: r.s(3)),
                       Row(
                         children: [
-                          Text('${items.length} ${_itemsWord(items.length)}',
-                              style: GoogleFonts.inter(
-                                color: _Dark.textMuted,
-                                fontSize: r.fs(11),
-                                fontWeight: FontWeight.w500,
-                              )),
+                          Text(
+                            '${items.length} ${_itemsWord(items.length)}',
+                            style: GoogleFonts.inter(
+                              color: _Dark.textMuted,
+                              fontSize: r.fs(11),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                           if (aisleTotal > 0) ...[
                             SizedBox(width: r.s(6)),
                             Container(
-                              width: r.s(3), height: r.s(3),
+                              width: r.s(3),
+                              height: r.s(3),
                               decoration: BoxDecoration(
                                 color: _Dark.textMuted.withOpacity(0.5),
                                 shape: BoxShape.circle,
                               ),
                             ),
                             SizedBox(width: r.s(6)),
-                            Text('${aisleTotal.round()} ₽',
-                                style: GoogleFonts.inter(
-                                  color: accent,
-                                  fontSize: r.fs(11),
-                                  fontWeight: FontWeight.w700,
-                                  fontFeatures: const [FontFeature.tabularFigures()],
-                                )),
+                            Text(
+                              '${aisleTotal.round()} ₽',
+                              style: GoogleFonts.inter(
+                                color: accent,
+                                fontSize: r.fs(11),
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
                           ],
                         ],
                       ),
@@ -1441,46 +2058,53 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                     borderRadius: BorderRadius.circular(r.s(8)),
                     border: Border.all(color: accent.withOpacity(0.3)),
                   ),
-                  child: Icon(Icons.chevron_right_rounded, color: accent, size: r.s(16)),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    color: accent,
+                    size: r.s(16),
+                  ),
                 ),
               ],
             ),
           ),
         ),
-        // Товары внутри отдела
         ...items.asMap().entries.map((entry) {
           final item = entry.value;
           final isLastItem = entry.key == items.length - 1;
-          return _darkShoppingTileWithSwipe(item, provider, r, isLast: isLastItem && isLast);
+          return _darkShoppingTileWithSwipe(
+            item,
+            provider,
+            r,
+            isLast: isLastItem && isLast,
+          );
         }),
       ],
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  🆕 TILE С ДВОЙНЫМ СВАЙПОМ (тёмная тема)
-  //  → Свайп вправо = Купить (с подтверждением)
-  //  ← Свайп влево = Удалить
-  // ═══════════════════════════════════════════════════════════════
-  Widget _darkShoppingTileWithSwipe(ShoppingItem item, NutritionProvider provider, _R r, {bool isLast = false}) {
-    final product = provider.products.where((p) => p.id == item.productId).firstOrNull;
+  Widget _darkShoppingTileWithSwipe(
+      ShoppingItem item,
+      NutritionProvider provider,
+      _R r, {
+        bool isLast = false,
+      }) {
+    final product =
+        provider.products.where((p) => p.id == item.productId).firstOrNull;
     final isUrgent = item.isUrgent;
     final fallbackName = item.fallbackName;
-    final accent = product?.category == 'other' ? _Palette.green : _aisleAccent(_categoryToAisle(product?.category ?? ''));
+    final accent = product?.category == 'other'
+        ? _Palette.green
+        : _aisleAccent(_categoryToAisle(product?.category ?? ''));
 
     return Dismissible(
       key: Key('shopping_swipe_${item.id}'),
       direction: DismissDirection.horizontal,
-      // 🟢 СВАЙП ВПРАВО = КУПИТЬ (с подтверждением)
       background: Container(
         alignment: Alignment.centerLeft,
         padding: EdgeInsets.only(left: r.s(20)),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              _Vibrant.neonGreen.withOpacity(0.25),
-              _Dark.surface,
-            ],
+            colors: [_Vibrant.neonGreen.withOpacity(0.25), _Dark.surface],
           ),
         ),
         child: Row(
@@ -1491,44 +2115,52 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 color: _Vibrant.neonGreen,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: _Vibrant.neonGreen.withOpacity(0.5), blurRadius: 12, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: _Vibrant.neonGreen.withOpacity(0.5),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
-              child: Icon(Icons.check_rounded, color: Colors.white, size: r.s(20)),
+              child: Icon(
+                Icons.check_rounded,
+                color: Colors.white,
+                size: r.s(20),
+              ),
             ),
             SizedBox(width: r.s(10)),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Купить',
-                    style: GoogleFonts.inter(
-                      color: _Vibrant.neonGreen,
-                      fontSize: r.fs(12),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
-                    )),
-                Text('подтвердите',
-                    style: GoogleFonts.inter(
-                      color: _Vibrant.neonGreen.withOpacity(0.7),
-                      fontSize: r.fs(9),
-                      fontWeight: FontWeight.w500,
-                    )),
+                Text(
+                  'Купить',
+                  style: GoogleFonts.inter(
+                    color: _Vibrant.neonGreen,
+                    fontSize: r.fs(12),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                Text(
+                  'подтвердите',
+                  style: GoogleFonts.inter(
+                    color: _Vibrant.neonGreen.withOpacity(0.7),
+                    fontSize: r.fs(9),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
-      // 🔴 СВАЙП ВЛЕВО = УДАЛИТЬ
       secondaryBackground: Container(
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: r.s(20)),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              _Dark.surface,
-              _Vibrant.glowingPink.withOpacity(0.25),
-            ],
+            colors: [_Dark.surface, _Vibrant.glowingPink.withOpacity(0.25)],
           ),
         ),
         child: Row(
@@ -1538,19 +2170,23 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('Удалить',
-                    style: GoogleFonts.inter(
-                      color: _Vibrant.glowingPink,
-                      fontSize: r.fs(12),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
-                    )),
-                Text('из списка',
-                    style: GoogleFonts.inter(
-                      color: _Vibrant.glowingPink.withOpacity(0.7),
-                      fontSize: r.fs(9),
-                      fontWeight: FontWeight.w500,
-                    )),
+                Text(
+                  'Удалить',
+                  style: GoogleFonts.inter(
+                    color: _Vibrant.glowingPink,
+                    fontSize: r.fs(12),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                Text(
+                  'из списка',
+                  style: GoogleFonts.inter(
+                    color: _Vibrant.glowingPink.withOpacity(0.7),
+                    fontSize: r.fs(9),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
             SizedBox(width: r.s(10)),
@@ -1560,65 +2196,43 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 color: _Vibrant.glowingPink,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: _Vibrant.glowingPink.withOpacity(0.5), blurRadius: 12, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: _Vibrant.glowingPink.withOpacity(0.5),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
-              child: Icon(Icons.delete_rounded, color: Colors.white, size: r.s(20)),
+              child: Icon(
+                Icons.delete_rounded,
+                color: Colors.white,
+                size: r.s(20),
+              ),
             ),
           ],
         ),
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          // Свайп вправо = Купить → подтверждаем
           return await _confirmBuyItem(item);
         } else {
-          // Свайп влево = Удалить → подтверждаем
           return await _confirmDeleteFromList(item);
         }
       },
       onDismissed: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          // Помечаем как купленное
-          await provider.toggleShoppingItem(item.id);
+          await provider.markBoughtAndStock(item.id);
           if (!mounted) return;
           HapticFeedback.mediumImpact();
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                SizedBox(width: r.s(8)),
-                Text('✅ «${item.displayName}» куплен'),
-              ],
-            ),
-            backgroundColor: _Palette.green,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(14))),
-          ));
-        } else {
-          // Удаляем
-          await provider.deleteShoppingItem(item.id);
-          if (!mounted) return;
-          HapticFeedback.mediumImpact();
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('🗑️ «${item.displayName}» удалён'),
-            backgroundColor: _Palette.pink,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(14))),
-          ));
-        }
-      },
-      child: _TapScale(
-        onTap: () => _confirmBuyItem(item).then((confirmed) {
-          if (confirmed == true) {
-            provider.toggleShoppingItem(item.id);
-            HapticFeedback.mediumImpact();
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   SizedBox(width: r.s(8)),
                   Text('✅ «${item.displayName}» куплен'),
                 ],
@@ -1626,53 +2240,126 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
               backgroundColor: _Palette.green,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 2),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(14))),
-            ));
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(r.s(14)),
+              ),
+            ),
+          );
+        } else {
+          await provider.deleteShoppingItem(item.id);
+          if (!mounted) return;
+          HapticFeedback.mediumImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🗑️ «${item.displayName}» удалён'),
+              backgroundColor: _Palette.pink,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(r.s(14)),
+              ),
+            ),
+          );
+        }
+      },
+      child: _TapScale(
+        onTap: () => _confirmBuyItem(item).then((confirmed) {
+          if (confirmed == true) {
+            provider.markBoughtAndStock(item.id);
+            HapticFeedback.mediumImpact();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    SizedBox(width: r.s(8)),
+                    Text('✅ «${item.displayName}» куплен'),
+                  ],
+                ),
+                backgroundColor: _Palette.green,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(r.s(14)),
+                ),
+              ),
+            );
           }
         }),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: r.s(16), vertical: r.s(12)),
+          padding: EdgeInsets.symmetric(
+            horizontal: r.s(16),
+            vertical: r.s(12),
+          ),
           decoration: BoxDecoration(
-            border: isLast ? null : Border(bottom: BorderSide(color: _Dark.border.withOpacity(0.4), width: 0.5)),
+            border: isLast
+                ? null
+                : Border(
+              bottom: BorderSide(
+                color: _Dark.border.withOpacity(0.4),
+                width: 0.5,
+              ),
+            ),
           ),
           child: Row(
             children: [
-              // Чекбокс (тёмная тема)
               GestureDetector(
                 onTap: () => _confirmBuyItem(item).then((confirmed) {
                   if (confirmed == true) {
-                    provider.toggleShoppingItem(item.id);
+                    provider.markBoughtAndStock(item.id);
                     HapticFeedback.mediumImpact();
                   }
                 }),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: r.s(26), height: r.s(26),
+                  width: r.s(26),
+                  height: r.s(26),
                   decoration: BoxDecoration(
-                    color: item.isBought ? _Vibrant.neonGreen : Colors.transparent,
+                    color:
+                    item.isBought ? _Vibrant.neonGreen : Colors.transparent,
                     borderRadius: BorderRadius.circular(r.s(7)),
-                    border: item.isBought ? null : Border.all(color: _Dark.border, width: 2),
+                    border: item.isBought
+                        ? null
+                        : Border.all(color: _Dark.border, width: 2),
                     boxShadow: item.isBought
-                        ? [BoxShadow(color: _Vibrant.neonGreen.withOpacity(0.5), blurRadius: 10, offset: const Offset(0, 2))]
+                        ? [
+                      BoxShadow(
+                        color: _Vibrant.neonGreen.withOpacity(0.5),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
                         : null,
                   ),
-                  child: item.isBought ? Icon(Icons.check_rounded, size: r.s(15), color: Colors.white) : const SizedBox(),
+                  child: item.isBought
+                      ? Icon(
+                    Icons.check_rounded,
+                    size: r.s(15),
+                    color: Colors.white,
+                  )
+                      : const SizedBox(),
                 ),
               ),
               SizedBox(width: r.s(12)),
-              // Эмодзи
               Container(
-                width: r.s(38), height: r.s(38),
+                width: r.s(38),
+                height: r.s(38),
                 decoration: BoxDecoration(
                   color: accent.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(r.s(10)),
                   border: Border.all(color: accent.withOpacity(0.3)),
                 ),
                 alignment: Alignment.center,
-                child: Text(product?.categoryEmoji ?? '📦', style: TextStyle(fontSize: r.s(18))),
+                child: Text(
+                  product?.categoryEmoji ?? '📦',
+                  style: TextStyle(fontSize: r.s(18)),
+                ),
               ),
               SizedBox(width: r.s(12)),
-              // Инфо
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1680,51 +2367,74 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                     Row(
                       children: [
                         Expanded(
-                          child: Text(item.displayName,
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                color: item.isBought ? _Dark.textMuted : _Dark.text,
-                                fontSize: r.fs(13.5), fontWeight: FontWeight.w600,
-                                decoration: item.isBought ? TextDecoration.lineThrough : null,
-                                decorationColor: _Vibrant.neonGreen,
-                                decorationThickness: 2,
-                              )),
+                          child: Text(
+                            item.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              color:
+                              item.isBought ? _Dark.textMuted : _Dark.text,
+                              fontSize: r.fs(13.5),
+                              fontWeight: FontWeight.w600,
+                              decoration: item.isBought
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                              decorationColor: _Vibrant.neonGreen,
+                              decorationThickness: 2,
+                            ),
+                          ),
                         ),
                         if (isUrgent && !item.isBought)
                           Container(
                             margin: EdgeInsets.only(left: r.s(6)),
-                            padding: EdgeInsets.symmetric(horizontal: r.s(6), vertical: r.s(2)),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: r.s(6),
+                              vertical: r.s(2),
+                            ),
                             decoration: BoxDecoration(
                               color: _Vibrant.glowingPink.withOpacity(0.20),
                               borderRadius: BorderRadius.circular(r.s(5)),
-                              border: Border.all(color: _Vibrant.glowingPink.withOpacity(0.5)),
+                              border: Border.all(
+                                color: _Vibrant.glowingPink.withOpacity(0.5),
+                              ),
                             ),
-                            child: Text('СРОЧНО',
-                                style: GoogleFonts.inter(
-                                  color: _Vibrant.glowingPink,
-                                  fontSize: r.fs(8),
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
-                                )),
+                            child: Text(
+                              'СРОЧНО',
+                              style: GoogleFonts.inter(
+                                color: _Vibrant.glowingPink,
+                                fontSize: r.fs(8),
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
                       ],
                     ),
-                    if (fallbackName != null && fallbackName.isNotEmpty && !item.isBought)
+                    if (fallbackName != null &&
+                        fallbackName.isNotEmpty &&
+                        !item.isBought)
                       Padding(
                         padding: EdgeInsets.only(top: r.s(3)),
                         child: Row(
                           children: [
-                            Icon(Icons.sync_alt_rounded, size: r.s(10), color: _Palette.sage),
+                            Icon(
+                              Icons.sync_alt_rounded,
+                              size: r.s(10),
+                              color: _Palette.sage,
+                            ),
                             SizedBox(width: r.s(4)),
                             Expanded(
-                              child: Text('→ $fallbackName',
-                                  style: GoogleFonts.inter(
-                                    color: _Palette.sage,
-                                    fontSize: r.fs(10),
-                                    fontWeight: FontWeight.w500,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                              child: Text(
+                                '→ $fallbackName',
+                                style: GoogleFonts.inter(
+                                  color: _Palette.sage,
+                                  fontSize: r.fs(10),
+                                  fontWeight: FontWeight.w500,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -1733,25 +2443,28 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 ),
               ),
               SizedBox(width: r.s(8)),
-              // Количество + цена
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${_fmtNum(item.quantity)} ${item.unit}',
-                      style: GoogleFonts.inter(
-                        color: _Dark.textMuted,
-                        fontSize: r.fs(11),
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      )),
+                  Text(
+                    '${_fmtNum(item.quantity)} ${item.unit}',
+                    style: GoogleFonts.inter(
+                      color: _Dark.textMuted,
+                      fontSize: r.fs(11),
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
                   if (item.estimatedPrice != null && item.estimatedPrice! > 0)
-                    Text('${item.totalPrice.round()} ₽',
-                        style: GoogleFonts.inter(
-                          color: _Vibrant.amber,
-                          fontSize: r.fs(12),
-                          fontWeight: FontWeight.w800,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        )),
+                    Text(
+                      '${item.totalPrice.round()} ₽',
+                      style: GoogleFonts.inter(
+                        color: _Vibrant.amber,
+                        fontSize: r.fs(12),
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
                 ],
               ),
             ],
@@ -1761,14 +2474,15 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     );
   }
 
-  // 🆕 Подтверждение покупки
   Future<bool?> _confirmBuyItem(ShoppingItem item) async {
     final r = _R(context);
     return await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: _Palette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(20))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(r.s(20)),
+        ),
         title: Row(
           children: [
             Container(
@@ -1777,12 +2491,22 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 color: _Palette.greenSoft,
                 borderRadius: BorderRadius.circular(r.s(10)),
               ),
-              child: const Icon(Icons.shopping_cart_rounded, color: _Palette.green, size: 18),
+              child: const Icon(
+                Icons.shopping_cart_rounded,
+                color: _Palette.green,
+                size: 18,
+              ),
             ),
             SizedBox(width: r.s(10)),
             Expanded(
-              child: Text('Купить?',
-                  style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(16), fontWeight: FontWeight.w600)),
+              child: Text(
+                'Купить?',
+                style: GoogleFonts.inter(
+                  color: _Palette.text,
+                  fontSize: r.fs(16),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -1790,11 +2514,22 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('«${item.displayName}»',
-                style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(14), fontWeight: FontWeight.w600)),
+            Text(
+              '«${item.displayName}»',
+              style: GoogleFonts.inter(
+                color: _Palette.text,
+                fontSize: r.fs(14),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             SizedBox(height: r.s(4)),
-            Text('${_fmtNum(item.quantity)} ${item.unit}',
-                style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13))),
+            Text(
+              '${_fmtNum(item.quantity)} ${item.unit}',
+              style: GoogleFonts.inter(
+                color: _Palette.textMuted,
+                fontSize: r.fs(13),
+              ),
+            ),
             if (item.totalPrice > 0) ...[
               SizedBox(height: r.s(8)),
               Container(
@@ -1805,15 +2540,21 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.attach_money_rounded, color: _Palette.green, size: r.s(16)),
+                    Icon(
+                      Icons.attach_money_rounded,
+                      color: _Palette.green,
+                      size: r.s(16),
+                    ),
                     SizedBox(width: r.s(6)),
-                    Text('${item.totalPrice.round()} ₽',
-                        style: GoogleFonts.inter(
-                          color: _Palette.green,
-                          fontSize: r.fs(15),
-                          fontWeight: FontWeight.w700,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        )),
+                    Text(
+                      '${item.totalPrice.round()} ₽',
+                      style: GoogleFonts.inter(
+                        color: _Palette.green,
+                        fontSize: r.fs(15),
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1821,8 +2562,13 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: Text('Отмена', style: GoogleFonts.inter(color: _Palette.textMuted))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Отмена',
+              style: GoogleFonts.inter(color: _Palette.textMuted),
+            ),
+          ),
           ElevatedButton.icon(
             onPressed: () => Navigator.pop(ctx, true),
             icon: const Icon(Icons.check_rounded, size: 16),
@@ -1830,7 +2576,9 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
             style: ElevatedButton.styleFrom(
               backgroundColor: _Palette.green,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(10))),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(r.s(10)),
+              ),
             ),
           ),
         ],
@@ -1838,25 +2586,45 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     );
   }
 
-  // 🆕 Подтверждение удаления из списка
   Future<bool?> _confirmDeleteFromList(ShoppingItem item) async {
     final r = _R(context);
     return await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: _Palette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(20))),
-        title: Text('Удалить «${item.displayName}»?',
-            style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(16), fontWeight: FontWeight.w600)),
-        content: Text('Товар будет удалён из списка покупок.',
-            style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(r.s(20)),
+        ),
+        title: Text(
+          'Удалить «${item.displayName}»?',
+          style: GoogleFonts.inter(
+            color: _Palette.text,
+            fontSize: r.fs(16),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Товар будет удалён из списка покупок.',
+          style: GoogleFonts.inter(
+            color: _Palette.textMuted,
+            fontSize: r.fs(13),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: Text('Отмена', style: GoogleFonts.inter(color: _Palette.textMuted))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Отмена',
+              style: GoogleFonts.inter(color: _Palette.textMuted),
+            ),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: _Palette.pink),
-            child: const Text('Удалить', style: TextStyle(fontWeight: FontWeight.w600)),
+            child: const Text(
+              'Удалить',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -1869,7 +2637,8 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
       child: Column(
         children: [
           Container(
-            width: r.s(80), height: r.s(80),
+            width: r.s(80),
+            height: r.s(80),
             decoration: BoxDecoration(
               color: _Palette.greenSoft,
               borderRadius: BorderRadius.circular(r.s(24)),
@@ -1878,12 +2647,26 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
             child: Text('🛒', style: TextStyle(fontSize: r.s(40))),
           ),
           SizedBox(height: r.s(16)),
-          Text('Список пуст',
-              style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(16), fontWeight: FontWeight.w600, letterSpacing: -0.3)),
+          Text(
+            'Список пуст',
+            style: GoogleFonts.inter(
+              color: _Palette.text,
+              fontSize: r.fs(16),
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+            ),
+          ),
           SizedBox(height: r.s(6)),
-          Text('Добавьте товары вручную или из плана',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13), fontWeight: FontWeight.w400, height: 1.4)),
+          Text(
+            'Добавьте товары вручную или из плана',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              color: _Palette.textMuted,
+              fontSize: r.fs(13),
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );
@@ -1899,7 +2682,12 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
           colors: [_Vibrant.neonGreen, _Palette.green],
         ),
         boxShadow: [
-          BoxShadow(color: _Palette.green.withOpacity(0.4), blurRadius: 20, spreadRadius: -4, offset: const Offset(0, 8)),
+          BoxShadow(
+            color: _Palette.green.withOpacity(0.4),
+            blurRadius: 20,
+            spreadRadius: -4,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: FloatingActionButton(
@@ -1913,17 +2701,24 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  🆕 ШТОРКА ФОКУСА ОТДЕЛА (с кнопкой удаления)
+  // AISLE FOCUS SHEET
   // ═══════════════════════════════════════════════════════════════
-  void _showAisleFocusMode(String aisle, List<ShoppingItem> items, NutritionProvider provider) {
+  void _showAisleFocusMode(
+      String aisle,
+      List<ShoppingItem> items,
+      NutritionProvider provider,
+      ) {
     final r = _R(context);
     final accent = _aisleAccent(aisle);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.9, minChildSize: 0.5, maxChildSize: 0.98,
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.98,
         builder: (context, scrollController) => Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -1938,36 +2733,69 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
             children: [
               Padding(
                 padding: EdgeInsets.symmetric(vertical: r.s(12)),
-                child: Center(child: Container(width: r.s(38), height: r.s(5), decoration: BoxDecoration(color: _Dark.border, borderRadius: BorderRadius.circular(r.s(3))))),
+                child: Center(
+                  child: Container(
+                    width: r.s(38),
+                    height: r.s(5),
+                    decoration: BoxDecoration(
+                      color: _Dark.border,
+                      borderRadius: BorderRadius.circular(r.s(3)),
+                    ),
+                  ),
+                ),
               ),
               Padding(
                 padding: EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(16)),
                 child: Row(
                   children: [
                     Container(
-                      width: r.s(56), height: r.s(56),
+                      width: r.s(56),
+                      height: r.s(56),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [accent.withOpacity(0.30), accent.withOpacity(0.10)],
+                          colors: [
+                            accent.withOpacity(0.30),
+                            accent.withOpacity(0.10),
+                          ],
                         ),
                         boxShadow: [
-                          BoxShadow(color: accent.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 3)),
+                          BoxShadow(
+                            color: accent.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
                         ],
                       ),
                       alignment: Alignment.center,
-                      child: Text(_aisleEmoji(aisle), style: TextStyle(fontSize: r.s(28))),
+                      child: Text(
+                        _aisleEmoji(aisle),
+                        style: TextStyle(fontSize: r.s(28)),
+                      ),
                     ),
                     SizedBox(width: r.s(14)),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(aisle, style: GoogleFonts.inter(color: _Dark.text, fontSize: r.fs(20), fontWeight: FontWeight.w700, letterSpacing: -0.3)),
-                          Text('${items.length} ${_itemsWord(items.length)}',
-                              style: GoogleFonts.inter(color: _Dark.textMuted, fontSize: r.fs(13))),
+                          Text(
+                            aisle,
+                            style: GoogleFonts.inter(
+                              color: _Dark.text,
+                              fontSize: r.fs(20),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          Text(
+                            '${items.length} ${_itemsWord(items.length)}',
+                            style: GoogleFonts.inter(
+                              color: _Dark.textMuted,
+                              fontSize: r.fs(13),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1980,7 +2808,11 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                           borderRadius: BorderRadius.circular(r.s(12)),
                           border: Border.all(color: _Dark.border),
                         ),
-                        child: Icon(Icons.close_rounded, color: _Dark.text, size: r.s(20)),
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: _Dark.text,
+                          size: r.s(20),
+                        ),
                       ),
                     ),
                   ],
@@ -2000,9 +2832,16 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                         decoration: BoxDecoration(
                           color: _Dark.surface,
                           borderRadius: BorderRadius.circular(r.s(16)),
-                          border: Border.all(color: _Dark.border.withOpacity(0.6)),
+                          border: Border.all(
+                            color: _Dark.border.withOpacity(0.6),
+                          ),
                         ),
-                        child: _darkShoppingTileWithDelete(item, provider, r, isLast: isLast),
+                        child: _darkShoppingTileWithDelete(
+                          item,
+                          provider,
+                          r,
+                          isLast: isLast,
+                        ),
                       ),
                     );
                   },
@@ -2011,15 +2850,25 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
               Padding(
                 padding: EdgeInsets.all(r.s(16)),
                 child: SizedBox(
-                  width: double.infinity, height: r.s(52),
+                  width: double.infinity,
+                  height: r.s(52),
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _Vibrant.neonGreen, foregroundColor: Colors.white,
+                      backgroundColor: _Vibrant.neonGreen,
+                      foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(14))),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(r.s(14)),
+                      ),
                     ),
-                    child: Text('ГОТОВО', style: GoogleFonts.inter(fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                    child: Text(
+                      'ГОТОВО',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -2030,12 +2879,17 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  🆕 TILE С ЯВНОЙ КНОПКОЙ УДАЛЕНИЯ (для шторки)
-  // ═══════════════════════════════════════════════════════════════
-  Widget _darkShoppingTileWithDelete(ShoppingItem item, NutritionProvider provider, _R r, {bool isLast = false}) {
-    final product = provider.products.where((p) => p.id == item.productId).firstOrNull;
-    final accent = product?.category == 'other' ? _Palette.green : _aisleAccent(_categoryToAisle(product?.category ?? ''));
+  Widget _darkShoppingTileWithDelete(
+      ShoppingItem item,
+      NutritionProvider provider,
+      _R r, {
+        bool isLast = false,
+      }) {
+    final product =
+        provider.products.where((p) => p.id == item.productId).firstOrNull;
+    final accent = product?.category == 'other'
+        ? _Palette.green
+        : _aisleAccent(_categoryToAisle(product?.category ?? ''));
 
     return Dismissible(
       key: Key('aisle_focus_${item.id}'),
@@ -2044,16 +2898,29 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: r.s(20)),
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [_Vibrant.glowingPink.withOpacity(0.25), _Dark.surface]),
+          gradient: LinearGradient(
+            colors: [_Vibrant.glowingPink.withOpacity(0.25), _Dark.surface],
+          ),
           borderRadius: BorderRadius.circular(r.s(16)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Icon(Icons.delete_rounded, color: _Vibrant.glowingPink, size: r.s(22)),
+            Icon(
+              Icons.delete_rounded,
+              color: _Vibrant.glowingPink,
+              size: r.s(22),
+            ),
             SizedBox(height: r.s(3)),
-            Text('Удалить', style: GoogleFonts.inter(color: _Vibrant.glowingPink, fontSize: r.fs(10), fontWeight: FontWeight.w700)),
+            Text(
+              'Удалить',
+              style: GoogleFonts.inter(
+                color: _Vibrant.glowingPink,
+                fontSize: r.fs(10),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
       ),
@@ -2062,18 +2929,39 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: _Palette.surface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(20))),
-            title: Text('Удалить «${item.displayName}»?',
-                style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(16), fontWeight: FontWeight.w600)),
-            content: Text('Товар будет удалён из списка покупок.',
-                style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13))),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(r.s(20)),
+            ),
+            title: Text(
+              'Удалить «${item.displayName}»?',
+              style: GoogleFonts.inter(
+                color: _Palette.text,
+                fontSize: r.fs(16),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              'Товар будет удалён из списка покупок.',
+              style: GoogleFonts.inter(
+                color: _Palette.textMuted,
+                fontSize: r.fs(13),
+              ),
+            ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false),
-                  child: Text('Отмена', style: GoogleFonts.inter(color: _Palette.textMuted))),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(
+                  'Отмена',
+                  style: GoogleFonts.inter(color: _Palette.textMuted),
+                ),
+              ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: TextButton.styleFrom(foregroundColor: _Palette.pink),
-                child: const Text('Удалить', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Удалить',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),
@@ -2083,83 +2971,123 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
         await provider.deleteShoppingItem(item.id);
         if (!mounted) return;
         HapticFeedback.mediumImpact();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('🗑️ «${item.displayName}» удалён'),
-          backgroundColor: _Palette.pink,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(14))),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🗑️ «${item.displayName}» удалён'),
+            backgroundColor: _Palette.pink,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(r.s(14)),
+            ),
+          ),
+        );
       },
       child: Padding(
         padding: EdgeInsets.all(r.s(14)),
         child: Row(
           children: [
-            // Чекбокс (тоже с подтверждением)
             GestureDetector(
               onTap: () => _confirmBuyItem(item).then((confirmed) {
                 if (confirmed == true) {
-                  provider.toggleShoppingItem(item.id);
+                  provider.markBoughtAndStock(item.id);
                   HapticFeedback.mediumImpact();
                 }
               }),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                width: r.s(26), height: r.s(26),
+                width: r.s(26),
+                height: r.s(26),
                 decoration: BoxDecoration(
-                  color: item.isBought ? _Vibrant.neonGreen : Colors.transparent,
+                  color:
+                  item.isBought ? _Vibrant.neonGreen : Colors.transparent,
                   borderRadius: BorderRadius.circular(r.s(7)),
-                  border: item.isBought ? null : Border.all(color: _Dark.border, width: 2),
+                  border: item.isBought
+                      ? null
+                      : Border.all(color: _Dark.border, width: 2),
                 ),
-                child: item.isBought ? Icon(Icons.check_rounded, size: r.s(15), color: Colors.white) : const SizedBox(),
+                child: item.isBought
+                    ? Icon(
+                  Icons.check_rounded,
+                  size: r.s(15),
+                  color: Colors.white,
+                )
+                    : const SizedBox(),
               ),
             ),
             SizedBox(width: r.s(12)),
             Container(
-              width: r.s(38), height: r.s(38),
+              width: r.s(38),
+              height: r.s(38),
               decoration: BoxDecoration(
                 color: accent.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(r.s(10)),
                 border: Border.all(color: accent.withOpacity(0.3)),
               ),
               alignment: Alignment.center,
-              child: Text(product?.categoryEmoji ?? '📦', style: TextStyle(fontSize: r.s(18))),
+              child: Text(
+                product?.categoryEmoji ?? '📦',
+                style: TextStyle(fontSize: r.s(18)),
+              ),
             ),
             SizedBox(width: r.s(12)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.displayName,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        color: item.isBought ? _Dark.textMuted : _Dark.text,
-                        fontSize: r.fs(13), fontWeight: FontWeight.w600,
-                        decoration: item.isBought ? TextDecoration.lineThrough : null,
-                        decorationColor: _Vibrant.neonGreen,
-                      )),
+                  Text(
+                    item.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      color: item.isBought ? _Dark.textMuted : _Dark.text,
+                      fontSize: r.fs(13),
+                      fontWeight: FontWeight.w600,
+                      decoration:
+                      item.isBought ? TextDecoration.lineThrough : null,
+                      decorationColor: _Vibrant.neonGreen,
+                    ),
+                  ),
                   SizedBox(height: r.s(2)),
-                  Text('${_fmtNum(item.quantity)} ${item.unit}',
-                      style: GoogleFonts.inter(color: _Dark.textMuted, fontSize: r.fs(11), fontWeight: FontWeight.w500)),
+                  Text(
+                    '${_fmtNum(item.quantity)} ${item.unit}',
+                    style: GoogleFonts.inter(
+                      color: _Dark.textMuted,
+                      fontSize: r.fs(11),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),
             if (item.totalPrice > 0)
               Padding(
                 padding: EdgeInsets.only(right: r.s(10)),
-                child: Text('${item.totalPrice.round()} ₽',
-                    style: GoogleFonts.inter(color: _Vibrant.amber, fontSize: r.fs(13), fontWeight: FontWeight.w700)),
+                child: Text(
+                  '${item.totalPrice.round()} ₽',
+                  style: GoogleFonts.inter(
+                    color: _Vibrant.amber,
+                    fontSize: r.fs(13),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-            // 🆕 ЯВНАЯ КНОПКА УДАЛЕНИЯ
             _TapScale(
               onTap: () => _confirmDeleteFromSheet(item, provider),
               child: Container(
-                width: r.s(32), height: r.s(32),
+                width: r.s(32),
+                height: r.s(32),
                 decoration: BoxDecoration(
                   color: _Vibrant.glowingPink.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(r.s(9)),
-                  border: Border.all(color: _Vibrant.glowingPink.withOpacity(0.4)),
+                  border: Border.all(
+                    color: _Vibrant.glowingPink.withOpacity(0.4),
+                  ),
                 ),
-                child: Icon(Icons.close_rounded, color: _Vibrant.glowingPink, size: r.s(16)),
+                child: Icon(
+                  Icons.close_rounded,
+                  color: _Vibrant.glowingPink,
+                  size: r.s(16),
+                ),
               ),
             ),
           ],
@@ -2168,39 +3096,67 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     );
   }
 
-  // 🆕 Подтверждение удаления из шторки
-  Future<void> _confirmDeleteFromSheet(ShoppingItem item, NutritionProvider provider) async {
+  Future<void> _confirmDeleteFromSheet(
+      ShoppingItem item,
+      NutritionProvider provider,
+      ) async {
     final r = _R(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: _Palette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(20))),
-        title: Text('Удалить «${item.displayName}»?',
-            style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(16), fontWeight: FontWeight.w600)),
-        content: Text('Товар будет удалён из списка покупок.',
-            style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(r.s(20)),
+        ),
+        title: Text(
+          'Удалить «${item.displayName}»?',
+          style: GoogleFonts.inter(
+            color: _Palette.text,
+            fontSize: r.fs(16),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Товар будет удалён из списка покупок.',
+          style: GoogleFonts.inter(
+            color: _Palette.textMuted,
+            fontSize: r.fs(13),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: Text('Отмена', style: GoogleFonts.inter(color: _Palette.textMuted))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Отмена',
+              style: GoogleFonts.inter(color: _Palette.textMuted),
+            ),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: _Palette.pink),
-            child: const Text('Удалить', style: TextStyle(fontWeight: FontWeight.w600)),
+            child: const Text(
+              'Удалить',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
     );
+
     if (confirm == true) {
       await provider.deleteShoppingItem(item.id);
       if (!mounted) return;
       HapticFeedback.mediumImpact();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('🗑️ «${item.displayName}» удалён'),
-        backgroundColor: _Palette.pink,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(14))),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('🗑️ «${item.displayName}» удалён'),
+          backgroundColor: _Palette.pink,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(r.s(14)),
+          ),
+        ),
+      );
     }
   }
 
@@ -2216,49 +3172,75 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
   Future<void> _shareList(BuildContext context) async {
     final provider = context.read<NutritionProvider>();
     final active = provider.shoppingItems.where((i) => !i.isBought).toList();
+
     if (active.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('Список пуст'), backgroundColor: _Palette.pink, behavior: SnackBarBehavior.floating));
+        SnackBar(
+          content: const Text('Список пуст'),
+          backgroundColor: _Palette.pink,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
+
     final byAisle = <String, List<ShoppingItem>>{};
     for (final item in active) {
-      final product = provider.products.where((p) => p.id == item.productId).firstOrNull;
+      final product =
+          provider.products.where((p) => p.id == item.productId).firstOrNull;
       String aisle = 'Другое';
-      if (item.category != null && item.category!.isNotEmpty)
+      if (item.category != null && item.category!.isNotEmpty) {
         aisle = item.category!;
-      else if (product != null) aisle = _categoryToAisle(product.category);
+      } else if (product != null) {
+        aisle = _categoryToAisle(product.category);
+      }
       byAisle.putIfAbsent(aisle, () => []).add(item);
     }
+
     final buffer = StringBuffer();
     buffer.writeln('🛒 Список покупок\n');
     for (final aisle in _storeAisles) {
       final items = byAisle[aisle];
       if (items == null || items.isEmpty) continue;
       buffer.writeln('${_aisleEmoji(aisle)} *$aisle*');
-      for (final item in items) buffer.writeln('• ${item.displayName} — ${_fmtNum(item.quantity)} ${item.unit}');
+      for (final item in items) {
+        buffer.writeln(
+          '• ${item.displayName} — ${_fmtNum(item.quantity)} ${item.unit}',
+        );
+      }
       buffer.writeln();
     }
+
     final total = active.fold<double>(0, (s, i) => s + i.totalPrice);
     buffer.writeln('💰 *Итого: ~${total.toStringAsFixed(0)} ₽*');
+
     await Clipboard.setData(ClipboardData(text: buffer.toString()));
     if (!mounted) return;
     HapticFeedback.mediumImpact();
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: const Text('✅ Скопировано'), backgroundColor: _Palette.green, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))));
+      SnackBar(
+        content: const Text('✅ Скопировано'),
+        backgroundColor: _Palette.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
-  void _showAnalyticsSheet(List<ShoppingItem> initialBoughtItems, NutritionProvider provider) {
+  void _showAnalyticsSheet(
+      List<ShoppingItem> initialBoughtItems,
+      NutritionProvider provider,
+      ) {
     final r = _R(context);
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
-          // Пересчитываем данные при каждом обновлении шторки
-          final boughtItems = provider.shoppingItems.where((i) => i.isBought).toList()
+          final boughtItems = provider.shoppingItems
+              .where((i) => i.isBought)
+              .toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
           final Map<String, List<ShoppingItem>> historyByDay = {};
@@ -2266,23 +3248,36 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
           for (final item in boughtItems) {
             totalSpent += item.totalPrice;
             final dateKey = _formatDate(item.createdAt);
-            if (!historyByDay.containsKey(dateKey)) historyByDay[dateKey] = [];
-            historyByDay[dateKey]!.add(item);
+            historyByDay.putIfAbsent(dateKey, () => []).add(item);
           }
-          final sortedDays = historyByDay.keys.toList()..sort((a, b) => b.compareTo(a));
+          final sortedDays = historyByDay.keys.toList()
+            ..sort((a, b) => b.compareTo(a));
 
           return DraggableScrollableSheet(
-            initialChildSize: 0.7, minChildSize: 0.4, maxChildSize: 0.95,
+            initialChildSize: 0.7,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
             builder: (context, scrollController) => Container(
               decoration: BoxDecoration(
                 color: _Palette.surface,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(r.s(28))),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(r.s(28)),
+                ),
               ),
               child: Column(
                 children: [
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: r.s(12)),
-                    child: Center(child: Container(width: r.s(38), height: r.s(5), decoration: BoxDecoration(color: _Palette.divider, borderRadius: BorderRadius.circular(r.s(3))))),
+                    child: Center(
+                      child: Container(
+                        width: r.s(38),
+                        height: r.s(5),
+                        decoration: BoxDecoration(
+                          color: _Palette.divider,
+                          borderRadius: BorderRadius.circular(r.s(3)),
+                        ),
+                      ),
+                    ),
                   ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(r.s(20), 0, r.s(20), r.s(16)),
@@ -2290,16 +3285,39 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                       children: [
                         Container(
                           padding: EdgeInsets.all(r.s(10)),
-                          decoration: BoxDecoration(color: _Palette.greenSoft, borderRadius: BorderRadius.circular(r.s(12))),
-                          child: Icon(Icons.history_rounded, color: _Palette.green, size: r.s(22)),
+                          decoration: BoxDecoration(
+                            color: _Palette.greenSoft,
+                            borderRadius: BorderRadius.circular(r.s(12)),
+                          ),
+                          child: Icon(
+                            Icons.history_rounded,
+                            color: _Palette.green,
+                            size: r.s(22),
+                          ),
                         ),
                         SizedBox(width: r.s(12)),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('ИСТОРИЯ ПОКУПОК', style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-                              Text('Последние операции', style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(18), fontWeight: FontWeight.w700, letterSpacing: -0.3)),
+                              Text(
+                                'ИСТОРИЯ ПОКУПОК',
+                                style: GoogleFonts.inter(
+                                  color: _Palette.textMuted,
+                                  fontSize: r.fs(10),
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              Text(
+                                'Последние операции',
+                                style: GoogleFonts.inter(
+                                  color: _Palette.text,
+                                  fontSize: r.fs(18),
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -2309,7 +3327,10 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                   Expanded(
                     child: ListView(
                       controller: scrollController,
-                      padding: EdgeInsets.symmetric(horizontal: r.s(20), vertical: r.s(8)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: r.s(20),
+                        vertical: r.s(8),
+                      ),
                       children: [
                         Container(
                           padding: EdgeInsets.all(r.s(20)),
@@ -2317,11 +3338,18 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [_Vibrant.vividPeach, _Palette.peach],
+                              colors: [
+                                _Vibrant.vividPeach,
+                                _Palette.peach,
+                              ],
                             ),
                             borderRadius: BorderRadius.circular(r.s(20)),
                             boxShadow: [
-                              BoxShadow(color: _Palette.peach.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6)),
+                              BoxShadow(
+                                color: _Palette.peach.withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
                             ],
                           ),
                           child: Row(
@@ -2330,19 +3358,53 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('ВСЕГО ПОТРАЧЕНО', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: r.fs(11), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                                  Text(
+                                    'ВСЕГО ПОТРАЧЕНО',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontSize: r.fs(11),
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
                                   SizedBox(height: r.s(6)),
-                                  Text('${totalSpent.round()} ₽',
-                                      style: GoogleFonts.inter(color: Colors.white, fontSize: r.fs(32), fontWeight: FontWeight.w800, fontFeatures: const [FontFeature.tabularFigures()])),
+                                  Text(
+                                    '${totalSpent.round()} ₽',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: r.fs(32),
+                                      fontWeight: FontWeight.w800,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text('ПОЗИЦИЙ', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: r.fs(11), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                                  Text(
+                                    'ПОЗИЦИЙ',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontSize: r.fs(11),
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
                                   SizedBox(height: r.s(6)),
-                                  Text('${boughtItems.length}',
-                                      style: GoogleFonts.inter(color: Colors.white, fontSize: r.fs(32), fontWeight: FontWeight.w800, fontFeatures: const [FontFeature.tabularFigures()])),
+                                  Text(
+                                    '${boughtItems.length}',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: r.fs(32),
+                                      fontWeight: FontWeight.w800,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -2353,16 +3415,26 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                           Center(
                             child: Padding(
                               padding: EdgeInsets.all(r.s(20)),
-                              child: Text('Пока нет купленных товаров',
-                                  style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(14))),
+                              child: Text(
+                                'Пока нет купленных товаров',
+                                style: GoogleFonts.inter(
+                                  color: _Palette.textMuted,
+                                  fontSize: r.fs(14),
+                                ),
+                              ),
                             ),
                           )
                         else
                           ...sortedDays.map((day) {
                             final dayItems = historyByDay[day]!;
-                            final dayTotal = dayItems.fold<double>(0, (sum, item) => sum + item.totalPrice);
+                            final dayTotal = dayItems.fold<double>(
+                              0,
+                                  (sum, item) => sum + item.totalPrice,
+                            );
                             final date = dayItems.first.createdAt;
-                            final timeStr = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+                            final timeStr =
+                                '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
                             return Padding(
                               padding: EdgeInsets.only(bottom: r.s(16)),
                               child: Column(
@@ -2371,18 +3443,54 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                                   Row(
                                     children: [
                                       Container(
-                                        padding: EdgeInsets.symmetric(horizontal: r.s(10), vertical: r.s(6)),
-                                        decoration: BoxDecoration(color: _Palette.peachSoft, borderRadius: BorderRadius.circular(r.s(8))),
-                                        child: Text(day, style: GoogleFonts.inter(color: _Palette.peach, fontSize: r.fs(11), fontWeight: FontWeight.w700)),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: r.s(10),
+                                          vertical: r.s(6),
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _Palette.peachSoft,
+                                          borderRadius:
+                                          BorderRadius.circular(r.s(8)),
+                                        ),
+                                        child: Text(
+                                          day,
+                                          style: GoogleFonts.inter(
+                                            color: _Palette.peach,
+                                            fontSize: r.fs(11),
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
                                       ),
                                       SizedBox(width: r.s(8)),
-                                      Text(timeStr, style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(11))),
+                                      Text(
+                                        timeStr,
+                                        style: GoogleFonts.inter(
+                                          color: _Palette.textMuted,
+                                          fontSize: r.fs(11),
+                                        ),
+                                      ),
                                       const Spacer(),
                                       Container(
-                                        padding: EdgeInsets.symmetric(horizontal: r.s(8), vertical: r.s(4)),
-                                        decoration: BoxDecoration(color: _Palette.greenSoft, borderRadius: BorderRadius.circular(r.s(6))),
-                                        child: Text('${dayTotal.round()} ₽',
-                                            style: GoogleFonts.inter(color: _Palette.green, fontSize: r.fs(11), fontWeight: FontWeight.w700, fontFeatures: const [FontFeature.tabularFigures()])),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: r.s(8),
+                                          vertical: r.s(4),
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _Palette.greenSoft,
+                                          borderRadius:
+                                          BorderRadius.circular(r.s(6)),
+                                        ),
+                                        child: Text(
+                                          '${dayTotal.round()} ₽',
+                                          style: GoogleFonts.inter(
+                                            color: _Palette.green,
+                                            fontSize: r.fs(11),
+                                            fontWeight: FontWeight.w700,
+                                            fontFeatures: const [
+                                              FontFeature.tabularFigures(),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -2390,68 +3498,182 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                                   Container(
                                     decoration: BoxDecoration(
                                       color: _Palette.bg,
-                                      borderRadius: BorderRadius.circular(r.s(16)),
+                                      borderRadius:
+                                      BorderRadius.circular(r.s(16)),
                                     ),
                                     child: Column(
                                       children: dayItems.map((item) {
-                                        final product = provider.products.firstWhere((p) => p.id == item.productId,
-                                            orElse: () => FoodProduct(id: '', name: '', category: 'other', calories: 0, protein: 0, fat: 0, carbs: 0));
+                                        final product =
+                                        provider.products.firstWhere(
+                                              (p) => p.id == item.productId,
+                                          orElse: () => FoodProduct(
+                                            id: '',
+                                            name: '',
+                                            category: 'other',
+                                            calories: 0,
+                                            protein: 0,
+                                            fat: 0,
+                                            carbs: 0,
+                                          ),
+                                        );
                                         return Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: r.s(16), vertical: r.s(10)),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: r.s(16),
+                                            vertical: r.s(10),
+                                          ),
                                           child: Row(
                                             children: [
-                                              Text(product.categoryEmoji.isEmpty ? '📦' : product.categoryEmoji, style: TextStyle(fontSize: r.s(16))),
+                                              Text(
+                                                product.categoryEmoji.isEmpty
+                                                    ? '📦'
+                                                    : product.categoryEmoji,
+                                                style: TextStyle(
+                                                  fontSize: r.s(16),
+                                                ),
+                                              ),
                                               SizedBox(width: r.s(12)),
                                               Expanded(
                                                 child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(item.displayName,
-                                                        style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(13), fontWeight: FontWeight.w600)),
-                                                    Text('${_fmtNum(item.quantity)} ${item.unit}',
-                                                        style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(11))),
+                                                    Text(
+                                                      item.displayName,
+                                                      style: GoogleFonts.inter(
+                                                        color: _Palette.text,
+                                                        fontSize: r.fs(13),
+                                                        fontWeight:
+                                                        FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      '${_fmtNum(item.quantity)} ${item.unit}',
+                                                      style: GoogleFonts.inter(
+                                                        color:
+                                                        _Palette.textMuted,
+                                                        fontSize: r.fs(11),
+                                                      ),
+                                                    ),
                                                   ],
                                                 ),
                                               ),
                                               Padding(
-                                                padding: EdgeInsets.only(right: r.s(8)),
-                                                child: Text('+${item.totalPrice.round()} ₽',
-                                                    style: GoogleFonts.inter(color: _Palette.green, fontSize: r.fs(13), fontWeight: FontWeight.w700, fontFeatures: const [FontFeature.tabularFigures()])),
+                                                padding:
+                                                EdgeInsets.only(right: r.s(8)),
+                                                child: Text(
+                                                  '+${item.totalPrice.round()} ₽',
+                                                  style: GoogleFonts.inter(
+                                                    color: _Palette.green,
+                                                    fontSize: r.fs(13),
+                                                    fontWeight: FontWeight.w700,
+                                                    fontFeatures: const [
+                                                      FontFeature.tabularFigures(),
+                                                    ],
+                                                  ),
+                                                ),
                                               ),
-                                              // 🆕 КНОПКА УДАЛЕНИЯ
                                               _TapScale(
                                                 onTap: () async {
-                                                  final confirm = await showDialog<bool>(
+                                                  final confirm =
+                                                  await showDialog<bool>(
                                                     context: ctx,
-                                                    builder: (dialogCtx) => AlertDialog(
-                                                      backgroundColor: _Palette.surface,
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(20))),
-                                                      title: Text('Удалить «${item.displayName}»?',
-                                                          style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(16), fontWeight: FontWeight.w600)),
-                                                      content: Text('Товар будет удалён из истории покупок.',
-                                                          style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13))),
-                                                      actions: [
-                                                        TextButton(onPressed: () => Navigator.pop(dialogCtx, false),
-                                                            child: Text('Отмена', style: GoogleFonts.inter(color: _Palette.textMuted))),
-                                                        TextButton(
-                                                          onPressed: () => Navigator.pop(dialogCtx, true),
-                                                          style: TextButton.styleFrom(foregroundColor: _Palette.pink),
-                                                          child: const Text('Удалить', style: TextStyle(fontWeight: FontWeight.w600)),
+                                                    builder: (dialogCtx) =>
+                                                        AlertDialog(
+                                                          backgroundColor:
+                                                          _Palette.surface,
+                                                          shape:
+                                                          RoundedRectangleBorder(
+                                                            borderRadius:
+                                                            BorderRadius.circular(
+                                                              r.s(20),
+                                                            ),
+                                                          ),
+                                                          title: Text(
+                                                            'Удалить «${item.displayName}»?',
+                                                            style:
+                                                            GoogleFonts.inter(
+                                                              color: _Palette.text,
+                                                              fontSize: r.fs(16),
+                                                              fontWeight:
+                                                              FontWeight.w600,
+                                                            ),
+                                                          ),
+                                                          content: Text(
+                                                            'Товар будет удалён из истории покупок.',
+                                                            style:
+                                                            GoogleFonts.inter(
+                                                              color:
+                                                              _Palette.textMuted,
+                                                              fontSize: r.fs(13),
+                                                            ),
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogCtx,
+                                                                    false,
+                                                                  ),
+                                                              child: Text(
+                                                                'Отмена',
+                                                                style:
+                                                                GoogleFonts.inter(
+                                                                  color: _Palette
+                                                                      .textMuted,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogCtx,
+                                                                    true,
+                                                                  ),
+                                                              style: TextButton
+                                                                  .styleFrom(
+                                                                foregroundColor:
+                                                                _Palette.pink,
+                                                              ),
+                                                              child: const Text(
+                                                                'Удалить',
+                                                                style: TextStyle(
+                                                                  fontWeight:
+                                                                  FontWeight.w600,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
-                                                      ],
-                                                    ),
                                                   );
+
                                                   if (confirm == true) {
-                                                    await provider.deleteShoppingItem(item.id);
+                                                    await provider
+                                                        .deleteShoppingItem(
+                                                      item.id,
+                                                    );
                                                     if (!mounted) return;
                                                     HapticFeedback.mediumImpact();
-                                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                                      content: Text('🗑️ «${item.displayName}» удалён из истории'),
-                                                      backgroundColor: _Palette.pink,
-                                                      behavior: SnackBarBehavior.floating,
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(14))),
-                                                    ));
-                                                    // Обновляем UI шторки
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          '🗑️ «${item.displayName}» удалён из истории',
+                                                        ),
+                                                        backgroundColor:
+                                                        _Palette.pink,
+                                                        behavior:
+                                                        SnackBarBehavior
+                                                            .floating,
+                                                        shape:
+                                                        RoundedRectangleBorder(
+                                                          borderRadius:
+                                                          BorderRadius.circular(
+                                                            r.s(14),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
                                                     setSheetState(() {});
                                                   }
                                                 },
@@ -2460,9 +3682,16 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
                                                   height: r.s(28),
                                                   decoration: BoxDecoration(
                                                     color: _Palette.pinkSoft,
-                                                    borderRadius: BorderRadius.circular(r.s(8)),
+                                                    borderRadius:
+                                                    BorderRadius.circular(
+                                                      r.s(8),
+                                                    ),
                                                   ),
-                                                  child: Icon(Icons.close_rounded, color: _Palette.pink, size: r.s(14)),
+                                                  child: Icon(
+                                                    Icons.close_rounded,
+                                                    color: _Palette.pink,
+                                                    size: r.s(14),
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -2497,10 +3726,16 @@ class _ShoppingModeScreenState extends State<ShoppingModeScreen> with TickerProv
     return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
   }
 
-  String _itemsWord(int n) => n == 1 ? 'позиция' : (n >= 2 && n <= 4 ? 'позиции' : 'позиций');
-  String _aislesWord(int n) => n == 1 ? 'отдел' : (n >= 2 && n <= 4 ? 'отдела' : 'отделов');
+  String _itemsWord(int n) =>
+      n == 1 ? 'позиция' : (n >= 2 && n <= 4 ? 'позиции' : 'позиций');
+
+  String _aislesWord(int n) =>
+      n == 1 ? 'отдел' : (n >= 2 && n <= 4 ? 'отдела' : 'отделов');
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// PAINTERS / COMMON WIDGETS
+// ═══════════════════════════════════════════════════════════════════
 class _ProgressRingPainter extends CustomPainter {
   final double progress;
   final int boughtCount;
@@ -2510,9 +3745,12 @@ class _ProgressRingPainter extends CustomPainter {
   final Color accent;
 
   _ProgressRingPainter({
-    required this.progress, required this.boughtCount,
-    required this.totalCount, required this.totalBudget,
-    required this.scale, required this.accent,
+    required this.progress,
+    required this.boughtCount,
+    required this.totalCount,
+    required this.totalBudget,
+    required this.scale,
+    required this.accent,
   });
 
   @override
@@ -2522,7 +3760,8 @@ class _ProgressRingPainter extends CustomPainter {
     final stroke = 14.0 * scale;
 
     canvas.drawCircle(
-      center, radius,
+      center,
+      radius,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke * 0.75
@@ -2535,7 +3774,10 @@ class _ProgressRingPainter extends CustomPainter {
       final sweep = 2 * math.pi * progress.clamp(0.0, 1.0);
 
       canvas.drawArc(
-        rect, start, sweep, false,
+        rect,
+        start,
+        sweep,
+        false,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = stroke * 1.6
@@ -2544,7 +3786,7 @@ class _ProgressRingPainter extends CustomPainter {
           ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 7),
       );
 
-      final segments = 60;
+      const segments = 60;
       for (int i = 0; i < segments; i++) {
         final segStart = i / segments;
         final segEnd = (i + 1) / segments;
@@ -2555,7 +3797,9 @@ class _ProgressRingPainter extends CustomPainter {
         final color = Color.lerp(_Vibrant.vividPeach, _Vibrant.neonGreen, t)!;
         canvas.drawArc(
           Rect.fromCircle(center: center, radius: radius),
-          a1, a2 - a1, false,
+          a1,
+          a2 - a1,
+          false,
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = stroke
@@ -2569,35 +3813,83 @@ class _ProgressRingPainter extends CustomPainter {
         center.dx + math.cos(endAngle) * radius,
         center.dy + math.sin(endAngle) * radius,
       );
-      canvas.drawCircle(dotPos, stroke * 1.0,
-          Paint()..color = _Vibrant.neonGreen.withOpacity(0.55)..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 7));
+
+      canvas.drawCircle(
+        dotPos,
+        stroke * 1.0,
+        Paint()
+          ..color = _Vibrant.neonGreen.withOpacity(0.55)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 7),
+      );
       canvas.drawCircle(dotPos, stroke * 0.65, Paint()..color = _Vibrant.neonGreen);
       canvas.drawCircle(dotPos, stroke * 0.28, Paint()..color = Colors.white);
     }
 
-    _drawCenterText(canvas, center, '${(progress * 100).round()}%', 36 * scale, Colors.white, FontWeight.w600, -20 * scale);
-    _drawCenterText(canvas, center, 'куплено', 12 * scale, Colors.white.withOpacity(0.7), FontWeight.w500, 8 * scale);
-    _drawCenterText(canvas, center, '$boughtCount / $totalCount', 14 * scale, _Vibrant.neonGreen, FontWeight.w700, 28 * scale);
+    _drawCenterText(
+      canvas,
+      center,
+      '${(progress * 100).round()}%',
+      36 * scale,
+      Colors.white,
+      FontWeight.w600,
+      -20 * scale,
+    );
+    _drawCenterText(
+      canvas,
+      center,
+      'куплено',
+      12 * scale,
+      Colors.white.withOpacity(0.7),
+      FontWeight.w500,
+      8 * scale,
+    );
+    _drawCenterText(
+      canvas,
+      center,
+      '$boughtCount / $totalCount',
+      14 * scale,
+      _Vibrant.neonGreen,
+      FontWeight.w700,
+      28 * scale,
+    );
   }
 
-  void _drawCenterText(Canvas canvas, Offset center, String text, double fontSize, Color color, FontWeight weight, double offsetY) {
+  void _drawCenterText(
+      Canvas canvas,
+      Offset center,
+      String text,
+      double fontSize,
+      Color color,
+      FontWeight weight,
+      double offsetY,
+      ) {
     final tp = TextPainter(
       text: TextSpan(
         text: text,
         style: TextStyle(
-          color: color, fontSize: fontSize, fontWeight: weight, letterSpacing: -0.5,
+          color: color,
+          fontSize: fontSize,
+          fontWeight: weight,
+          letterSpacing: -0.5,
           fontFeatures: const [FontFeature.tabularFigures()],
-          shadows: [Shadow(color: Colors.black.withOpacity(0.3), blurRadius: 4)],
+          shadows: [
+            Shadow(color: Colors.black.withOpacity(0.3), blurRadius: 4),
+          ],
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    tp.paint(canvas, Offset(center.dx - tp.width / 2, center.dy + offsetY - tp.height / 2));
+    tp.paint(
+      canvas,
+      Offset(center.dx - tp.width / 2, center.dy + offsetY - tp.height / 2),
+    );
   }
 
   @override
   bool shouldRepaint(covariant _ProgressRingPainter old) =>
-      old.progress != progress || old.boughtCount != boughtCount || old.totalCount != totalCount;
+      old.progress != progress ||
+          old.boughtCount != boughtCount ||
+          old.totalCount != totalCount;
 }
 
 class _TapScale extends StatefulWidget {
@@ -2610,6 +3902,7 @@ class _TapScale extends StatefulWidget {
 
 class _TapScaleState extends State<_TapScale> {
   bool _pressed = false;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -2636,11 +3929,15 @@ class _GlossyProgress extends StatelessWidget {
   final List<Color> gradient;
   final Color track;
   final double radius;
+
   const _GlossyProgress({
-    required this.value, required this.gradient,
-    this.height = 8, this.track = const Color(0x33FFFFFF),
+    required this.value,
+    required this.gradient,
+    this.height = 8,
+    this.track = const Color(0x33FFFFFF),
     this.radius = 100,
   });
+
   @override
   Widget build(BuildContext context) {
     final pct = value.clamp(0.0, 1.0);
@@ -2650,7 +3947,10 @@ class _GlossyProgress extends StatelessWidget {
         children: [
           Container(
             height: height,
-            decoration: BoxDecoration(color: track, borderRadius: BorderRadius.circular(radius)),
+            decoration: BoxDecoration(
+              color: track,
+              borderRadius: BorderRadius.circular(radius),
+            ),
           ),
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: pct),
@@ -2668,7 +3968,11 @@ class _GlossyProgress extends StatelessWidget {
                     end: Alignment.centerRight,
                   ),
                   boxShadow: [
-                    BoxShadow(color: gradient.last.withOpacity(0.35), blurRadius: 6, spreadRadius: -1),
+                    BoxShadow(
+                      color: gradient.last.withOpacity(0.35),
+                      blurRadius: 6,
+                      spreadRadius: -1,
+                    ),
                   ],
                 ),
                 child: Align(
@@ -2684,7 +3988,10 @@ class _GlossyProgress extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.white.withOpacity(0.55), Colors.white.withOpacity(0.0)],
+                          colors: [
+                            Colors.white.withOpacity(0.55),
+                            Colors.white.withOpacity(0.0),
+                          ],
                         ),
                       ),
                     ),
@@ -2699,6 +4006,9 @@ class _GlossyProgress extends StatelessWidget {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// ADD ITEM BOTTOM SHEET
+// ═══════════════════════════════════════════════════════════════════
 class _AddItemBottomSheet extends StatefulWidget {
   final NutritionProvider provider;
   const _AddItemBottomSheet({required this.provider});
@@ -2706,7 +4016,8 @@ class _AddItemBottomSheet extends StatefulWidget {
   State<_AddItemBottomSheet> createState() => _AddItemBottomSheetState();
 }
 
-class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerProviderStateMixin {
+class _AddItemBottomSheetState extends State<_AddItemBottomSheet>
+    with TickerProviderStateMixin {
   final _nameCtrl = TextEditingController();
   final _qtyCtrl = TextEditingController(text: '1');
   final _priceCtrl = TextEditingController();
@@ -2716,40 +4027,67 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
   String _priceUnit = 'за шт';
   bool _hasFallback = false;
   String? _selectedCategory = 'Другое';
-  final List<String> _availableAisles = ['Овощи', 'Фрукты', 'Мясо', 'Рыба', 'Молочка', 'Хлеб', 'Бакалея', 'Напитки', 'Другое'];
-  List<ShoppingItem> _suggestions = [];
 
+  final List<String> _availableAisles = [
+    'Овощи', 'Фрукты', 'Мясо', 'Рыба', 'Молочка',
+    'Хлеб', 'Бакалея', 'Напитки', 'Другое',
+  ];
+
+  List<ShoppingItem> _suggestions = [];
   late final AnimationController _snapController;
   late final Animation<double> _snapScale;
 
   @override
   void initState() {
     super.initState();
-    if (_dimOfPrice(_priceUnit) != _dimOf(_qtyUnit)) _qtyUnit = _defaultQtyUnitFor(_dimOfPrice(_priceUnit));
-    _snapController = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
-    _snapScale = Tween<double>(begin: 1.0, end: 1.15).animate(CurvedAnimation(parent: _snapController, curve: Curves.easeOutBack));
-    _snapController.addStatusListener((status) { if (status == AnimationStatus.completed) _snapController.reverse(); });
+    if (_dimOfPrice(_priceUnit) != _dimOf(_qtyUnit)) {
+      _qtyUnit = _defaultQtyUnitFor(_dimOfPrice(_priceUnit));
+    }
+    _snapController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _snapScale = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _snapController, curve: Curves.easeOutBack),
+    );
+    _snapController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) _snapController.reverse();
+    });
     _nameCtrl.addListener(_updateSuggestions);
   }
 
   void _updateSuggestions() {
     final query = _nameCtrl.text.trim().toLowerCase();
-    if (query.length < 2) { setState(() => _suggestions = []); return; }
+    if (query.length < 2) {
+      setState(() => _suggestions = []);
+      return;
+    }
     final all = widget.provider.shoppingItems;
-    final matches = all.where((item) => item.displayName.toLowerCase().contains(query)).toList();
+    final matches = all
+        .where((item) => item.displayName.toLowerCase().contains(query))
+        .toList();
     final Map<String, ShoppingItem> unique = {};
-    for (var item in matches) unique[item.displayName] = item;
-    setState(() { _suggestions = unique.values.take(3).toList(); });
+    for (var item in matches) {
+      unique[item.displayName] = item;
+    }
+    setState(() => _suggestions = unique.values.take(3).toList());
   }
 
   @override
   void dispose() {
     _nameCtrl.removeListener(_updateSuggestions);
-    _nameCtrl.dispose(); _qtyCtrl.dispose(); _priceCtrl.dispose(); _fallbackCtrl.dispose(); _snapController.dispose();
+    _nameCtrl.dispose();
+    _qtyCtrl.dispose();
+    _priceCtrl.dispose();
+    _fallbackCtrl.dispose();
+    _snapController.dispose();
     super.dispose();
   }
 
-  void _triggerSnap() { _snapController.forward(from: 0.0); HapticFeedback.lightImpact(); }
+  void _triggerSnap() {
+    _snapController.forward(from: 0.0);
+    HapticFeedback.lightImpact();
+  }
 
   double get _calculatedTotal {
     final qty = double.tryParse(_qtyCtrl.text.replaceAll(',', '.')) ?? 0;
@@ -2767,15 +4105,33 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
 
   List<Map<String, dynamic>> _getQuickPresets() {
     final dim = _dimOf(_qtyUnit);
-    if (dim == _Dim.mass) return [{'v': 100, 'u': 'г'}, {'v': 500, 'u': 'г'}, {'v': 1, 'u': 'кг'}];
-    if (dim == _Dim.volume) return [{'v': 250, 'u': 'мл'}, {'v': 500, 'u': 'мл'}, {'v': 1, 'u': 'л'}];
-    return [{'v': 1, 'u': 'шт'}, {'v': 2, 'u': 'шт'}, {'v': 3, 'u': 'шт'}];
+    if (dim == _Dim.mass) {
+      return [
+        {'v': 100, 'u': 'г'},
+        {'v': 500, 'u': 'г'},
+        {'v': 1, 'u': 'кг'},
+      ];
+    }
+    if (dim == _Dim.volume) {
+      return [
+        {'v': 250, 'u': 'мл'},
+        {'v': 500, 'u': 'мл'},
+        {'v': 1, 'u': 'л'},
+      ];
+    }
+    return [
+      {'v': 1, 'u': 'шт'},
+      {'v': 2, 'u': 'шт'},
+      {'v': 3, 'u': 'шт'},
+    ];
   }
 
   void _onQtyUnitChanged(String newUnit) {
     setState(() {
       _qtyUnit = newUnit;
-      if (_dimOfPrice(_priceUnit) != _dimOf(newUnit)) _priceUnit = _defaultPriceBasisFor(_dimOf(newUnit));
+      if (_dimOfPrice(_priceUnit) != _dimOf(newUnit)) {
+        _priceUnit = _defaultPriceBasisFor(_dimOf(newUnit));
+      }
     });
   }
 
@@ -2783,7 +4139,10 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
     setState(() {
       _priceUnit = newBasis;
       final dim = _dimOfPrice(newBasis);
-      if (_dimOf(_qtyUnit) != dim) { _qtyUnit = _defaultQtyUnitFor(dim); _triggerSnap(); }
+      if (_dimOf(_qtyUnit) != dim) {
+        _qtyUnit = _defaultQtyUnitFor(dim);
+        _triggerSnap();
+      }
     });
   }
 
@@ -2792,7 +4151,9 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
       _qtyCtrl.text = preset['v'].toString();
       if (_qtyUnit != preset['u']) {
         _qtyUnit = preset['u'];
-        if (_dimOfPrice(_priceUnit) != _dimOf(_qtyUnit)) _priceUnit = _defaultPriceBasisFor(_dimOf(_qtyUnit));
+        if (_dimOfPrice(_priceUnit) != _dimOf(_qtyUnit)) {
+          _priceUnit = _defaultPriceBasisFor(_dimOf(_qtyUnit));
+        }
         _triggerSnap();
       }
     });
@@ -2806,10 +4167,18 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
       _priceCtrl.text = suggestion.estimatedPrice?.toString() ?? '';
       _priceUnit = _labelFromBasis(suggestion.priceBasis);
       final fallback = suggestion.fallbackName;
-      if (fallback != null && fallback.isNotEmpty) { _hasFallback = true; _fallbackCtrl.text = fallback; }
-      else { _hasFallback = false; _fallbackCtrl.clear(); }
-      if (suggestion.category != null && suggestion.category!.isNotEmpty) _selectedCategory = suggestion.category;
-      else _selectedCategory = 'Другое';
+      if (fallback != null && fallback.isNotEmpty) {
+        _hasFallback = true;
+        _fallbackCtrl.text = fallback;
+      } else {
+        _hasFallback = false;
+        _fallbackCtrl.clear();
+      }
+      if (suggestion.category != null && suggestion.category!.isNotEmpty) {
+        _selectedCategory = suggestion.category;
+      } else {
+        _selectedCategory = 'Другое';
+      }
       _suggestions = [];
       _triggerSnap();
     });
@@ -2821,18 +4190,28 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
     final qty = double.tryParse(_qtyCtrl.text.replaceAll(',', '.')) ?? 0;
     final price = double.tryParse(_priceCtrl.text.replaceAll(',', '.')) ?? 0;
     final fallback = _hasFallback ? _fallbackCtrl.text.trim() : null;
+
     if (name.isEmpty || qty <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('Заполните название и количество'), backgroundColor: _Palette.pink, behavior: SnackBarBehavior.floating));
+        SnackBar(
+          content: const Text('Заполните название и количество'),
+          backgroundColor: _Palette.pink,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
+
     widget.provider.addShoppingItem(
-      customName: name, quantity: qty, unit: _qtyUnit,
+      customName: name,
+      quantity: qty,
+      unit: _qtyUnit,
       estimatedPrice: price > 0 ? price : null,
       priceBasis: _basisFromLabel(_priceUnit),
       fallbackName: fallback,
       category: _selectedCategory == 'Другое' ? null : _selectedCategory,
     );
+
     if (!mounted) return;
     Navigator.pop(context);
     HapticFeedback.mediumImpact();
@@ -2848,15 +4227,28 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
         decoration: BoxDecoration(
           color: isSelected ? _Palette.green : _Palette.bg,
           borderRadius: BorderRadius.circular(r.s(20)),
-          border: Border.all(color: isSelected ? _Palette.green : _Palette.divider, width: isSelected ? 0 : 1),
-          boxShadow: isSelected ? [BoxShadow(color: _Palette.green.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))] : null,
+          border: Border.all(
+            color: isSelected ? _Palette.green : _Palette.divider,
+            width: isSelected ? 0 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+            BoxShadow(
+              color: _Palette.green.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ]
+              : null,
         ),
-        child: Text(label,
-            style: GoogleFonts.inter(
-              color: isSelected ? Colors.white : _Palette.text,
-              fontSize: r.fs(13),
-              fontWeight: FontWeight.w600,
-            )),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            color: isSelected ? Colors.white : _Palette.text,
+            fontSize: r.fs(13),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
@@ -2883,35 +4275,82 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: Container(width: r.s(38), height: r.s(5), decoration: BoxDecoration(color: _Palette.divider, borderRadius: BorderRadius.circular(r.s(3))))),
+                Center(
+                  child: Container(
+                    width: r.s(38),
+                    height: r.s(5),
+                    decoration: BoxDecoration(
+                      color: _Palette.divider,
+                      borderRadius: BorderRadius.circular(r.s(3)),
+                    ),
+                  ),
+                ),
                 SizedBox(height: r.s(20)),
                 Row(
                   children: [
                     Container(
                       padding: EdgeInsets.all(r.s(10)),
-                      decoration: BoxDecoration(color: _Palette.greenSoft, borderRadius: BorderRadius.circular(r.s(12))),
-                      child: Icon(Icons.add_shopping_cart_rounded, color: _Palette.green, size: r.s(20)),
+                      decoration: BoxDecoration(
+                        color: _Palette.greenSoft,
+                        borderRadius: BorderRadius.circular(r.s(12)),
+                      ),
+                      child: Icon(
+                        Icons.add_shopping_cart_rounded,
+                        color: _Palette.green,
+                        size: r.s(20),
+                      ),
                     ),
                     SizedBox(width: r.s(12)),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('НОВЫЙ ПРОДУКТ', style: GoogleFonts.inter(color: _Palette.green, fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.2)),
-                        Text('Добавить вручную', style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(18), fontWeight: FontWeight.w600, letterSpacing: -0.3)),
+                        Text(
+                          'НОВЫЙ ПРОДУКТ',
+                          style: GoogleFonts.inter(
+                            color: _Palette.green,
+                            fontSize: r.fs(10),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        Text(
+                          'Добавить вручную',
+                          style: GoogleFonts.inter(
+                            color: _Palette.text,
+                            fontSize: r.fs(18),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
                 SizedBox(height: r.s(20)),
                 TextField(
-                  controller: _nameCtrl, autofocus: true,
-                  style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(15), fontWeight: FontWeight.w600),
+                  controller: _nameCtrl,
+                  autofocus: true,
+                  style: GoogleFonts.inter(
+                    color: _Palette.text,
+                    fontSize: r.fs(15),
+                    fontWeight: FontWeight.w600,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Название',
-                    labelStyle: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13)),
-                    filled: true, fillColor: _Palette.bg,
-                    contentPadding: EdgeInsets.symmetric(horizontal: r.s(16), vertical: r.s(16)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(r.s(16))), borderSide: BorderSide.none),
+                    labelStyle: GoogleFonts.inter(
+                      color: _Palette.textMuted,
+                      fontSize: r.fs(13),
+                    ),
+                    filled: true,
+                    fillColor: _Palette.bg,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: r.s(16),
+                      vertical: r.s(16),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(r.s(16))),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
                 if (_suggestions.isNotEmpty) ...[
@@ -2921,7 +4360,13 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                       color: _Palette.surface,
                       borderRadius: BorderRadius.circular(r.s(16)),
                       border: Border.all(color: _Palette.divider),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: _suggestions.map((s) {
@@ -2932,23 +4377,55 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                             padding: EdgeInsets.all(r.s(12)),
                             child: Row(
                               children: [
-                                Icon(Icons.history_rounded, size: r.s(18), color: _Palette.green),
+                                Icon(
+                                  Icons.history_rounded,
+                                  size: r.s(18),
+                                  color: _Palette.green,
+                                ),
                                 SizedBox(width: r.s(10)),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                     children: [
-                                      Text(s.displayName, style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(14), fontWeight: FontWeight.w600)),
-                                      if (fallback != null && fallback.isNotEmpty)
-                                        Text('🔄 $fallback', style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(11), fontStyle: FontStyle.italic)),
+                                      Text(
+                                        s.displayName,
+                                        style: GoogleFonts.inter(
+                                          color: _Palette.text,
+                                          fontSize: r.fs(14),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (fallback != null &&
+                                          fallback.isNotEmpty)
+                                        Text(
+                                          '🔄 $fallback',
+                                          style: GoogleFonts.inter(
+                                            color: _Palette.textMuted,
+                                            fontSize: r.fs(11),
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
                                 Container(
-                                  padding: EdgeInsets.symmetric(horizontal: r.s(8), vertical: r.s(4)),
-                                  decoration: BoxDecoration(color: _Palette.greenSoft, borderRadius: BorderRadius.circular(r.s(8))),
-                                  child: Text('${_fmtNum(s.quantity)} ${s.unit} • ${s.estimatedPrice?.round() ?? 0} ₽',
-                                      style: GoogleFonts.inter(color: _Palette.green, fontSize: r.fs(11), fontWeight: FontWeight.w700)),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: r.s(8),
+                                    vertical: r.s(4),
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _Palette.greenSoft,
+                                    borderRadius: BorderRadius.circular(r.s(8)),
+                                  ),
+                                  child: Text(
+                                    '${_fmtNum(s.quantity)} ${s.unit} • ${s.estimatedPrice?.round() ?? 0} ₽',
+                                    style: GoogleFonts.inter(
+                                      color: _Palette.green,
+                                      fontSize: r.fs(11),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -2960,21 +4437,51 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                 ],
                 SizedBox(height: r.s(16)),
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory, isDense: true,
+                  value: _selectedCategory,
+                  isDense: true,
                   dropdownColor: _Palette.surface,
-                  style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(14), fontWeight: FontWeight.w500),
+                  style: GoogleFonts.inter(
+                    color: _Palette.text,
+                    fontSize: r.fs(14),
+                    fontWeight: FontWeight.w500,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Отдел магазина',
-                    labelStyle: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(13)),
-                    filled: true, fillColor: _Palette.bg,
-                    contentPadding: EdgeInsets.symmetric(horizontal: r.s(16), vertical: r.s(14)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(r.s(16))), borderSide: BorderSide.none),
-                    prefixIcon: Icon(Icons.storefront_rounded, color: _Palette.green, size: r.s(20)),
+                    labelStyle: GoogleFonts.inter(
+                      color: _Palette.textMuted,
+                      fontSize: r.fs(13),
+                    ),
+                    filled: true,
+                    fillColor: _Palette.bg,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: r.s(16),
+                      vertical: r.s(14),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(r.s(16))),
+                      borderSide: BorderSide.none,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.storefront_rounded,
+                      color: _Palette.green,
+                      size: r.s(20),
+                    ),
                   ),
-                  items: _availableAisles.map((String value) => DropdownMenuItem<String>(
+                  items: _availableAisles.map((String value) {
+                    return DropdownMenuItem<String>(
                       value: value,
-                      child: Text(value, style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(14), fontWeight: FontWeight.w500)))).toList(),
-                  onChanged: (String? newValue) => setState(() => _selectedCategory = newValue),
+                      child: Text(
+                        value,
+                        style: GoogleFonts.inter(
+                          color: _Palette.text,
+                          fontSize: r.fs(14),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) =>
+                      setState(() => _selectedCategory = newValue),
                 ),
                 SizedBox(height: r.s(20)),
                 Container(
@@ -2993,18 +4500,45 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('СКОЛЬКО', style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                                Text(
+                                  'СКОЛЬКО',
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.textMuted,
+                                    fontSize: r.fs(10),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
                                 SizedBox(height: r.s(6)),
                                 TextField(
                                   controller: _qtyCtrl,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                                   onChanged: (_) => setState(() {}),
-                                  style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(20), fontWeight: FontWeight.w700, fontFeatures: const [FontFeature.tabularFigures()]),
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.text,
+                                    fontSize: r.fs(20),
+                                    fontWeight: FontWeight.w700,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
                                   decoration: InputDecoration(
                                     hintText: '0',
-                                    filled: true, fillColor: _Palette.surface,
-                                    contentPadding: EdgeInsets.symmetric(horizontal: r.s(14), vertical: r.s(10)),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(r.s(12))), borderSide: BorderSide.none),
+                                    filled: true,
+                                    fillColor: _Palette.surface,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: r.s(14),
+                                      vertical: r.s(10),
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(r.s(12)),
+                                      ),
+                                      borderSide: BorderSide.none,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -3016,15 +4550,29 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('ЕДИНИЦА', style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                                Text(
+                                  'ЕДИНИЦА',
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.textMuted,
+                                    fontSize: r.fs(10),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
                                 SizedBox(height: r.s(6)),
                                 ScaleTransition(
                                   scale: _snapScale,
                                   child: Wrap(
-                                    spacing: r.s(6), runSpacing: r.s(6),
-                                    children: _qtyUnitsFor(_dimOf(_qtyUnit)).map((unit) {
+                                    spacing: r.s(6),
+                                    runSpacing: r.s(6),
+                                    children: _qtyUnitsFor(_dimOf(_qtyUnit))
+                                        .map((unit) {
                                       final isSelected = _qtyUnit == unit;
-                                      return _buildChip(unit, isSelected, () => _onQtyUnitChanged(unit));
+                                      return _buildChip(
+                                        unit,
+                                        isSelected,
+                                            () => _onQtyUnitChanged(unit),
+                                      );
                                     }).toList(),
                                   ),
                                 ),
@@ -3037,26 +4585,42 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                         SizedBox(height: r.s(12)),
                         Row(
                           children: presets.map((p) {
-                            final isCurrent = _qtyCtrl.text == p['v'].toString() && _qtyUnit == p['u'];
+                            final isCurrent = _qtyCtrl.text ==
+                                p['v'].toString() &&
+                                _qtyUnit == p['u'];
                             return Expanded(
                               child: Padding(
                                 padding: EdgeInsets.only(right: r.s(6)),
                                 child: GestureDetector(
                                   onTap: () => _applyPreset(p),
                                   child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    padding: EdgeInsets.symmetric(vertical: r.s(8)),
+                                    duration:
+                                    const Duration(milliseconds: 200),
+                                    padding:
+                                    EdgeInsets.symmetric(vertical: r.s(8)),
                                     decoration: BoxDecoration(
-                                      color: isCurrent ? _Palette.greenSoft : _Palette.surface,
-                                      borderRadius: BorderRadius.circular(r.s(10)),
-                                      border: Border.all(color: isCurrent ? _Palette.green.withOpacity(0.3) : _Palette.divider),
+                                      color: isCurrent
+                                          ? _Palette.greenSoft
+                                          : _Palette.surface,
+                                      borderRadius:
+                                      BorderRadius.circular(r.s(10)),
+                                      border: Border.all(
+                                        color: isCurrent
+                                            ? _Palette.green.withOpacity(0.3)
+                                            : _Palette.divider,
+                                      ),
                                     ),
                                     child: Center(
-                                      child: Text('${p['v']} ${p['u']}',
-                                          style: GoogleFonts.inter(
-                                            color: isCurrent ? _Palette.green : _Palette.text,
-                                            fontSize: r.fs(12), fontWeight: FontWeight.w600,
-                                          )),
+                                      child: Text(
+                                        '${p['v']} ${p['u']}',
+                                        style: GoogleFonts.inter(
+                                          color: isCurrent
+                                              ? _Palette.green
+                                              : _Palette.text,
+                                          fontSize: r.fs(12),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -3076,20 +4640,51 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('ЦЕНА', style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                                Text(
+                                  'ЦЕНА',
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.textMuted,
+                                    fontSize: r.fs(10),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
                                 SizedBox(height: r.s(6)),
                                 TextField(
                                   controller: _priceCtrl,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                                   onChanged: (_) => setState(() {}),
-                                  style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(20), fontWeight: FontWeight.w700, fontFeatures: const [FontFeature.tabularFigures()]),
+                                  style: GoogleFonts.inter(
+                                    color: _Palette.text,
+                                    fontSize: r.fs(20),
+                                    fontWeight: FontWeight.w700,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
                                   decoration: InputDecoration(
                                     hintText: '0',
                                     suffixText: '₽',
-                                    suffixStyle: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(16), fontWeight: FontWeight.w600),
-                                    filled: true, fillColor: _Palette.surface,
-                                    contentPadding: EdgeInsets.symmetric(horizontal: r.s(14), vertical: r.s(10)),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(r.s(12))), borderSide: BorderSide.none),
+                                    suffixStyle: GoogleFonts.inter(
+                                      color: _Palette.textMuted,
+                                      fontSize: r.fs(16),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    filled: true,
+                                    fillColor: _Palette.surface,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: r.s(14),
+                                      vertical: r.s(10),
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(r.s(12)),
+                                      ),
+                                      borderSide: BorderSide.none,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -3100,14 +4695,27 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                       SizedBox(height: r.s(12)),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('БАЗИС ЦЕНЫ', style: GoogleFonts.inter(color: _Palette.textMuted, fontSize: r.fs(10), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                        child: Text(
+                          'БАЗИС ЦЕНЫ',
+                          style: GoogleFonts.inter(
+                            color: _Palette.textMuted,
+                            fontSize: r.fs(10),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
                       ),
                       SizedBox(height: r.s(6)),
                       Wrap(
-                        spacing: r.s(6), runSpacing: r.s(6),
+                        spacing: r.s(6),
+                        runSpacing: r.s(6),
                         children: _allPriceUnits.map((unit) {
                           final isSelected = _priceUnit == unit;
-                          return _buildChip(unit, isSelected, () => _onPriceBasisChanged(unit));
+                          return _buildChip(
+                            unit,
+                            isSelected,
+                                () => _onPriceBasisChanged(unit),
+                          );
                         }).toList(),
                       ),
                     ],
@@ -3117,9 +4725,14 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                 Container(
                   padding: EdgeInsets.all(r.s(16)),
                   decoration: BoxDecoration(
-                    color: _hasFallback ? _Palette.peachSoft : _Palette.bg,
+                    color:
+                    _hasFallback ? _Palette.peachSoft : _Palette.bg,
                     borderRadius: BorderRadius.circular(r.s(16)),
-                    border: Border.all(color: _hasFallback ? _Palette.peach.withOpacity(0.3) : _Palette.divider),
+                    border: Border.all(
+                      color: _hasFallback
+                          ? _Palette.peach.withOpacity(0.3)
+                          : _Palette.divider,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3129,15 +4742,26 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.sync_alt_rounded, size: r.s(18), color: _Palette.peach),
+                              Icon(
+                                Icons.sync_alt_rounded,
+                                size: r.s(18),
+                                color: _Palette.peach,
+                              ),
                               SizedBox(width: r.s(8)),
-                              Text('Есть вариант замены?',
-                                  style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(13), fontWeight: FontWeight.w600)),
+                              Text(
+                                'Есть вариант замены?',
+                                style: GoogleFonts.inter(
+                                  color: _Palette.text,
+                                  fontSize: r.fs(13),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                           Switch(
                             value: _hasFallback,
-                            onChanged: (val) => setState(() => _hasFallback = val),
+                            onChanged: (val) =>
+                                setState(() => _hasFallback = val),
                             activeColor: _Palette.peach,
                           ),
                         ],
@@ -3146,13 +4770,26 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                         SizedBox(height: r.s(12)),
                         TextField(
                           controller: _fallbackCtrl,
-                          style: GoogleFonts.inter(color: _Palette.text, fontSize: r.fs(14)),
+                          style: GoogleFonts.inter(
+                            color: _Palette.text,
+                            fontSize: r.fs(14),
+                          ),
                           decoration: InputDecoration(
                             hintText: 'Например: Сметана 15%',
-                            hintStyle: GoogleFonts.inter(color: _Palette.textMuted),
-                            filled: true, fillColor: _Palette.surface,
-                            contentPadding: EdgeInsets.symmetric(horizontal: r.s(14), vertical: r.s(12)),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(r.s(12))), borderSide: BorderSide.none),
+                            hintStyle:
+                            GoogleFonts.inter(color: _Palette.textMuted),
+                            filled: true,
+                            fillColor: _Palette.surface,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: r.s(14),
+                              vertical: r.s(12),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(r.s(12)),
+                              ),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                         ),
                       ],
@@ -3165,11 +4802,22 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                   padding: EdgeInsets.all(r.s(16)),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: hasResult ? [_Vibrant.neonGreen, _Palette.green] : [_Palette.sage, _Palette.greenSoft],
-                      begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: hasResult
+                          ? [_Vibrant.neonGreen, _Palette.green]
+                          : [_Palette.sage, _Palette.greenSoft],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(r.s(16)),
-                    boxShadow: hasResult ? [BoxShadow(color: _Palette.green.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))] : null,
+                    boxShadow: hasResult
+                        ? [
+                      BoxShadow(
+                        color: _Palette.green.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                        : null,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3178,29 +4826,63 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('ИТОГО', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.85), fontSize: r.fs(12), fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-                          Text('${_fmtNum(total)} ₽',
-                              style: GoogleFonts.inter(color: Colors.white, fontSize: r.fs(28), fontWeight: FontWeight.w800, fontFeatures: const [FontFeature.tabularFigures()], letterSpacing: -1)),
+                          Text(
+                            'ИТОГО',
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withOpacity(0.85),
+                              fontSize: r.fs(12),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          Text(
+                            '${_fmtNum(total)} ₽',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: r.fs(28),
+                              fontWeight: FontWeight.w800,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                              letterSpacing: -1,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: r.s(6)),
-                      Text(_getHumanFormula(),
-                          style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: r.fs(12), fontWeight: FontWeight.w500)),
+                      Text(
+                        _getHumanFormula(),
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: r.fs(12),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 SizedBox(height: r.s(24)),
                 SizedBox(
-                  width: double.infinity, height: r.s(56),
+                  width: double.infinity,
+                  height: r.s(56),
                   child: ElevatedButton(
                     onPressed: _saveItem,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _Palette.text, foregroundColor: Colors.white,
+                      backgroundColor: _Palette.text,
+                      foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.s(16))),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(r.s(16)),
+                      ),
                     ),
-                    child: Text('ДОБАВИТЬ В СПИСОК',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: r.fs(15), letterSpacing: 0.5)),
+                    child: Text(
+                      'ДОБАВИТЬ В СПИСОК',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        fontSize: r.fs(15),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -3212,13 +4894,18 @@ class _AddItemBottomSheetState extends State<_AddItemBottomSheet> with TickerPro
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// UNIT / PRICE HELPERS
+// ═══════════════════════════════════════════════════════════════════
 enum _Dim { piece, mass, volume }
 
 _Dim _dimOf(String qtyUnit) {
   switch (qtyUnit) {
     case 'шт': return _Dim.piece;
-    case 'г': case 'кг': return _Dim.mass;
-    case 'мл': case 'л': return _Dim.volume;
+    case 'г':
+    case 'кг': return _Dim.mass;
+    case 'мл':
+    case 'л': return _Dim.volume;
     default: return _Dim.piece;
   }
 }
@@ -3231,27 +4918,45 @@ List<String> _qtyUnitsFor(_Dim d) {
   }
 }
 
-const List<String> _allPriceUnits = ['за шт', 'за г', 'за 100 г', 'за кг', 'за мл', 'за 100 мл', 'за л'];
+const List<String> _allPriceUnits = [
+  'за шт', 'за г', 'за 100 г', 'за кг', 'за мл', 'за 100 мл', 'за л',
+];
 
 _Dim _dimOfPrice(String priceBasis) {
   switch (priceBasis) {
     case 'за шт': return _Dim.piece;
-    case 'за г': case 'за 100 г': case 'за кг': return _Dim.mass;
-    case 'за мл': case 'за 100 мл': case 'за л': return _Dim.volume;
+    case 'за г':
+    case 'за 100 г':
+    case 'за кг': return _Dim.mass;
+    case 'за мл':
+    case 'за 100 мл':
+    case 'за л': return _Dim.volume;
     default: return _Dim.piece;
   }
 }
 
 String _defaultQtyUnitFor(_Dim d) {
-  switch (d) { case _Dim.piece: return 'шт'; case _Dim.mass: return 'г'; case _Dim.volume: return 'мл'; }
+  switch (d) {
+    case _Dim.piece: return 'шт';
+    case _Dim.mass: return 'г';
+    case _Dim.volume: return 'мл';
+  }
 }
 
 String _defaultPriceBasisFor(_Dim d) {
-  switch (d) { case _Dim.piece: return 'за шт'; case _Dim.mass: return 'за кг'; case _Dim.volume: return 'за л'; }
+  switch (d) {
+    case _Dim.piece: return 'за шт';
+    case _Dim.mass: return 'за кг';
+    case _Dim.volume: return 'за л';
+  }
 }
 
 double _qtyToBase(double qty, String qtyUnit) {
-  switch (qtyUnit) { case 'кг': return qty * 1000; case 'л': return qty * 1000; default: return qty; }
+  switch (qtyUnit) {
+    case 'кг': return qty * 1000;
+    case 'л': return qty * 1000;
+    default: return qty;
+  }
 }
 
 double _priceToBase(double price, String priceBasis) {
@@ -3266,26 +4971,39 @@ double _priceToBase(double price, String priceBasis) {
 
 String _priceSuffixFor(String priceBasis) {
   switch (priceBasis) {
-    case 'за шт': return '₽/шт'; case 'за г': return '₽/г'; case 'за 100 г': return '₽/100г';
-    case 'за кг': return '₽/кг'; case 'за мл': return '₽/мл'; case 'за 100 мл': return '₽/100мл';
-    case 'за л': return '₽/л'; default: return '₽';
+    case 'за шт': return '₽/шт';
+    case 'за г': return '₽/г';
+    case 'за 100 г': return '₽/100г';
+    case 'за кг': return '₽/кг';
+    case 'за мл': return '₽/мл';
+    case 'за 100 мл': return '₽/100мл';
+    case 'за л': return '₽/л';
+    default: return '₽';
   }
 }
 
 PriceBasis _basisFromLabel(String label) {
   switch (label) {
-    case 'за шт': return PriceBasis.perPiece; case 'за г': return PriceBasis.perGram;
-    case 'за 100 г': return PriceBasis.per100g; case 'за кг': return PriceBasis.perKg;
-    case 'за мл': return PriceBasis.perMl; case 'за 100 мл': return PriceBasis.per100ml;
-    case 'за л': return PriceBasis.perLiter; default: return PriceBasis.perKg;
+    case 'за шт': return PriceBasis.perPiece;
+    case 'за г': return PriceBasis.perGram;
+    case 'за 100 г': return PriceBasis.per100g;
+    case 'за кг': return PriceBasis.perKg;
+    case 'за мл': return PriceBasis.perMl;
+    case 'за 100 мл': return PriceBasis.per100ml;
+    case 'за л': return PriceBasis.perLiter;
+    default: return PriceBasis.perKg;
   }
 }
 
 String _labelFromBasis(PriceBasis basis) {
   switch (basis) {
-    case PriceBasis.perPiece: return 'за шт'; case PriceBasis.perGram: return 'за г';
-    case PriceBasis.per100g: return 'за 100 г'; case PriceBasis.perKg: return 'за кг';
-    case PriceBasis.perMl: return 'за мл'; case PriceBasis.per100ml: return 'за 100 мл';
-    case PriceBasis.perLiter: return 'за л'; default: return 'за кг';
+    case PriceBasis.perPiece: return 'за шт';
+    case PriceBasis.perGram: return 'за г';
+    case PriceBasis.per100g: return 'за 100 г';
+    case PriceBasis.perKg: return 'за кг';
+    case PriceBasis.perMl: return 'за мл';
+    case PriceBasis.per100ml: return 'за 100 мл';
+    case PriceBasis.perLiter: return 'за л';
+    default: return 'за кг';
   }
 }

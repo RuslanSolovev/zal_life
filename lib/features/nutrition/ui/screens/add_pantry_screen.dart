@@ -15,42 +15,84 @@ import 'barcode_lookup_service.dart';
 import 'barcode_sheets.dart';
 
 // ═══════════════════════════════════════════════════════════════════
-//  DESIGN SYSTEM
+//  DESIGN TOKENS
 // ═══════════════════════════════════════════════════════════════════
-class _P {
-  static const bg = Color(0xFFF6F7F9);
+class _C {
+  static const bg = Color(0xFFF7F6F2);
   static const surface = Color(0xFFFFFFFF);
-  static const text = Color(0xFF1C2026);
-  static const textMuted = Color(0xFF7C818A);
-  static const divider = Color(0xFFE9EBEF);
-  static const greenSoft = Color(0xFFE7F2ED);
-  static const greenDeep = Color(0xFF6C9E88);
-  static const skySoft = Color(0xFFE8EFF8);
-  static const skyDeep = Color(0xFF7E9DC6);
-  static const peachSoft = Color(0xFFFBEDE4);
-  static const peachDeep = Color(0xFFEF9563);
-  static const yellowSoft = Color(0xFFFDF5E6);
-  static const yellowDeep = Color(0xFFE0B054);
-  static const pinkSoft = Color(0xFFFCF0F2);
-  static const pinkDeep = Color(0xFFD17A8F);
-  static const lavenderSoft = Color(0xFFEEEAF8);
-  static const lavenderDeep = Color(0xFF9381BB);
-  static const brownSoft = Color(0xFFF3E9DC);
-  static const brownDeep = Color(0xFFA87B4F);
+  static const ink = Color(0xFF0E1116);
+  static const muted = Color(0xFF8C9096);
+  static const hairline = Color(0xFFEBEAE4);
+
+  static const primary = Color(0xFF2F5D50);
+  static const primarySoft = Color(0xFFE6F0EB);
+  static const primaryDeep = Color(0xFF1B3B32);
+
+  static const warm = Color(0xFFC97555);
+  static const warmSoft = Color(0xFFFAEDE6);
+
+  static const cool = Color(0xFF6F86A8);
+  static const coolSoft = Color(0xFFEAF0F7);
+
+  static const plum = Color(0xFF6B5A7E);
+  static const plumSoft = Color(0xFFF1ECF4);
+
+  static const gold = Color(0xFFB4884A);
+  static const goldSoft = Color(0xFFF6EFE0);
+
+  static const danger = Color(0xFFB65258);
+  static const dangerSoft = Color(0xFFF8E7E8);
 }
 
-class _Hero {
-  static const bgTop = Color(0xFF1B2027);
-  static const bgBottom = Color(0xFF161719);
-  static const accent = Color(0xFFA87B4F);
-  static const textHigh = Colors.white;
-  static const textLow = Color(0xFFA4A6AA);
+class _T {
+  static TextStyle display(Color c) => GoogleFonts.inter(
+    fontSize: 30,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -1.1,
+    height: 1.08,
+    color: c,
+  );
+  static TextStyle h1(Color c) => GoogleFonts.inter(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.5,
+    color: c,
+  );
+  static TextStyle h2(Color c) => GoogleFonts.inter(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.2,
+    color: c,
+  );
+  static TextStyle body(Color c) => GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: c,
+  );
+  static TextStyle bodySm(Color c) => GoogleFonts.inter(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: c,
+  );
+  static TextStyle overline(Color c) => GoogleFonts.inter(
+    fontSize: 10,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.4,
+    color: c,
+  );
 }
 
-enum ScanDestination { pantry, shopping, diary }
+const _cardShadow = [
+  BoxShadow(
+      color: Color(0x0A0E1116),
+      blurRadius: 24,
+      offset: Offset(0, 8),
+      spreadRadius: -6),
+  BoxShadow(color: Color(0x050E1116), blurRadius: 4, offset: Offset(0, 1)),
+];
 
 // ═══════════════════════════════════════════════════════════════════
-//  HERO THEMES + ФОТО
+//  HERO THEMES + PHOTOS
 // ═══════════════════════════════════════════════════════════════════
 class _HeroTheme {
   final String id;
@@ -60,20 +102,44 @@ class _HeroTheme {
   final Color bottom;
   final Color accent;
   const _HeroTheme({
-    required this.id, required this.label, required this.emoji,
-    required this.top, required this.bottom, required this.accent,
+    required this.id,
+    required this.label,
+    required this.emoji,
+    required this.top,
+    required this.bottom,
+    required this.accent,
   });
 }
 
 const List<_HeroTheme> _heroThemes = [
-  _HeroTheme(id: 'kitchen', label: 'Кухня', emoji: '🍳',
-      top: Color(0xFF4A2D1B), bottom: Color(0xFF2A1B0F), accent: Color(0xFFEF9563)),
-  _HeroTheme(id: 'market', label: 'Рынок', emoji: '🥬',
-      top: Color(0xFF1E3530), bottom: Color(0xFF0E1F1B), accent: Color(0xFF6C9E88)),
-  _HeroTheme(id: 'pantry', label: 'Кладовая', emoji: '🧺',
-      top: Color(0xFF4A3520), bottom: Color(0xFF2A1F10), accent: Color(0xFFE8B858)),
-  _HeroTheme(id: 'current', label: 'Тёмный', emoji: '✨',
-      top: Color(0xFF1B2027), bottom: Color(0xFF161719), accent: Color(0xFFA87B4F)),
+  _HeroTheme(
+      id: 'forest',
+      label: 'Лес',
+      emoji: '🌲',
+      top: Color(0xFF1E3B33),
+      bottom: Color(0xFF0F201B),
+      accent: Color(0xFF7BAE9A)),
+  _HeroTheme(
+      id: 'clay',
+      label: 'Глина',
+      emoji: '🏺',
+      top: Color(0xFF6E3A2A),
+      bottom: Color(0xFF3E1F14),
+      accent: Color(0xFFE0A080)),
+  _HeroTheme(
+      id: 'dusk',
+      label: 'Сумерки',
+      emoji: '🌆',
+      top: Color(0xFF2D3550),
+      bottom: Color(0xFF161B2A),
+      accent: Color(0xFF9BAAD0)),
+  _HeroTheme(
+      id: 'ink',
+      label: 'Тушь',
+      emoji: '🖋️',
+      top: Color(0xFF1A1A1E),
+      bottom: Color(0xFF0A0A0C),
+      accent: Color(0xFFA87B4F)),
 ];
 
 const List<String> _heroBackgrounds = [
@@ -101,6 +167,8 @@ _HeroTheme _findTheme(String id) =>
 
 bool _isImagePath(String value) => value.startsWith('assets/');
 
+enum ScanDestination { pantry, shopping, diary }
+
 // ═══════════════════════════════════════════════════════════════════
 //  MAIN SCREEN
 // ═══════════════════════════════════════════════════════════════════
@@ -110,7 +178,11 @@ class AddPantryScreen extends StatefulWidget {
   State<AddPantryScreen> createState() => _AddPantryScreenState();
 }
 
-class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderStateMixin {
+class _AddPantryScreenState extends State<AddPantryScreen>
+    with TickerProviderStateMixin {
+  // Camera — создаётся заново на каждую сессию (см. _startScanner)
+  MobileScannerController? _scannerController;
+
   bool _isScanning = false;
   String _scanMode = 'none';
   bool _isProcessingOCR = false;
@@ -118,7 +190,9 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
   bool _isBatchMode = false;
   final List<BarcodeProduct> _batchItems = [];
   DateTime? _lastScanTime;
-  String _heroBg = 'kitchen';
+  String _heroBg = 'forest';
+
+  final _formKey = GlobalKey();
 
   final _nameCtrl = TextEditingController();
   final _qtyCtrl = TextEditingController();
@@ -128,13 +202,10 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
 
   final TextRecognizer _textRecognizer = TextRecognizer();
   final ImagePicker _picker = ImagePicker();
-  final MobileScannerController _scannerController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.noDuplicates,
-  );
 
   late final AnimationController _scannerPulse = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1800),
+    duration: const Duration(milliseconds: 2200),
   )..repeat(reverse: true);
 
   @override
@@ -145,7 +216,7 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
 
   Future<void> _loadBg() async {
     final prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString('pantry_hero_bg') ?? 'kitchen';
+    final value = prefs.getString('pantry_hero_bg') ?? 'forest';
     if (mounted) setState(() => _heroBg = value);
   }
 
@@ -156,23 +227,22 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
 
   @override
   void dispose() {
-    _scannerController.stop();
+    _scannerController?.dispose();
     _scannerPulse.dispose();
     _nameCtrl.dispose();
     _qtyCtrl.dispose();
     _unitCtrl.dispose();
     _barcodeCtrl.dispose();
     _textRecognizer.close();
-    _scannerController.dispose();
     super.dispose();
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  CAMERA & PERMISSIONS
+  //  CAMERA LIFECYCLE
   // ═══════════════════════════════════════════════════════════════
   Future<void> _startScanner() async {
     final status = await Permission.camera.status;
-    if (status.isDenied || status.isPermanentlyDenied) {
+    if (!status.isGranted) {
       final requested = await Permission.camera.request();
       if (!requested.isGranted) {
         if (!mounted) return;
@@ -181,58 +251,142 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
       }
     }
 
+    if (_scannerController != null) {
+      try {
+        await _scannerController!.dispose();
+      } catch (_) {}
+      _scannerController = null;
+    }
+
     if (!mounted) return;
+
+    final controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+    );
+
     setState(() {
+      _scannerController = controller;
       _scanMode = 'barcode';
       _isScanning = true;
       _cameraLoading = true;
     });
 
-    try {
-      await _scannerController.start();
-      if (mounted) setState(() => _cameraLoading = false);
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isScanning = false;
-          _cameraLoading = false;
-        });
-        _showError('Камера недоступна: ${e.toString()}');
-      }
-    }
+    Future.delayed(const Duration(milliseconds: 1600), () {
+      if (mounted && _cameraLoading) setState(() => _cameraLoading = false);
+    });
   }
 
+  Future<void> _closeScanner() async {
+    final controller = _scannerController;
+
+    if (mounted) {
+      setState(() {
+        _isScanning = false;
+        _scanMode = 'none';
+        _cameraLoading = false;
+      });
+    }
+
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    try {
+      await controller?.dispose();
+    } catch (_) {}
+    _scannerController = null;
+  }
+
+  Future<void> _startBatchMode() async {
+    final status = await Permission.camera.status;
+    if (!status.isGranted) {
+      final requested = await Permission.camera.request();
+      if (!requested.isGranted) {
+        _showPermissionDeniedDialog();
+        return;
+      }
+    }
+
+    if (_scannerController != null) {
+      try {
+        await _scannerController!.dispose();
+      } catch (_) {}
+      _scannerController = null;
+    }
+
+    if (!mounted) return;
+
+    final controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+    );
+
+    setState(() {
+      _isBatchMode = true;
+      _batchItems.clear();
+      _scanMode = 'barcode';
+      _isScanning = true;
+      _cameraLoading = true;
+      _scannerController = controller;
+    });
+
+    Future.delayed(const Duration(milliseconds: 1600), () {
+      if (mounted && _cameraLoading) setState(() => _cameraLoading = false);
+    });
+  }
+
+  Future<void> _finishBatchMode() async {
+    await _closeScanner();
+    await Future.delayed(const Duration(milliseconds: 150));
+
+    final total = _batchItems.length;
+    if (!mounted) return;
+
+    setState(() => _isBatchMode = false);
+
+    if (total == 0) {
+      Navigator.pop(context);
+      return;
+    }
+    _showBatchCompleteDialog(total);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  PERMISSIONS & MESSAGES
+  // ═══════════════════════════════════════════════════════════════
   void _showPermissionDeniedDialog() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _P.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        backgroundColor: _C.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+        contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         title: Row(
           children: [
-        Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: _P.pinkSoft,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Icon(Icons.photo_camera_rounded, color: _P.pinkDeep, size: 18),
-      ),
-      const SizedBox(width: 12),
-      const Text('Нужна камера', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _C.dangerSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.photo_camera_rounded,
+                  color: _C.danger, size: 20),
             ),
             const SizedBox(width: 12),
-            const Text('Нужна камера', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Expanded(
+              child: Text('Нужна камера', style: _T.h1(_C.ink)),
+            ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'Чтобы сканировать штрихкоды, разреши приложению использовать камеру в настройках.',
-          style: TextStyle(color: _P.textMuted, fontSize: 13),
+          style: _T.bodySm(_C.muted).copyWith(height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Отмена', style: TextStyle(color: _P.textMuted)),
+            child: Text('Отмена', style: _T.body(_C.muted)),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -242,9 +396,13 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
             icon: const Icon(Icons.settings_rounded, size: 16),
             label: const Text('Настройки'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _P.skyDeep,
+              backgroundColor: _C.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+              padding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ],
@@ -253,35 +411,46 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message, style: const TextStyle(fontSize: 13))),
-          ],
-        ),
-        backgroundColor: _P.pinkDeep,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+    _snack(message, _C.danger, Icons.error_outline_rounded);
   }
 
   void _showSuccess(String message) {
+    _snack(message, _C.primary, Icons.check_circle_rounded);
+  }
+
+  void _showInfo(String message) {
+    _snack(message, _C.cool, Icons.info_outline_rounded,
+        duration: const Duration(seconds: 1));
+  }
+
+  void _snack(String message, Color bg, IconData icon,
+      {Duration duration = const Duration(seconds: 3)}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ],
         ),
-        backgroundColor: _P.greenDeep,
+        backgroundColor: bg,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: duration,
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       ),
     );
   }
@@ -293,123 +462,40 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        decoration: const BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  width: 38, height: 5,
-                  decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3)),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(color: _P.skySoft, borderRadius: BorderRadius.circular(13)),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.document_scanner_rounded, color: _P.skyDeep, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Сканирование этикетки',
-                            style: GoogleFonts.inter(color: _P.text, fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
-                        const SizedBox(height: 2),
-                        Text('Распознает название и КБЖУ',
-                            style: GoogleFonts.inter(color: _P.textMuted, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _scanActionTile(
-                icon: Icons.camera_alt_rounded,
-                emoji: '📸',
-                title: 'Сфотографировать',
-                subtitle: 'Навести на этикетку продукта',
-                color: _P.skyDeep,
-                softColor: _P.skySoft,
-                onTap: () {
-                  Navigator.pop(context);
-                  _processImageOCR(source: ImageSource.camera);
-                },
-              ),
-              const SizedBox(height: 10),
-              _scanActionTile(
-                icon: Icons.photo_library_rounded,
-                emoji: '🖼️',
-                title: 'Выбрать из галереи',
-                subtitle: 'Использовать готовое фото',
-                color: _P.lavenderDeep,
-                softColor: _P.lavenderSoft,
-                onTap: () {
-                  Navigator.pop(context);
-                  _processImageOCR(source: ImageSource.gallery);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _scanActionTile({
-    required IconData icon,
-    required String emoji,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required Color softColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: softColor.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Row(
+      builder: (_) => _bottomSheet(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 48, height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(13),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 3))],
-              ),
-              alignment: Alignment.center,
-              child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            _sheetHeader(
+              icon: Icons.document_scanner_rounded,
+              iconColor: _C.warm,
+              iconBg: _C.warmSoft,
+              title: 'Сканирование этикетки',
+              subtitle: 'Распознает название и КБЖУ',
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: GoogleFonts.inter(color: _P.text, fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 3),
-                  Text(subtitle, style: GoogleFonts.inter(color: _P.textMuted, fontSize: 11)),
-                ],
-              ),
+            const SizedBox(height: 20),
+            _actionTile(
+              emoji: '📸',
+              title: 'Сфотографировать',
+              subtitle: 'Навести на этикетку продукта',
+              accent: _C.warm,
+              onTap: () {
+                Navigator.pop(context);
+                _processImageOCR(source: ImageSource.camera);
+              },
             ),
-            Icon(Icons.chevron_right_rounded, color: color, size: 20),
+            const SizedBox(height: 10),
+            _actionTile(
+              emoji: '🖼️',
+              title: 'Выбрать из галереи',
+              subtitle: 'Использовать готовое фото',
+              accent: _C.cool,
+              onTap: () {
+                Navigator.pop(context);
+                _processImageOCR(source: ImageSource.gallery);
+              },
+            ),
           ],
         ),
       ),
@@ -437,23 +523,29 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     final inputImage = InputImage.fromFilePath(image.path);
     try {
       final recognizedText = await _textRecognizer.processImage(inputImage);
-      final parsed = context.read<NutritionProvider>().parseOCRLabel(recognizedText.text);
+      final parsed =
+      context.read<NutritionProvider>().parseOCRLabel(recognizedText.text);
 
-      final firstLine = recognizedText.text
-          .split('\n')
-          .firstWhere((line) => line.trim().isNotEmpty && line.trim().length > 2, orElse: () => '');
+      final firstLine = recognizedText.text.split('\n').firstWhere(
+              (line) => line.trim().isNotEmpty && line.trim().length > 2,
+          orElse: () => '');
 
       if (mounted) {
         setState(() {
-          _nameCtrl.text = firstLine.isNotEmpty && !RegExp(r'^\d').hasMatch(firstLine) ? firstLine : '';
-          if (parsed['quantity'] != null) _qtyCtrl.text = parsed['quantity'].toString();
+          _nameCtrl.text =
+          firstLine.isNotEmpty && !RegExp(r'^\d').hasMatch(firstLine)
+              ? firstLine
+              : '';
+          if (parsed['quantity'] != null) {
+            _qtyCtrl.text = parsed['quantity'].toString();
+          }
           if (parsed['unit'] != null) _unitCtrl.text = parsed['unit'];
         });
         _showSuccess(parsed['quantity'] != null
             ? 'Распознано: ${parsed['quantity']} ${parsed['unit']}'
             : 'Текст распознан');
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) _showError('Не удалось распознать текст');
     } finally {
       if (mounted) setState(() => _isProcessingOCR = false);
@@ -465,7 +557,7 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
   // ═══════════════════════════════════════════════════════════════
   Future<void> _handleBarcode(String rawCode) async {
     final provider = context.read<NutritionProvider>();
-    _showInfo('🔍 Ищем продукт...');
+    _showInfo('Ищем продукт…');
 
     final result = await provider.lookupBarcode(rawCode);
     if (!mounted) return;
@@ -507,16 +599,14 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     }
   }
 
-  Future<void> _handleBatchScan(BarcodeLookupResult result, String rawCode) async {
+  Future<void> _handleBatchScan(
+      BarcodeLookupResult result, String rawCode) async {
     final provider = context.read<NutritionProvider>();
     BarcodeProduct? product = result.product;
 
     if (product == null) {
       final name = await _showQuickNameDialog(rawCode);
-      if (name == null || !mounted) {
-        await _scannerController.start();
-        return;
-      }
+      if (name == null || !mounted) return;
       product = BarcodeProduct(
         barcode: rawCode,
         name: name,
@@ -543,8 +633,7 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     HapticFeedback.mediumImpact();
 
     if (mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      _showSuccess('✅ ${saved.name} • В корзине ${_batchItems.length} шт');
+      _showSuccess('${saved.name} · в корзине ${_batchItems.length}');
     }
   }
 
@@ -554,18 +643,27 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _P.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        backgroundColor: _C.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+        contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: _P.yellowSoft, borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.help_outline_rounded, color: _P.yellowDeep, size: 18),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _C.goldSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child:
+              const Icon(Icons.help_outline_rounded, color: _C.gold, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('Не найдено', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+              child: Text('Не найдено', style: _T.h1(_C.ink)),
             ),
           ],
         ),
@@ -574,15 +672,19 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: _P.bg, borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: _C.bg,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Text(
                 barcode,
                 style: TextStyle(
-                  color: _P.textMuted,
+                  color: _C.muted,
                   fontSize: 12,
                   fontFamily: 'monospace',
-                  letterSpacing: 1.0,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -590,14 +692,18 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
             TextField(
               controller: ctrl,
               autofocus: true,
-              style: GoogleFonts.inter(color: _P.text, fontSize: 14, fontWeight: FontWeight.w500),
+              style: _T.body(_C.ink),
               decoration: InputDecoration(
-                hintText: 'Введи название продукта',
-                hintStyle: GoogleFonts.inter(color: _P.textMuted),
+                hintText: 'Название продукта',
+                hintStyle: _T.body(_C.muted),
                 filled: true,
-                fillColor: _P.bg,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                fillColor: _C.bg,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 16),
               ),
             ),
           ],
@@ -605,23 +711,30 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, null),
-            child: Text('Пропустить', style: TextStyle(color: _P.textMuted)),
+            child: Text('Пропустить', style: _T.body(_C.muted)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim().isEmpty ? null : ctrl.text.trim()),
+            onPressed: () =>
+                Navigator.pop(ctx, ctrl.text.trim().isEmpty ? null : ctrl.text.trim()),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _P.skyDeep,
+              backgroundColor: _C.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+              padding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Добавить'),
+            child: Text('Добавить',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _handleNotFoundChoice(NotFoundChoice choice, String barcode) async {
+  Future<void> _handleNotFoundChoice(
+      NotFoundChoice choice, String barcode) async {
     final provider = context.read<NutritionProvider>();
 
     if (choice.local != null) {
@@ -645,7 +758,11 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
       ));
       if (destination != null && mounted) {
         await _sendToDestination(
-          BarcodeProduct(barcode: barcode, name: choice.local!.name, category: choice.local!.category),
+          BarcodeProduct(
+            barcode: barcode,
+            name: choice.local!.name,
+            category: choice.local!.category,
+          ),
           destination,
           productId: choice.local!.id,
         );
@@ -655,7 +772,8 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
       final name = await _showManualNameDialog(choice.manualName!, barcode);
       if (name == null || !mounted) return;
 
-      final product = BarcodeProduct(barcode: barcode, name: name, source: BarcodeSource.manual);
+      final product =
+      BarcodeProduct(barcode: barcode, name: name, source: BarcodeSource.manual);
       await provider.saveScannedProduct(product);
       await provider.addToScanHistory(product);
 
@@ -675,29 +793,46 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     return showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _P.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: const Text('Название продукта', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        backgroundColor: _C.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+        contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        title: Text('Название продукта', style: _T.h1(_C.ink)),
         content: TextField(
           controller: ctrl,
           autofocus: true,
-          style: GoogleFonts.inter(color: _P.text, fontSize: 14),
+          style: _T.body(_C.ink),
           decoration: InputDecoration(
             filled: true,
-            fillColor: _P.bg,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            fillColor: _C.bg,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Отмена')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: Text('Отмена', style: _T.body(_C.muted)),
+          ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim().isEmpty ? null : ctrl.text.trim()),
+            onPressed: () =>
+                Navigator.pop(ctx, ctrl.text.trim().isEmpty ? null : ctrl.text.trim()),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _P.greenDeep,
+              backgroundColor: _C.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+              padding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Сохранить'),
+            child: Text('Сохранить',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -705,143 +840,47 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  DESTINATION CHOICE
+  //  DESTINATION
   // ═══════════════════════════════════════════════════════════════
   Future<ScanDestination?> _showDestinationChoice(BarcodeProduct product) {
     return showModalBottomSheet<ScanDestination>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        decoration: const BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  width: 38, height: 5,
-                  decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3)),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(color: _P.greenSoft, borderRadius: BorderRadius.circular(13)),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.place_rounded, color: _P.greenDeep, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Куда добавить?',
-                            style: GoogleFonts.inter(color: _P.text, fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
-                        const SizedBox(height: 2),
-                        Text(product.displayName,
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(color: _P.textMuted, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _destinationTile(
-                icon: Icons.kitchen_rounded,
-                emoji: '🧺',
-                title: 'В кладовую',
-                subtitle: 'Уже есть дома — учту срок годности',
-                color: _P.brownDeep,
-                softColor: _P.brownSoft,
-                onTap: () => Navigator.pop(context, ScanDestination.pantry),
-              ),
-              const SizedBox(height: 10),
-              _destinationTile(
-                icon: Icons.shopping_basket_rounded,
-                emoji: '🛒',
-                title: 'В список покупок',
-                subtitle: 'Нужно купить — добавлю в корзину',
-                color: _P.skyDeep,
-                softColor: _P.skySoft,
-                onTap: () => Navigator.pop(context, ScanDestination.shopping),
-              ),
-              const SizedBox(height: 10),
-              _destinationTile(
-                icon: Icons.restaurant_menu_rounded,
-                emoji: '🍽️',
-                title: 'Сразу в дневник',
-                subtitle: 'Уже съел — запишу в приём пищи',
-                color: _P.peachDeep,
-                softColor: _P.peachSoft,
-                onTap: () => Navigator.pop(context, ScanDestination.diary),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _destinationTile({
-    required IconData icon,
-    required String emoji,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required Color softColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: softColor.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Row(
+      builder: (_) => _bottomSheet(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 48, height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(13),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
-              ),
-              alignment: Alignment.center,
-              child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            _sheetHeader(
+              icon: Icons.place_rounded,
+              iconColor: _C.primary,
+              iconBg: _C.primarySoft,
+              title: 'Куда добавить?',
+              subtitle: product.displayName,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: GoogleFonts.inter(color: _P.text, fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 3),
-                  Text(subtitle, style: GoogleFonts.inter(color: _P.textMuted, fontSize: 11)),
-                ],
-              ),
+            const SizedBox(height: 20),
+            _actionTile(
+              emoji: '🧺',
+              title: 'В кладовую',
+              subtitle: 'Уже есть дома — учту срок годности',
+              accent: _C.gold,
+              onTap: () => Navigator.pop(context, ScanDestination.pantry),
             ),
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.chevron_right_rounded, color: color, size: 16),
+            const SizedBox(height: 10),
+            _actionTile(
+              emoji: '🛒',
+              title: 'В список покупок',
+              subtitle: 'Нужно купить — добавлю в корзину',
+              accent: _C.cool,
+              onTap: () => Navigator.pop(context, ScanDestination.shopping),
+            ),
+            const SizedBox(height: 10),
+            _actionTile(
+              emoji: '🍽️',
+              title: 'Сразу в дневник',
+              subtitle: 'Уже съел — запишу в приём пищи',
+              accent: _C.warm,
+              onTap: () => Navigator.pop(context, ScanDestination.diary),
             ),
           ],
         ),
@@ -849,10 +888,8 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  SEND TO DESTINATION
-  // ═══════════════════════════════════════════════════════════════
-  Future<void> _sendToDestination(BarcodeProduct product, ScanDestination dest, {String? productId}) async {
+  Future<void> _sendToDestination(BarcodeProduct product, ScanDestination dest,
+      {String? productId}) async {
     final provider = context.read<NutritionProvider>();
 
     switch (dest) {
@@ -864,7 +901,7 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
           unit: product.packageGrams != null ? 'г' : 'шт',
           expiresAt: DateTime.now().add(const Duration(days: 7)),
         );
-        if (mounted) _showSuccess('🧺 ${product.displayName} → в кладовой');
+        if (mounted) _showSuccess('${product.displayName} → в кладовой');
         break;
       case ScanDestination.shopping:
         await provider.addShoppingItem(
@@ -873,7 +910,7 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
           quantity: 1,
           unit: 'шт',
         );
-        if (mounted) _showSuccess('🛒 ${product.displayName} → в покупках');
+        if (mounted) _showSuccess('${product.displayName} → в покупках');
         break;
       case ScanDestination.diary:
         final p = provider.products.firstWhere(
@@ -885,70 +922,8 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
           grams: product.packageGrams ?? 100,
           mealType: MealType.suggestForNow(),
         );
-        if (mounted) _showSuccess('🍽️ ${product.displayName} → в дневнике');
+        if (mounted) _showSuccess('${product.displayName} → в дневнике');
         break;
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  BATCH MODE
-  // ═══════════════════════════════════════════════════════════════
-  void _startBatchMode() async {
-    final status = await Permission.camera.status;
-    if (!status.isGranted) {
-      final requested = await Permission.camera.request();
-      if (!requested.isGranted) {
-        _showPermissionDeniedDialog();
-        return;
-      }
-    }
-
-    setState(() {
-      _isBatchMode = true;
-      _batchItems.clear();
-      _scanMode = 'barcode';
-      _isScanning = true;
-      _cameraLoading = true;
-    });
-
-    try {
-      await _scannerController.start();
-      if (mounted) setState(() => _cameraLoading = false);
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isScanning = false;
-          _cameraLoading = false;
-          _isBatchMode = false;
-        });
-        _showError('Камера недоступна');
-      }
-    }
-  }
-
-  Future<void> _finishBatchMode() async {
-    // 1. Ждем полного освобождения камеры
-    await _scannerController.stop();
-
-    // 2. Даем нативной части 100-150 мс на корректное освобождение Surface
-    await Future.delayed(const Duration(milliseconds: 150));
-
-    final total = _batchItems.length;
-
-    if (!mounted) return;
-
-    setState(() {
-      _isScanning = false;
-      _isBatchMode = false;
-    });
-
-    if (total == 0) {
-      if (mounted) Navigator.pop(context);
-      return;
-    }
-
-    if (mounted) {
-      _showBatchCompleteDialog(total);
     }
   }
 
@@ -956,49 +931,66 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _P.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        backgroundColor: _C.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 72, height: 72,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [_P.greenDeep, Color(0xFF5A8A76)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_C.primary, _C.primaryDeep],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: _P.greenDeep.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: _C.primary.withOpacity(0.35),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                    spreadRadius: -4,
+                  ),
+                ],
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.celebration_rounded, color: Colors.white, size: 36),
+              child: const Icon(Icons.celebration_rounded,
+                  color: Colors.white, size: 34),
             ),
             const SizedBox(height: 20),
-            Text('Закупка завершена!',
-                style: GoogleFonts.inter(color: _P.text, fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+            Text('Закупка завершена',
+                style: _T.h1(_C.ink).copyWith(fontSize: 22)),
             const SizedBox(height: 8),
-            Text('Добавлено $total ${_itemsWord(total)}',
-                style: GoogleFonts.inter(color: _P.textMuted, fontSize: 14)),
-            const SizedBox(height: 8),
-            Text('в список покупок',
-                style: GoogleFonts.inter(color: _P.textMuted, fontSize: 13)),
+            Text(
+              'Добавлено $total ${_itemsWord(total)} в список покупок',
+              textAlign: TextAlign.center,
+              style: _T.bodySm(_C.muted).copyWith(height: 1.4),
+            ),
           ],
         ),
         actions: [
           SizedBox(
             width: double.infinity,
+            height: 52,
             child: ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: _P.greenDeep,
+                backgroundColor: _C.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
-              child: Text('Готово', style: GoogleFonts.inter(fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+              child: Text('Готово',
+                  style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w700, letterSpacing: 0.5)),
             ),
           ),
         ],
@@ -1006,19 +998,8 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     );
   }
 
-  String _itemsWord(int n) => n == 1 ? 'позиция' : (n >= 2 && n <= 4 ? 'позиции' : 'позиций');
-
-  void _showInfo(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontWeight: FontWeight.w500)),
-        backgroundColor: _P.skyDeep,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
+  String _itemsWord(int n) =>
+      n == 1 ? 'позиция' : (n >= 2 && n <= 4 ? 'позиции' : 'позиций');
 
   // ═══════════════════════════════════════════════════════════════
   //  BUILD
@@ -1028,20 +1009,20 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     final provider = context.watch<NutritionProvider>();
     final recentScans = provider.recentScans;
 
-    if (_isScanning && _scanMode == 'barcode') {
+    if (_isScanning && _scanMode == 'barcode' && _scannerController != null) {
       return _buildScannerScreen(provider);
     }
 
     return Scaffold(
-      backgroundColor: _P.bg,
+      backgroundColor: _C.bg,
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics:
+        const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         slivers: [
           SliverToBoxAdapter(child: _buildHero()),
           SliverToBoxAdapter(child: _buildQuickActions()),
-          if (recentScans.isNotEmpty) ...[
+          if (recentScans.isNotEmpty)
             SliverToBoxAdapter(child: _buildRecentScans(recentScans, provider)),
-          ],
           SliverToBoxAdapter(child: _buildFormSection()),
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
@@ -1049,13 +1030,10 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  HERO
-  // ═══════════════════════════════════════════════════════════════
+  // ─── HERO ───
   Widget _buildHero() {
     final isImage = _isImagePath(_heroBg);
     final theme = isImage ? _heroThemes.first : _findTheme(_heroBg);
-    final accent = theme.accent;
 
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -1088,11 +1066,11 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withOpacity(0.45),
+                        Colors.black.withOpacity(0.5),
                         Colors.black.withOpacity(0.15),
-                        Colors.black.withOpacity(0.55),
+                        Colors.black.withOpacity(0.6),
                       ],
-                      stops: const [0.0, 0.35, 1.0],
+                      stops: const [0.0, 0.4, 1.0],
                     ),
                   ),
                 ),
@@ -1110,22 +1088,30 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
           ),
           if (!isImage)
             Positioned(
-              top: 40, right: -60,
+              top: 40,
+              right: -80,
               child: IgnorePointer(
                 child: Container(
-                  width: 260, height: 260,
+                  width: 280,
+                  height: 280,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
-                      colors: [accent.withOpacity(0.25), accent.withOpacity(0)],
+                      colors: [
+                        theme.accent.withOpacity(0.22),
+                        theme.accent.withOpacity(0),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          // Плавный переход
+          // Bottom fade into bg
           Positioned(
-            left: 0, right: 0, bottom: 0, height: 120,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 90,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -1133,15 +1119,12 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      _P.bg.withOpacity(0.0),
-                      _P.bg.withOpacity(0.05),
-                      _P.bg.withOpacity(0.15),
-                      _P.bg.withOpacity(0.35),
-                      _P.bg.withOpacity(0.65),
-                      _P.bg.withOpacity(0.90),
-                      _P.bg,
+                      _C.bg.withOpacity(0.0),
+                      _C.bg.withOpacity(0.2),
+                      _C.bg.withOpacity(0.6),
+                      _C.bg,
                     ],
-                    stops: const [0.0, 0.15, 0.30, 0.50, 0.70, 0.85, 1.0],
+                    stops: const [0.0, 0.5, 0.8, 1.0],
                   ),
                 ),
               ),
@@ -1150,78 +1133,49 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
           SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      _glassPill(Icons.arrow_back_rounded, () => Navigator.pop(context)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('ДОБАВЛЕНИЕ',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.4,
-                                  shadows: [Shadow(color: Colors.black.withOpacity(0.4), blurRadius: 4)],
-                                )),
-                            const SizedBox(height: 2),
-                            Text('Пополнить кладовую',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.3,
-                                  shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 6)],
-                                )),
-                          ],
-                        ),
-                      ),
-                      _glassPill(Icons.wallpaper_rounded, _openThemePicker),
+                      _glassButton(
+                          Icons.arrow_back_rounded, () => Navigator.pop(context)),
+                      const Spacer(),
+                      _glassButton(Icons.wallpaper_rounded, _openThemePicker),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.20)),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 4))],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 52, height: 52,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [accent.withOpacity(0.3), accent.withOpacity(0.15)]),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.white.withOpacity(0.2)),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Text('🧺', style: TextStyle(fontSize: 26)),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('3 способа добавить',
-                                  style: GoogleFonts.inter(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 3),
-                              Text('Штрихкод · OCR · Вручную',
-                                  style: GoogleFonts.inter(color: Colors.white.withOpacity(0.7), fontSize: 12)),
-                            ],
-                          ),
+                  const SizedBox(height: 40),
+                  Text(
+                    'ДОБАВЛЕНИЕ',
+                    style: _T.overline(Colors.white.withOpacity(0.75)).copyWith(
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 6,
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Пополнить\nкладовую',
+                    style: GoogleFonts.inter(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1.4,
+                      height: 1.05,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -1231,34 +1185,516 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
     );
   }
 
-  Widget _glassPill(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
+  Widget _glassButton(IconData icon, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(100),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.14),
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: Colors.white.withOpacity(0.22)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2))],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(100),
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: Colors.white.withOpacity(0.22)),
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: Colors.white, size: 18),
         ),
-        child: Icon(icon, color: Colors.white, size: 16),
       ),
     );
   }
 
+  // ─── QUICK ACTIONS ───
+  Widget _buildQuickActions() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('СПОСОБЫ ДОБАВЛЕНИЯ'),
+          const SizedBox(height: 12),
+          _PrimaryScanCard(onTap: _startScanner),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _SecondaryCard(
+                  emoji: '🔍',
+                  title: 'Этикетка',
+                  subtitle: 'Распознать КБЖУ',
+                  accent: _C.warm,
+                  soft: _C.warmSoft,
+                  onTap: _isProcessingOCR ? null : _showOcrSourcePicker,
+                  isLoading: _isProcessingOCR,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _SecondaryCard(
+                  emoji: '✍️',
+                  title: 'Вручную',
+                  subtitle: 'Заполнить форму',
+                  accent: _C.cool,
+                  soft: _C.coolSoft,
+                  onTap: _scrollToForm,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _BatchCard(onTap: _startBatchMode),
+        ],
+      ),
+    );
+  }
+
+  void _scrollToForm() {
+    final ctx = _formKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+        alignment: 0.1,
+      );
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  // ─── RECENT SCANS ───
+  Widget _buildRecentScans(
+      List<ScanHistoryEntry> recentScans, NutritionProvider provider) {
+    final items = recentScans.take(3).toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _sectionLabel('НЕДАВНИЕ'),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _C.primarySoft,
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Text(
+                  '${recentScans.length}',
+                  style: _T.overline(_C.primary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: _C.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _C.hairline),
+              boxShadow: _cardShadow,
+            ),
+            child: Column(
+              children: [
+                for (int i = 0; i < items.length; i++) ...[
+                  if (i > 0)
+                    Divider(
+                        height: 1,
+                        color: _C.hairline,
+                        indent: 16,
+                        endIndent: 16),
+                  _recentScanRow(items[i], provider),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _recentScanRow(ScanHistoryEntry scan, NutritionProvider provider) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () async {
+        final product = BarcodeProduct(
+          barcode: scan.barcode,
+          name: scan.name,
+          category: scan.category,
+          calories: scan.calories,
+          protein: scan.protein,
+          fat: scan.fat,
+          carbs: scan.carbs,
+          fiber: scan.fiber,
+          source: BarcodeSource.localDb,
+        );
+        final destination = await _showDestinationChoice(product);
+        if (destination != null && mounted) {
+          await _sendToDestination(product, destination);
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _C.primarySoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.qr_code_rounded,
+                  color: _C.primary, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    scan.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _T.body(_C.ink).copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    scan.barcode,
+                    style: _T.bodySm(_C.muted).copyWith(
+                      fontFamily: 'monospace',
+                      letterSpacing: 0.6,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: _C.primarySoft,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child:
+              const Icon(Icons.add_rounded, color: _C.primary, size: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── FORM ───
+  Widget _buildFormSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+      child: Column(
+        key: _formKey,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('ДЕТАЛИ ПРОДУКТА'),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _C.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: _C.hairline),
+              boxShadow: _cardShadow,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _field(
+                  ctrl: _nameCtrl,
+                  hint: 'Название продукта',
+                  icon: Icons.shopping_basket_rounded,
+                  required: true,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _field(
+                        ctrl: _qtyCtrl,
+                        hint: 'Количество',
+                        icon: Icons.numbers_rounded,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        required: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 1,
+                      child: _field(
+                        ctrl: _unitCtrl,
+                        hint: 'Ед.',
+                        icon: Icons.straighten_rounded,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _field(
+                  ctrl: _barcodeCtrl,
+                  hint: 'Штрихкод (если есть)',
+                  icon: Icons.qr_code_rounded,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(child: Container(height: 1, color: _C.hairline)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('СРОК ГОДНОСТИ', style: _T.overline(_C.muted)),
+                    ),
+                    Expanded(child: Container(height: 1, color: _C.hairline)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _expiryPicker(),
+                const SizedBox(height: 24),
+                _saveButton(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _field({
+    required TextEditingController ctrl,
+    required String hint,
+    IconData? icon,
+    TextInputType? keyboardType,
+    bool required = false,
+    String? suffix,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _C.bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _C.hairline),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: _C.muted, size: 18),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: TextField(
+              controller: ctrl,
+              keyboardType: keyboardType,
+              style: _T.body(_C.ink),
+              decoration: InputDecoration(
+                hintText: required ? '$hint *' : hint,
+                hintStyle: _T.body(_C.muted),
+                suffixText: suffix,
+                suffixStyle: _T.bodySm(_C.muted),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 18),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _expiryPicker() {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () async {
+          final date = await showDatePicker(
+            context: context,
+            initialDate: _expiresAt ?? DateTime.now().add(const Duration(days: 7)),
+            firstDate: DateTime.now(),
+            lastDate: DateTime.now().add(const Duration(days: 3650)),
+            builder: (context, child) => Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.light(primary: _C.primary),
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(foregroundColor: _C.primary),
+                ),
+              ),
+              child: child!,
+            ),
+          );
+          if (date != null) setState(() => _expiresAt = date);
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color:
+            _expiresAt != null ? _C.goldSoft.withOpacity(0.55) : _C.bg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _expiresAt != null
+                  ? _C.gold.withOpacity(0.3)
+                  : _C.hairline,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _expiresAt != null
+                      ? _C.gold.withOpacity(0.15)
+                      : _C.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.calendar_today_rounded,
+                  color: _expiresAt != null ? _C.gold : _C.muted,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Срок годности', style: _T.overline(_C.muted)),
+                    const SizedBox(height: 3),
+                    Text(
+                      _expiresAt != null
+                          ? '${_expiresAt!.day}.${_expiresAt!.month.toString().padLeft(2, '0')}.${_expiresAt!.year}'
+                          : 'Не указан',
+                      style: GoogleFonts.inter(
+                        color: _expiresAt != null ? _C.ink : _C.muted,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_expiresAt != null)
+                InkWell(
+                  onTap: () => setState(() => _expiresAt = null),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    child:
+                    const Icon(Icons.close_rounded, size: 16, color: _C.muted),
+                  ),
+                )
+              else
+                const Icon(Icons.chevron_right_rounded,
+                    color: _C.muted, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _saveButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: _saveProduct,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _C.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: _C.primary.withOpacity(0.4),
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.check_rounded, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'СОХРАНИТЬ В КЛАДОВУЮ',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveProduct() async {
+    final provider = context.read<NutritionProvider>();
+
+    if (_nameCtrl.text.trim().isEmpty || _qtyCtrl.text.trim().isEmpty) {
+      _showError('Введите название и количество');
+      return;
+    }
+
+    await provider.addToPantry(
+      customName: _nameCtrl.text.trim(),
+      quantity:
+      double.tryParse(_qtyCtrl.text.replaceAll(',', '.')) ?? 1,
+      unit: _unitCtrl.text.trim().isEmpty ? 'г' : _unitCtrl.text.trim(),
+      expiresAt: _expiresAt,
+    );
+
+    if (!mounted) return;
+    Navigator.pop(context);
+    HapticFeedback.mediumImpact();
+    _showSuccess('Добавлено в кладовую');
+  }
+
+  Widget _sectionLabel(String text) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 12,
+          decoration: BoxDecoration(
+            color: _C.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(text, style: _T.overline(_C.muted)),
+      ],
+    );
+  }
+
+  // ─── THEME PICKER ───
   Future<void> _openThemePicker() async {
     final result = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => Container(
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.7),
+        constraints:
+        BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.72),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        decoration: BoxDecoration(
-          color: _P.bg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: const BoxDecoration(
+          color: _C.bg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: SafeArea(
           top: false,
@@ -1267,48 +1703,73 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Container(width: 38, height: 5, decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3))),
+                child: Container(
+                    width: 36,
+                    height: 5,
+                    decoration: BoxDecoration(
+                        color: _C.hairline,
+                        borderRadius: BorderRadius.circular(3))),
               ),
               const SizedBox(height: 20),
               Row(
                 children: [
                   Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(color: _P.peachSoft, borderRadius: BorderRadius.circular(12)),
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _C.warmSoft,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.wallpaper_rounded, color: _P.peachDeep, size: 20),
+                    child: const Icon(Icons.wallpaper_rounded,
+                        color: _C.warm, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  Text('Фон экрана', style: GoogleFonts.inter(color: _P.text, fontSize: 17, fontWeight: FontWeight.w600)),
+                  Text('Фон экрана', style: _T.h1(_C.ink)),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('ЦВЕТОВЫЕ ТЕМЫ', style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-                      const SizedBox(height: 10),
+                      _sectionLabel('ЦВЕТОВЫЕ ТЕМЫ'),
+                      const SizedBox(height: 12),
                       GridView.count(
                         crossAxisCount: 4,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         mainAxisSpacing: 8,
                         crossAxisSpacing: 8,
-                        childAspectRatio: 0.9,
+                        childAspectRatio: 0.85,
                         children: _heroThemes.map((theme) {
-                          final isSelected = !_isImagePath(_heroBg) && theme.id == _heroBg;
+                          final isSelected =
+                              !_isImagePath(_heroBg) && theme.id == _heroBg;
                           return InkWell(
                             onTap: () {
                               HapticFeedback.selectionClick();
                               Navigator.pop(ctx, theme.id);
                             },
+                            borderRadius: BorderRadius.circular(14),
                             child: Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: isSelected ? _P.peachDeep : Colors.white, width: isSelected ? 3 : 1),
-                                boxShadow: isSelected ? [BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 3))] : null,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? _C.primary
+                                      : Colors.transparent,
+                                  width: isSelected ? 2.5 : 1,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                  BoxShadow(
+                                      color:
+                                      _C.primary.withOpacity(0.25),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4))
+                                ]
+                                    : null,
                               ),
                               clipBehavior: Clip.antiAlias,
                               child: Stack(
@@ -1329,17 +1790,33 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
                                         gradient: LinearGradient(
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
-                                          colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.5)],
+                                          colors: [
+                                            Colors.black.withOpacity(0.0),
+                                            Colors.black.withOpacity(0.5),
+                                          ],
                                           stops: const [0.4, 1.0],
                                         ),
                                       ),
                                     ),
                                   ),
-                                  Positioned(left: 6, top: 6, child: Text(theme.emoji, style: const TextStyle(fontSize: 14))),
                                   Positioned(
-                                    left: 6, right: 6, bottom: 6,
-                                    child: Text(theme.label, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.inter(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
+                                      left: 6,
+                                      top: 6,
+                                      child: Text(theme.emoji,
+                                          style: const TextStyle(fontSize: 14))),
+                                  Positioned(
+                                    left: 6,
+                                    right: 6,
+                                    bottom: 6,
+                                    child: Text(
+                                      theme.label,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w700),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1347,9 +1824,9 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
                           );
                         }).toList(),
                       ),
-                      const SizedBox(height: 16),
-                      Text('ФОТО ПРИРОДЫ', style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 20),
+                      _sectionLabel('ФОТО ПРИРОДЫ'),
+                      const SizedBox(height: 12),
                       GridView.count(
                         crossAxisCount: 3,
                         shrinkWrap: true,
@@ -1358,40 +1835,70 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
                         crossAxisSpacing: 8,
                         childAspectRatio: 0.85,
                         children: _heroBackgrounds.map((path) {
-                          final isSelected = _isImagePath(_heroBg) && _heroBg == path;
+                          final isSelected =
+                              _isImagePath(_heroBg) && _heroBg == path;
                           final label = _heroBgLabels[path] ?? '';
                           return InkWell(
                             onTap: () {
                               HapticFeedback.selectionClick();
                               Navigator.pop(ctx, path);
                             },
+                            borderRadius: BorderRadius.circular(14),
                             child: Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: isSelected ? _P.peachDeep : Colors.white, width: isSelected ? 3 : 1),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? _C.primary
+                                      : Colors.transparent,
+                                  width: isSelected ? 2.5 : 1,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                  BoxShadow(
+                                      color:
+                                      _C.primary.withOpacity(0.25),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4))
+                                ]
+                                    : null,
                               ),
                               clipBehavior: Clip.antiAlias,
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  Image.asset(path, fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(color: _P.brownSoft)),
+                                  Image.asset(path,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                          color: _C.hairline)),
                                   Positioned.fill(
                                     child: DecoratedBox(
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
-                                          colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.5)],
+                                          colors: [
+                                            Colors.black.withOpacity(0.0),
+                                            Colors.black.withOpacity(0.5),
+                                          ],
                                           stops: const [0.4, 1.0],
                                         ),
                                       ),
                                     ),
                                   ),
                                   Positioned(
-                                    left: 6, right: 6, bottom: 6,
-                                    child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.inter(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
+                                    left: 6,
+                                    right: 6,
+                                    bottom: 6,
+                                    child: Text(
+                                      label,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w700),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1418,489 +1925,6 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  QUICK ACTIONS
-  // ═══════════════════════════════════════════════════════════════
-  Widget _buildQuickActions() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withOpacity(0.95), width: 1.5),
-          boxShadow: [
-            BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 20, spreadRadius: -4, offset: const Offset(0, 8)),
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(color: _P.greenSoft, borderRadius: BorderRadius.circular(6)),
-                  child: const Icon(Icons.bolt_rounded, size: 12, color: _P.greenDeep),
-                ),
-                const SizedBox(width: 8),
-                Text('БЫСТРЫЕ ДЕЙСТВИЯ',
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: _P.textMuted, letterSpacing: 1.0)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _quickActionButton(
-                    icon: Icons.qr_code_scanner_rounded,
-                    emoji: '📷',
-                    title: 'Штрихкод',
-                    subtitle: 'Быстрый поиск',
-                    color: _P.greenDeep,
-                    softColor: _P.greenSoft,
-                    onTap: _startScanner,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _quickActionButton(
-                    icon: Icons.document_scanner_rounded,
-                    emoji: '🔍',
-                    title: 'Этикетка',
-                    subtitle: 'Распознать КБЖУ',
-                    color: _P.skyDeep,
-                    softColor: _P.skySoft,
-                    onTap: _isProcessingOCR ? null : _showOcrSourcePicker,
-                    isLoading: _isProcessingOCR,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            _batchButton(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _quickActionButton({
-    required IconData icon,
-    required String emoji,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required Color softColor,
-    required VoidCallback? onTap,
-    bool isLoading = false,
-  }) {
-    return InkWell(
-      onTap: isLoading ? null : onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: softColor.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, 2))],
-                  ),
-                  alignment: Alignment.center,
-                  child: isLoading
-                      ? SizedBox(
-                    width: 18, height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: color),
-                  )
-                      : Text(emoji, style: const TextStyle(fontSize: 18)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(title, style: GoogleFonts.inter(color: _P.text, fontSize: 13, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 2),
-            Text(subtitle, style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _batchButton() {
-    return InkWell(
-      onTap: _startBatchMode,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [_P.lavenderDeep, Color(0xFF7A6BA8)],
-          ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: _P.lavenderDeep.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38, height: 38,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(11),
-              ),
-              alignment: Alignment.center,
-              child: const Text('🛒', style: TextStyle(fontSize: 18)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Пакетная закупка',
-                      style: GoogleFonts.inter(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 2),
-                  Text('Сканируй один за другим → всё в покупки',
-                      style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: 11)),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  RECENT SCANS
-  // ═══════════════════════════════════════════════════════════════
-  Widget _buildRecentScans(List<ScanHistoryEntry> recentScans, NutritionProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withOpacity(0.95), width: 1.5),
-          boxShadow: [BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6))],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(color: _P.skySoft, borderRadius: BorderRadius.circular(6)),
-                  child: const Icon(Icons.history_rounded, size: 12, color: _P.skyDeep),
-                ),
-                const SizedBox(width: 8),
-                Text('НЕДАВНО СКАНИРОВАЛИ',
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: _P.textMuted, letterSpacing: 1.0)),
-                const Spacer(),
-                Text('${recentScans.length}',
-                    style: GoogleFonts.inter(color: _P.skyDeep, fontSize: 11, fontWeight: FontWeight.w700)),
-              ],
-            ),
-            const SizedBox(height: 14),
-            ...recentScans.take(4).map((scan) => _recentScanTile(scan, provider)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _recentScanTile(ScanHistoryEntry scan, NutritionProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: () async {
-          final product = BarcodeProduct(
-            barcode: scan.barcode,
-            name: scan.name,
-            category: scan.category,
-            calories: scan.calories,
-            protein: scan.protein,
-            fat: scan.fat,
-            carbs: scan.carbs,
-            fiber: scan.fiber,
-            source: BarcodeSource.localDb,
-          );
-          final destination = await _showDestinationChoice(product);
-          if (destination != null && mounted) {
-            await _sendToDestination(product, destination);
-          }
-        },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: _P.bg,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _P.divider.withOpacity(0.7)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(11),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))],
-                ),
-                alignment: Alignment.center,
-                child: const Icon(Icons.qr_code_rounded, size: 18, color: _P.greenDeep),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(scan.name,
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(color: _P.text, fontSize: 13, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 2),
-                    Text(
-                      scan.barcode,
-                      style: TextStyle(
-                        color: _P.textMuted,
-                        fontSize: 10,
-                        fontFamily: 'monospace',
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: _P.greenSoft, borderRadius: BorderRadius.circular(8)),
-                child: const Icon(Icons.add_rounded, color: _P.greenDeep, size: 14),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  FORM SECTION
-  // ═══════════════════════════════════════════════════════════════
-  Widget _buildFormSection() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withOpacity(0.95), width: 1.5),
-          boxShadow: [BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 20, spreadRadius: -4, offset: const Offset(0, 8))],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(color: _P.brownSoft, borderRadius: BorderRadius.circular(6)),
-                  child: const Icon(Icons.edit_rounded, size: 12, color: _P.brownDeep),
-                ),
-                const SizedBox(width: 8),
-                Text('ДЕТАЛИ ПРОДУКТА',
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: _P.textMuted, letterSpacing: 1.0)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _textField(_nameCtrl, 'Название продукта', Icons.shopping_basket_rounded, required: true),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _textField(_qtyCtrl, 'Количество', Icons.numbers_rounded,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true), required: true),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 1,
-                  child: _textField(_unitCtrl, 'Ед.', Icons.straighten_rounded),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _textField(_barcodeCtrl, 'Штрихкод (если есть)', Icons.qr_code_rounded),
-            const SizedBox(height: 16),
-            _expiryPicker(),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton(
-                onPressed: _saveProduct,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _P.greenDeep,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  shadowColor: _P.greenDeep.withOpacity(0.4),
-                ),
-                child: Text('СОХРАНИТЬ В КЛАДОВУЮ',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.8)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _textField(TextEditingController ctrl, String hint, IconData icon,
-      {TextInputType? keyboardType, bool required = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _P.bg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _P.divider),
-      ),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 14),
-            child: Icon(icon, color: _P.textMuted, size: 18),
-          ),
-          Expanded(
-            child: TextField(
-              controller: ctrl,
-              keyboardType: keyboardType,
-              style: GoogleFonts.inter(color: _P.text, fontSize: 14, fontWeight: FontWeight.w500),
-              decoration: InputDecoration(
-                hintText: hint + (required ? ' *' : ''),
-                hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _expiryPicker() {
-    return InkWell(
-      onTap: () async {
-        final date = await showDatePicker(
-          context: context,
-          initialDate: DateTime.now().add(const Duration(days: 7)),
-          firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 3650)),
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.light(primary: _P.peachDeep),
-                textButtonTheme: TextButtonThemeData(
-                  style: TextButton.styleFrom(foregroundColor: _P.peachDeep),
-                ),
-              ),
-              child: child!,
-            );
-          },
-        );
-        if (date != null) setState(() => _expiresAt = date);
-      },
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: _expiresAt != null ? _P.yellowSoft.withOpacity(0.5) : _P.bg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _expiresAt != null ? _P.yellowDeep.withOpacity(0.3) : _P.divider),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))],
-              ),
-              alignment: Alignment.center,
-              child: Icon(Icons.calendar_today_rounded, color: _expiresAt != null ? _P.yellowDeep : _P.textMuted, size: 16),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Срок годности',
-                      style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(
-                    _expiresAt != null
-                        ? '${_expiresAt!.day}.${_expiresAt!.month.toString().padLeft(2, '0')}.${_expiresAt!.year}'
-                        : 'Не указан',
-                    style: GoogleFonts.inter(
-                      color: _expiresAt != null ? _P.text : _P.textMuted,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_expiresAt != null)
-              InkWell(
-                onTap: () => setState(() => _expiresAt = null),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  child: const Icon(Icons.close_rounded, size: 16, color: _P.textMuted),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _saveProduct() async {
-    final provider = context.read<NutritionProvider>();
-
-    if (_nameCtrl.text.trim().isEmpty || _qtyCtrl.text.trim().isEmpty) {
-      _showError('Введите название и количество');
-      return;
-    }
-
-    await provider.addToPantry(
-      customName: _nameCtrl.text.trim(),
-      quantity: double.tryParse(_qtyCtrl.text) ?? 1,
-      unit: _unitCtrl.text.trim().isEmpty ? 'г' : _unitCtrl.text.trim(),
-      expiresAt: _expiresAt,
-    );
-
-    if (!mounted) return;
-    Navigator.pop(context);
-    HapticFeedback.mediumImpact();
-    _showSuccess('✅ Добавлено в кладовую');
-  }
-
-  // ═══════════════════════════════════════════════════════════════
   //  SCANNER SCREEN
   // ═══════════════════════════════════════════════════════════════
   Widget _buildScannerScreen(NutritionProvider provider) {
@@ -1909,193 +1933,661 @@ class _AddPantryScreenState extends State<AddPantryScreen> with TickerProviderSt
       body: Stack(
         children: [
           MobileScanner(
-            controller: _scannerController,
+            controller: _scannerController!,
             onDetect: (capture) async {
-              final barcodes = capture.barcodes;
-              for (final barcode in barcodes) {
-                if (barcode.rawValue != null) {
-                  if (!_isBatchMode) {
-                    await _scannerController.stop();
-                    // Небольшая пауза, чтобы нативная камера точно отпустила ресурс
-                    // перед тем, как мы начнем показывать диалоги или менять UI
-                    await Future.delayed(const Duration(milliseconds: 100));
-                  } else {
-                    if (_lastScanTime != null &&
-                        DateTime.now().difference(_lastScanTime!).inSeconds < 3) {
-                      return;
-                    }
-                  }
+              for (final barcode in capture.barcodes) {
+                if (barcode.rawValue == null) continue;
 
+                if (_isBatchMode) {
+                  if (_lastScanTime != null &&
+                      DateTime.now().difference(_lastScanTime!).inSeconds < 3) {
+                    return;
+                  }
+                  _lastScanTime = DateTime.now();
                   if (!mounted) return;
                   await _handleBarcode(barcode.rawValue!);
                   return;
                 }
+
+                await _closeScanner();
+                if (!mounted) return;
+                await _handleBarcode(barcode.rawValue!);
+                return;
               }
             },
           ),
-          // Scan overlay with animated corners
           Positioned.fill(
             child: AnimatedBuilder(
               animation: _scannerPulse,
-              builder: (_, __) {
-                return CustomPaint(
-                  painter: _ScannerOverlayPainter(
-                    pulse: _scannerPulse.value,
-                    isBatch: _isBatchMode,
-                    accentColor: _isBatchMode ? _P.lavenderDeep : _P.greenDeep,
-                  ),
-                );
-              },
-            ),
-          ),
-          if (_cameraLoading)
-            Container(
-              color: Colors.black87,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(color: Colors.white),
-                    const SizedBox(height: 16),
-                    Text('Запуск камеры...', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.7), fontSize: 13)),
-                  ],
+              builder: (_, __) => CustomPaint(
+                painter: _ScannerOverlayPainter(
+                  pulse: _scannerPulse.value,
+                  isBatch: _isBatchMode,
+                  accentColor: _isBatchMode ? _C.plum : _C.primary,
                 ),
               ),
             ),
-          // Top bar
-          Positioned(
-            top: 50,
-            left: 16,
-            right: 16,
-            child: Row(
-              children: [
-                _scannerIconButton(Icons.close_rounded, () async {
-                  if (_isBatchMode) {
-                    // Если это пакетный режим, пусть _finishBatchMode сам всё корректно закроет
-                    await _finishBatchMode();
-                  } else {
-                    // Обычный режим: останавливаем, ждем, меняем состояние
-                    await _scannerController.stop();
-                    await Future.delayed(const Duration(milliseconds: 150));
-
-                    if (mounted) {
-                      setState(() => _isScanning = false);
-                    }
-                  }
-                }),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  child: Row(
+          ),
+          if (_cameraLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.75),
+                child: Center(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        _isBatchMode ? Icons.shopping_cart_rounded : Icons.qr_code_scanner_rounded,
-                        color: Colors.white,
-                        size: 14,
+                      SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor:
+                          AlwaysStoppedAnimation(_C.primary),
+                        ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(height: 16),
                       Text(
-                        _isBatchMode
-                            ? 'ЗАКУПКА • ${_batchItems.length}'
-                            : 'Сканирование',
-                        style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                        'Запуск камеры…',
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const Spacer(),
-                if (_isBatchMode)
-                  _scannerIconButton(Icons.check_rounded, _finishBatchMode, isAccent: true)
-                else
-                  const SizedBox(width: 40),
-              ],
+              ),
             ),
-          ),
-          // Bottom hint
           Positioned(
-            bottom: 60,
-            left: 40,
-            right: 40,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withOpacity(0.15)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 14),
-                  const SizedBox(width: 8),
-                  Text(
-                    _isBatchMode
-                        ? 'Наводите на штрихкоды по очереди'
-                        : 'Наведите камеру на штрихкод',
-                    style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Batch items counter
-          if (_isBatchMode && _batchItems.isNotEmpty)
-            Positioned(
-              bottom: 120,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.8, end: 1.0),
-                  duration: const Duration(milliseconds: 300),
-                  builder: (_, scale, __) => Transform.scale(
-                    scale: scale,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Row(
+                  children: [
+                    _scannerButton(Icons.close_rounded, () async {
+                      if (_isBatchMode) {
+                        await _finishBatchMode();
+                      } else {
+                        await _closeScanner();
+                      }
+                    }),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: _P.greenDeep,
+                        color: Colors.black.withOpacity(0.55),
                         borderRadius: BorderRadius.circular(100),
-                        boxShadow: [BoxShadow(color: _P.greenDeep.withOpacity(0.5), blurRadius: 20, spreadRadius: 2)],
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.15)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: _isBatchMode ? _C.plum : _C.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                           const SizedBox(width: 8),
                           Text(
-                            '${_batchItems.last.displayName} добавлен',
-                            style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                            _isBatchMode
+                                ? 'ЗАКУПКА · ${_batchItems.length}'
+                                : 'СКАНИРОВАНИЕ',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                    const Spacer(),
+                    if (_isBatchMode)
+                      _scannerButton(Icons.check_rounded, _finishBatchMode,
+                          isAccent: true)
+                    else
+                      const SizedBox(width: 44),
+                  ],
                 ),
               ),
             ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                child: Column(
+                  children: [
+                    if (_isBatchMode && _batchItems.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: _C.primary,
+                          borderRadius: BorderRadius.circular(100),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _C.primary.withOpacity(0.5),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_circle_rounded,
+                                color: Colors.white, size: 14),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                _batchItems.last.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    Text(
+                      _isBatchMode
+                          ? 'Наводи на штрихкоды по очереди'
+                          : 'Наведи камеру на штрихкод',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        color: Colors.white.withOpacity(0.75),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _scannerIconButton(IconData icon, VoidCallback onTap, {bool isAccent = false}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: isAccent ? _P.greenDeep : Colors.black.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+  Widget _scannerButton(IconData icon, VoidCallback onTap,
+      {bool isAccent = false}) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: isAccent ? _C.primary : Colors.black.withOpacity(0.55),
+            borderRadius: BorderRadius.circular(14),
+            border:
+            Border.all(color: Colors.white.withOpacity(0.15)),
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: Colors.white, size: 20),
         ),
-        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  BOTTOM SHEET HELPERS
+  // ═══════════════════════════════════════════════════════════════
+  Widget _bottomSheet({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      decoration: const BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 5,
+              decoration: BoxDecoration(
+                color: _C.hairline,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(height: 20),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetHeader({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String subtitle,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: iconBg,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: iconColor, size: 22),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: _T.h2(_C.ink)),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _T.bodySm(_C.muted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _actionTile({
+    required String emoji,
+    required String title,
+    required String subtitle,
+    required Color accent,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: _C.bg,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _C.hairline),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: _C.surface,
+                  borderRadius: BorderRadius.circular(13),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(emoji, style: const TextStyle(fontSize: 22)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style:
+                        _T.body(_C.ink).copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: _T.bodySm(_C.muted)),
+                  ],
+                ),
+              ),
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: accent.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                alignment: Alignment.center,
+                child:
+                Icon(Icons.chevron_right_rounded, color: accent, size: 16),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HERO CARDS (extracted widgets)
+// ═══════════════════════════════════════════════════════════════════
+class _PrimaryScanCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _PrimaryScanCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_C.primary, _C.primaryDeep],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withOpacity(0.28),
+                blurRadius: 28,
+                offset: const Offset(0, 14),
+                spreadRadius: -6,
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -40,
+                top: -60,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.06),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.2)),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.qr_code_scanner_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'быстро',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.arrow_forward_rounded,
+                                  color: Colors.white, size: 12),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Сканировать',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Наведи камеру на штрихкод',
+                      style: GoogleFonts.inter(
+                        color: Colors.white.withOpacity(0.75),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryCard extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final Color soft;
+  final VoidCallback? onTap;
+  final bool isLoading;
+
+  const _SecondaryCard({
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    required this.soft,
+    required this.onTap,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: isLoading ? null : onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _C.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _C.hairline),
+            boxShadow: _cardShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: soft,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                alignment: Alignment.center,
+                child: isLoading
+                    ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(accent),
+                  ),
+                )
+                    : Text(emoji, style: const TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  color: _C.ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  color: _C.muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BatchCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _BatchCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _C.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _C.hairline),
+            boxShadow: _cardShadow,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _C.plumSoft,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                alignment: Alignment.center,
+                child: const Text('🛒', style: TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Пакетная закупка',
+                      style: GoogleFonts.inter(
+                        color: _C.ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Сканируй подряд — всё в покупки',
+                      style: GoogleFonts.inter(
+                        color: _C.muted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _C.plum.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.arrow_forward_rounded,
+                    color: _C.plum, size: 16),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -2117,112 +2609,97 @@ class _ScannerOverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final w = math.min(size.width * 0.82, 360.0);
+    final h = w * 0.6;
+
     final scanRect = Rect.fromCenter(
       center: Offset(size.width / 2, size.height / 2),
-      width: 280,
-      height: 180,
+      width: w,
+      height: h,
     );
+    final rrect = RRect.fromRectAndRadius(scanRect, const Radius.circular(22));
 
-    // Dark overlay outside scan area
-    final backgroundPaint = Paint()
-      ..color = Colors.black.withOpacity(0.6)
-      ..style = PaintingStyle.fill;
-
+    // Dark overlay with cutout
     final path = Path()
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..addRRect(RRect.fromRectAndRadius(scanRect, const Radius.circular(20)))
+      ..addRRect(rrect)
       ..fillType = PathFillType.evenOdd;
+    canvas.drawPath(path, Paint()..color = Colors.black.withOpacity(0.55));
 
-    canvas.drawPath(path, backgroundPaint);
-
-    // Animated corner brackets
+    // Corner brackets
     final cornerPaint = Paint()
-      ..color = accentColor
-      ..strokeWidth = 4
+      ..color = Colors.white
+      ..strokeWidth = 3.5
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    final cornerLength = 30.0;
-    final cornerRadius = 16.0;
+    const len = 26.0;
+    const r = 20.0;
 
-    // Top-left corner
     canvas.drawRRect(
       RRect.fromRectAndCorners(
-        Rect.fromLTWH(scanRect.left, scanRect.top, cornerLength, cornerLength),
-        topLeft: Radius.circular(cornerRadius),
-        topRight: Radius.zero,
-        bottomLeft: Radius.zero,
-        bottomRight: Radius.zero,
+        Rect.fromLTWH(scanRect.left, scanRect.top, len, len),
+        topLeft: Radius.circular(r),
+      ),
+      cornerPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        Rect.fromLTWH(scanRect.right - len, scanRect.top, len, len),
+        topRight: Radius.circular(r),
+      ),
+      cornerPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        Rect.fromLTWH(scanRect.left, scanRect.bottom - len, len, len),
+        bottomLeft: Radius.circular(r),
+      ),
+      cornerPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        Rect.fromLTWH(
+            scanRect.right - len, scanRect.bottom - len, len, len),
+        bottomRight: Radius.circular(r),
       ),
       cornerPaint,
     );
 
-    // Top-right corner
-    canvas.drawRRect(
-      RRect.fromRectAndCorners(
-        Rect.fromLTWH(scanRect.right - cornerLength, scanRect.top, cornerLength, cornerLength),
-        topLeft: Radius.zero,
-        topRight: Radius.circular(cornerRadius),
-        bottomLeft: Radius.zero,
-        bottomRight: Radius.zero,
-      ),
-      cornerPaint,
-    );
-
-    // Bottom-left corner
-    canvas.drawRRect(
-      RRect.fromRectAndCorners(
-        Rect.fromLTWH(scanRect.left, scanRect.bottom - cornerLength, cornerLength, cornerLength),
-        topLeft: Radius.zero,
-        topRight: Radius.zero,
-        bottomLeft: Radius.circular(cornerRadius),
-        bottomRight: Radius.zero,
-      ),
-      cornerPaint,
-    );
-
-    // Bottom-right corner
-    canvas.drawRRect(
-      RRect.fromRectAndCorners(
-        Rect.fromLTWH(scanRect.right - cornerLength, scanRect.bottom - cornerLength, cornerLength, cornerLength),
-        topLeft: Radius.zero,
-        topRight: Radius.zero,
-        bottomLeft: Radius.zero,
-        bottomRight: Radius.circular(cornerRadius),
-      ),
-      cornerPaint,
-    );
-
-    // Scanning line animation
-    final lineY = scanRect.top + (scanRect.height * pulse);
+    // Scan line
+    final lineY = scanRect.top + 12 + (scanRect.height - 24) * pulse;
+    final lineRect =
+    Rect.fromLTWH(scanRect.left + 16, lineY - 1, scanRect.width - 32, 2);
     final linePaint = Paint()
       ..shader = LinearGradient(
         colors: [
           accentColor.withOpacity(0),
-          accentColor.withOpacity(0.8),
+          accentColor.withOpacity(0.9),
           accentColor.withOpacity(0),
         ],
-      ).createShader(Rect.fromLTWH(scanRect.left, lineY - 2, scanRect.width, 4))
+      ).createShader(lineRect)
       ..strokeWidth = 2;
-
     canvas.drawLine(
-      Offset(scanRect.left + 20, lineY),
-      Offset(scanRect.right - 20, lineY),
+      Offset(scanRect.left + 16, lineY),
+      Offset(scanRect.right - 16, lineY),
       linePaint,
     );
 
-    // Glow effect around scan area
+    // Soft glow around rect
     final glowPaint = Paint()
-      ..color = accentColor.withOpacity(0.15 + 0.1 * pulse)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
-
+      ..color = accentColor.withOpacity(0.08 + 0.06 * pulse)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8;
     canvas.drawRRect(
-      RRect.fromRectAndRadius(scanRect, const Radius.circular(20)),
-      glowPaint..style = PaintingStyle.stroke..strokeWidth = 8,
+      RRect.fromRectAndRadius(scanRect, const Radius.circular(22)),
+      glowPaint,
     );
   }
 
   @override
   bool shouldRepaint(covariant _ScannerOverlayPainter old) =>
-      old.pulse != pulse || old.isBatch != isBatch || old.accentColor != accentColor;
+      old.pulse != pulse ||
+          old.isBatch != isBatch ||
+          old.accentColor != accentColor;
 }

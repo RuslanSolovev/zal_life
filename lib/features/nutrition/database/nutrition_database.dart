@@ -16,8 +16,8 @@ class NutritionDatabase {
 
   factory NutritionDatabase() => _instance;
 
-  // 🆕 Версия увеличена до 11 для добавления программ питания и таргетов в план
-  static const int currentVersion = 11;
+  // 🆕 Версия увеличена до 13 для добавления backgroundImage в программы
+  static const int currentVersion = 13;
 
   Future<Database> get database async {
     if (_database != null && _database!.isOpen) return _database!;
@@ -210,16 +210,19 @@ class NutritionDatabase {
     )''');
 
     await db.execute('''CREATE TABLE IF NOT EXISTS plan_days (
-      id TEXT PRIMARY KEY, 
-      date TEXT NOT NULL UNIQUE, 
-      targetCalories REAL, 
-      targetProtein REAL, 
-      targetFat REAL, 
-      targetCarbs REAL, 
-      isCheatDay INTEGER DEFAULT 0, 
-      isVacation INTEGER DEFAULT 0, 
-      createdAt TEXT NOT NULL
-    )''');
+  id TEXT PRIMARY KEY,
+  date TEXT NOT NULL,
+  programId TEXT,
+  dayType TEXT DEFAULT 'regular',
+  targetCalories REAL,
+  targetProtein REAL,
+  targetFat REAL,
+  targetCarbs REAL,
+  isCheatDay INTEGER DEFAULT 0,
+  isVacation INTEGER DEFAULT 0,
+  createdAt TEXT NOT NULL
+)
+''');
 
     await db.execute('''CREATE TABLE IF NOT EXISTS plan_meals (
       id TEXT PRIMARY KEY, 
@@ -277,7 +280,7 @@ class NutritionDatabase {
       scannedAt TEXT NOT NULL
     )''');
 
-    // 🆕 Таблица для программ питания (v11)
+    // 🆕 Таблица для программ питания (v11) — 🆕 ДОБАВЛЕНО backgroundImage
     await db.execute('''CREATE TABLE IF NOT EXISTS nutrition_programs (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -290,7 +293,8 @@ class NutritionDatabase {
       targetFat REAL NOT NULL,
       targetCarbs REAL NOT NULL,
       slots TEXT DEFAULT '[]',
-      isActive INTEGER DEFAULT 1
+      isActive INTEGER DEFAULT 1,
+      backgroundImage TEXT
     )''');
 
     await _addColumnIfMissing(db, 'food_products', 'nameNormalized', 'TEXT');
@@ -413,10 +417,46 @@ class NutritionDatabase {
         debugPrint('✅ v11: nutrition_programs + target-поля для plan_meals');
       }
 
+
+      if (oldVersion < 12) {
+        await txn.execute('''CREATE TABLE plan_days_new (
+    id TEXT PRIMARY KEY,
+    date TEXT NOT NULL,
+    programId TEXT,
+    dayType TEXT DEFAULT 'regular',
+    targetCalories REAL,
+    targetProtein REAL,
+    targetFat REAL,
+    targetCarbs REAL,
+    isCheatDay INTEGER DEFAULT 0,
+    isVacation INTEGER DEFAULT 0,
+    createdAt TEXT NOT NULL
+  )''');
+        await txn.execute('''
+    INSERT OR IGNORE INTO plan_days_new
+      (id, date, programId, dayType, targetCalories, targetProtein, targetFat, targetCarbs, isCheatDay, isVacation, createdAt)
+    SELECT id, date, programId, dayType, targetCalories, targetProtein, targetFat, targetCarbs, isCheatDay, isVacation, createdAt
+    FROM plan_days
+  ''');
+        await txn.execute('DROP TABLE plan_days');
+        await txn.execute('ALTER TABLE plan_days_new RENAME TO plan_days');
+        await _createIndexes(txn);
+        debugPrint('✅ v12: plan_days пересоздана без UNIQUE(date)');
+      }
+
+      // 🆕 Миграция для версии 13 (добавление backgroundImage в программы)
+      if (oldVersion < 13) {
+        await _addColumnIfMissing(txn, 'nutrition_programs', 'backgroundImage', 'TEXT');
+        debugPrint('✅ v13: добавлена колонка backgroundImage в nutrition_programs');
+      }
+
       await _seedDefaultGoals(txn);
     });
+
     debugPrint('✅ ===== МИГРАЦИЯ v$newVersion ЗАВЕРШЕНА =====');
   }
+
+
 
   // ==========================================================================
   // NORMALIZATION & DEDUPLICATION

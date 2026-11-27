@@ -2371,7 +2371,7 @@ class _FitnessDashboardState extends State<FitnessDashboard>
   }
 
   // ═════════════════════════════════════════════════════════
-  //  QUICK START WORKOUT — full modal
+  //  QUICK START WORKOUT (Исправленный и улучшенный)
   // ═════════════════════════════════════════════════════════
   void _quickStartWorkout(FitnessProvider provider) {
     HapticFeedback.mediumImpact();
@@ -2397,225 +2397,267 @@ class _FitnessDashboardState extends State<FitnessDashboard>
                 .toList();
             final canStart = quickDay.exercises.isNotEmpty;
 
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.9,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                BorderRadius.vertical(top: Radius.circular(32)),
-              ),
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              child: Column(
-                children: [
-                  Container(
-                      width: 38,
-                      height: 5,
-                      decoration: BoxDecoration(
-                          color: _P.divider,
-                          borderRadius: BorderRadius.circular(3))),
-                  const SizedBox(height: 20),
-                  Row(
+            // Используем Stack, чтобы кнопка "Начать" плавала ПОВЕРХ списка
+            return Stack(
+              children: [
+                Container(
+                  height: MediaQuery.of(ctx).size.height * 0.85,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  child: Column(
                     children: [
+                      // Граббер
                       Container(
-                        width: 46,
-                        height: 46,
+                        width: 36,
+                        height: 4,
                         decoration: BoxDecoration(
-                            color: _P.greenSoft,
-                            borderRadius: BorderRadius.circular(14)),
-                        child: const Icon(Icons.bolt_rounded,
-                            color: _P.greenDeep, size: 24),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Быстрая тренировка',
-                                style: GoogleFonts.inter(
-                                    color: _P.text,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 2),
-                            Text('Выберите упражнения',
-                                style: GoogleFonts.inter(
-                                    color: _P.textMuted, fontSize: 12)),
-                          ],
+                          color: _P.divider,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: searchCtrl,
-                    onChanged: (_) => setSheetState(() {}),
-                    style: GoogleFonts.inter(color: _P.text),
-                    decoration: InputDecoration(
-                      hintText: 'Поиск упражнений',
-                      hintStyle: GoogleFonts.inter(color: _P.textMuted),
-                      prefixIcon: const Icon(Icons.search_rounded,
-                          color: _P.textMuted, size: 20),
-                      filled: true,
-                      fillColor: _P.bg,
-                      contentPadding:
-                      const EdgeInsets.symmetric(vertical: 14),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: filtered.isEmpty
-                        ? Center(
-                        child: Text('Ничего не найдено',
-                            style: GoogleFonts.inter(
-                                color: _P.textMuted)))
-                        : ListView.separated(
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, __) =>
-                      const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final exercise = filtered[index];
-                        final added = quickDay.exercises.any(
-                                (item) =>
-                            item.exerciseId == exercise.id);
-                        final accent =
-                        exercise.muscleGroups.isNotEmpty
-                            ? exercise.muscleGroups.first.color
-                            : _P.greenDeep;
-                        final hasImage =
-                            exercise.imageUrl != null &&
-                                exercise.imageUrl!.isNotEmpty;
+                      const SizedBox(height: 16),
 
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: _P.bg,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                                color: _P.divider, width: 0.6),
-                          ),
-                          child: ListTile(
-                            contentPadding:
-                            const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            leading: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: accent.withOpacity(0.12),
-                                borderRadius:
-                                BorderRadius.circular(11),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: hasImage
-                                  ? _buildThumbImage(
-                                  exercise.imageUrl,
-                                  exercise.exerciseType.emoji,
-                                  40)
-                                  : Center(
-                                child: Text(
-                                    exercise
-                                        .exerciseType.emoji,
-                                    style: const TextStyle(
-                                        fontSize: 18)),
-                              ),
+                      // Компактный заголовок
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: _P.greenSoft,
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            title: Text(exercise.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                            child: const Icon(Icons.bolt_rounded,
+                                color: _P.greenDeep, size: 20),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Быстрая тренировка',
+                                    style: GoogleFonts.inter(
+                                        color: _P.text,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: -0.3)),
+                                const SizedBox(height: 1),
+                                Text('Нажмите на упражнение, чтобы добавить',
+                                    style: GoogleFonts.inter(
+                                        color: _P.textMuted,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Поиск с крестиком очистки
+                      TextField(
+                        controller: searchCtrl,
+                        onChanged: (_) => setSheetState(() {}),
+                        style: GoogleFonts.inter(color: _P.text, fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Поиск...',
+                          hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
+                          prefixIcon: const Icon(Icons.search_rounded,
+                              color: _P.textMuted, size: 20),
+                          // 🆕 КРЕСТИК ОЧИСТКИ
+                          suffixIcon: searchCtrl.text.isNotEmpty
+                              ? IconButton(
+                            icon: const Icon(Icons.clear_rounded, size: 20, color: _P.textMuted),
+                            onPressed: () {
+                              searchCtrl.clear();
+                              setSheetState(() {});
+                            },
+                          )
+                              : null,
+                          filled: true,
+                          fillColor: _P.bg,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: _P.divider, width: 1)),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: _P.divider, width: 1)),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: _P.greenDeep.withOpacity(0.4), width: 1.5)),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Список упражнений
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? Center(
+                            child: Text('Ничего не найдено',
                                 style: GoogleFonts.inter(
-                                    color: _P.text,
-                                    fontWeight: FontWeight.w500)),
-                            trailing: GestureDetector(
+                                    color: _P.textMuted, fontSize: 13)))
+                            : ListView.separated(
+                          physics: const BouncingScrollPhysics(),
+                          // 🆕 ОТСТУП СНИЗУ, чтобы плавающая кнопка не перекрывала последние элементы
+                          padding: const EdgeInsets.only(bottom: 90),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final exercise = filtered[index];
+                            final added = quickDay.exercises.any(
+                                    (item) => item.exerciseId == exercise.id);
+                            final accent = exercise.muscleGroups.isNotEmpty
+                                ? exercise.muscleGroups.first.color
+                                : _P.greenDeep;
+                            final hasImage =
+                                exercise.imageUrl != null &&
+                                    exercise.imageUrl!.isNotEmpty;
+
+                            // 🆕 НАЖАТИЕ НА ВСЮ СТРОКУ (GestureDetector обёртывает контейнер)
+                            return GestureDetector(
+                              behavior: HitTestBehavior.opaque,
                               onTap: () {
                                 HapticFeedback.selectionClick();
                                 setSheetState(() {
                                   if (added) {
                                     quickDay.exercises.removeWhere(
-                                            (item) =>
-                                        item.exerciseId ==
-                                            exercise.id);
+                                            (item) => item.exerciseId == exercise.id);
                                   } else {
-                                    quickDay.exercises.add(
-                                        WorkoutExercise(
-                                          id:
-                                          'quick_ex_${quickDay.exercises.length}',
-                                          exerciseId: exercise.id,
-                                          order:
-                                          quickDay.exercises.length,
-                                          sets: [
-                                            ExerciseSet(
-                                                setNumber: 1,
-                                                reps: 10,
-                                                weight: 0)
-                                          ],
-                                        ));
+                                    quickDay.exercises.add(WorkoutExercise(
+                                      id: 'quick_ex_${quickDay.exercises.length}',
+                                      exerciseId: exercise.id,
+                                      order: quickDay.exercises.length,
+                                      sets: [
+                                        ExerciseSet(
+                                            setNumber: 1, reps: 10, weight: 0)
+                                      ],
+                                    ));
                                   }
                                 });
                               },
                               child: Container(
-                                width: 34,
-                                height: 34,
                                 decoration: BoxDecoration(
-                                  color: added
-                                      ? _P.peachSoft
-                                      : _P.greenSoft,
-                                  shape: BoxShape.circle,
+                                  color: _P.bg,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                      color: added ? _P.greenDeep.withOpacity(0.3) : _P.divider,
+                                      width: added ? 1.2 : 0.6),
                                 ),
-                                child: Icon(
-                                    added
-                                        ? Icons.remove_rounded
-                                        : Icons.add_rounded,
-                                    color: added
-                                        ? _P.peachDeep
-                                        : _P.greenDeep,
-                                    size: 20),
+                                child: ListTile(
+                                  contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: accent.withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(11),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: hasImage
+                                        ? _buildThumbImage(
+                                        exercise.imageUrl,
+                                        exercise.exerciseType.emoji,
+                                        40)
+                                        : Center(
+                                      child: Text(
+                                          exercise.exerciseType.emoji,
+                                          style: const TextStyle(fontSize: 18)),
+                                    ),
+                                  ),
+                                  title: Text(exercise.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                          color: _P.text,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14)),
+                                  // 🆕 ИКОНКА ТЕПЕРЬ ПРОСТО ВИЗУАЛЬНЫЙ ИНДИКАТОР (без своего GestureDetector)
+                                  trailing: Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      color: added ? _P.greenSoft : Colors.transparent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      added
+                                          ? Icons.check_circle_rounded
+                                          : Icons.check_circle_outline_rounded,
+                                      color: added ? _P.greenDeep : _P.divider,
+                                      size: 26,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  if (canStart)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
+                ),
+
+                // 🆕 ПЛАВАЮЩАЯ КНОПКА "НАЧАТЬ" (поверх контента, не ломает Column)
+                if (canStart)
+                  Positioned(
+                    bottom: 24,
+                    left: 0,
+                    right: 0,
+                    child: Center(
                       child: SizedBox(
-                        width: double.infinity,
-                        height: 54,
+                        width: MediaQuery.of(ctx).size.width * 0.35, // ~1/3 ширины
+                        height: 52,
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.pop(ctx);
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    ChangeNotifierProvider.value(
-                                      value: provider,
-                                      child: WorkoutExecutionScreen(
-                                          day: quickDay, isDark: false),
-                                    ),
+                                builder: (_) => ChangeNotifierProvider.value(
+                                  value: provider,
+                                  child: WorkoutExecutionScreen(
+                                      day: quickDay, isDark: false),
+                                ),
                               ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _P.greenDeep,
                             foregroundColor: Colors.white,
-                            elevation: 0,
+                            elevation: 4,
+                            shadowColor: _P.greenDeep.withOpacity(0.4),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                                borderRadius: BorderRadius.circular(16)),
                           ),
-                          child: Text(
-                              'НАЧАТЬ · ${quickDay.exercises.length} УПР.',
-                              style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.8)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.play_arrow_rounded, size: 20),
+                              const SizedBox(width: 6),
+                              // 🆕 Flexible + TextOverflow.ellipsis ГАРАНТИРОВАННО СПАСАЮТ ОТ RenderFlex OVERFLOW
+                              Flexible(
+                                child: Text(
+                                  'НАЧАТЬ · ${quickDay.exercises.length}',
+                                  style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 10,
+                                      letterSpacing: 0.5),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             );
           },
         );

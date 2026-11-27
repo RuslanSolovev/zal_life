@@ -19,7 +19,6 @@ class _P {
   static const textMuted = Color(0xFF7C818A);
   static const divider = Color(0xFFE9EBEF);
   static const elevated = Color(0xFFF0F1F4);
-
   static const peachSoft = Color(0xFFFBEDE4);
   static const peachDeep = Color(0xFFEF9563);
   static const greenSoft = Color(0xFFE7F2ED);
@@ -89,31 +88,21 @@ const List<_HeroTheme> _heroThemes = [
 ];
 
 const List<String> _heroBackgrounds = [
-  'assets/images/nature_hero.jpg',
-  'assets/images/nature_hero2.jpg',
-  'assets/images/nature_hero3.jpg',
-  'assets/images/nature_hero4.jpg',
-  'assets/images/nature_hero5.jpg',
-  'assets/images/nature_hero6.jpg',
-  'assets/images/nature_hero7.jpg',
-  'assets/images/nature_hero8.jpg',
-  'assets/images/nature_hero9.jpg',
-  'assets/images/nature_hero10.jpg',
-  'assets/images/nature_hero11.jpg',
-  'assets/images/nature_hero12.jpg',
-  'assets/images/nature_hero13.jpg',
-  'assets/images/nature_hero14.jpg',
-  'assets/images/nature_hero15.jpg',
-  'assets/images/nature_hero16.jpg',
-  'assets/images/nature_hero17.jpg',
-  'assets/images/nature_hero18.jpg',
-  'assets/images/nature_hero19.jpg',
-  'assets/images/nature_hero20.jpg',
+  'assets/images/nature_hero.jpg',  'assets/images/nature_hero2.jpg',
+  'assets/images/nature_hero3.jpg', 'assets/images/nature_hero4.jpg',
+  'assets/images/nature_hero5.jpg', 'assets/images/nature_hero6.jpg',
+  'assets/images/nature_hero7.jpg', 'assets/images/nature_hero8.jpg',
+  'assets/images/nature_hero9.jpg', 'assets/images/nature_hero10.jpg',
+  'assets/images/nature_hero11.jpg','assets/images/nature_hero12.jpg',
+  'assets/images/nature_hero13.jpg','assets/images/nature_hero14.jpg',
+  'assets/images/nature_hero15.jpg','assets/images/nature_hero16.jpg',
+  'assets/images/nature_hero17.jpg','assets/images/nature_hero18.jpg',
+  'assets/images/nature_hero19.jpg','assets/images/nature_hero20.jpg',
   'assets/images/nature_hero21.jpg',
 ];
 
 const Map<String, String> _heroBgLabels = {
-  'assets/images/nature_hero.jpg': 'Тропа',
+  'assets/images/nature_hero.jpg':  'Тропа',
   'assets/images/nature_hero2.jpg': 'Закат 1',
   'assets/images/nature_hero3.jpg': 'Закат 2',
   'assets/images/nature_hero4.jpg': 'Закат 3',
@@ -122,23 +111,22 @@ const Map<String, String> _heroBgLabels = {
   'assets/images/nature_hero7.jpg': 'Закат 4',
   'assets/images/nature_hero8.jpg': 'Рассвет',
   'assets/images/nature_hero9.jpg': 'Поле',
-  'assets/images/nature_hero10.jpg': 'Река',
-  'assets/images/nature_hero11.jpg': 'Озеро',
-  'assets/images/nature_hero12.jpg': 'Море',
-  'assets/images/nature_hero13.jpg': 'Пляж',
-  'assets/images/nature_hero14.jpg': 'Пустыня',
-  'assets/images/nature_hero15.jpg': 'Водопад',
-  'assets/images/nature_hero16.jpg': 'Каньон',
-  'assets/images/nature_hero17.jpg': 'Степь',
-  'assets/images/nature_hero18.jpg': 'Тайга',
-  'assets/images/nature_hero19.jpg': 'Луг',
-  'assets/images/nature_hero20.jpg': 'Дюны',
-  'assets/images/nature_hero21.jpg': 'Утёс',
+  'assets/images/nature_hero10.jpg':'Река',
+  'assets/images/nature_hero11.jpg':'Озеро',
+  'assets/images/nature_hero12.jpg':'Море',
+  'assets/images/nature_hero13.jpg':'Пляж',
+  'assets/images/nature_hero14.jpg':'Пустыня',
+  'assets/images/nature_hero15.jpg':'Водопад',
+  'assets/images/nature_hero16.jpg':'Каньон',
+  'assets/images/nature_hero17.jpg':'Степь',
+  'assets/images/nature_hero18.jpg':'Тайга',
+  'assets/images/nature_hero19.jpg':'Луг',
+  'assets/images/nature_hero20.jpg':'Дюны',
+  'assets/images/nature_hero21.jpg':'Утёс',
 };
 
 _HeroTheme _findTheme(String id) =>
     _heroThemes.firstWhere((t) => t.id == id, orElse: () => _heroThemes.first);
-
 bool _isImagePath(String value) => value.startsWith('assets/');
 
 // ═══════════════════════════════════════════════════════════════════
@@ -147,21 +135,16 @@ bool _isImagePath(String value) => value.startsWith('assets/');
 class RecipeEditorScreen extends StatefulWidget {
   final MealTemplate? existing;
   const RecipeEditorScreen({super.key, this.existing});
-
   @override
   State<RecipeEditorScreen> createState() => _RecipeEditorScreenState();
 }
 
 String _difficultyDescription(RecipeDifficulty d) {
   switch (d) {
-    case RecipeDifficulty.easy:
-      return 'Быстро и просто, до 30 минут';
-    case RecipeDifficulty.medium:
-      return 'Потребует внимания, 30-60 минут';
-    case RecipeDifficulty.hard:
-      return 'Для особых случаев, 60+ минут';
-    default:
-      return '';
+    case RecipeDifficulty.easy:   return 'Быстро и просто, до 30 минут';
+    case RecipeDifficulty.medium: return 'Потребует внимания, 30-60 минут';
+    case RecipeDifficulty.hard:   return 'Для особых случаев, 60+ минут';
+    default: return '';
   }
 }
 
@@ -175,12 +158,11 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
   final _cookTimeCtrl = TextEditingController();
 
   List<_IngredientRow> _ingredients = [];
+  List<RecipeStep> _steps = [];  // 🆕 ШАГИ ПРИГОТОВЛЕНИЯ
   RecipeDifficulty _difficulty = RecipeDifficulty.easy;
   final Set<String> _tags = {};
-
   double _targetCalories = 500;
   double _targetProtein = 30;
-
   bool _reduceMotion = false;
   String _heroBg = 'recipe';
 
@@ -238,6 +220,8 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       grams: i.grams,
     ))
         .toList();
+    // 🆕 Загружаем шаги
+    _steps = List<RecipeStep>.from(t.steps);
   }
 
   ({double cal, double pro, double fat, double carb, double grams}) _calcTotals(
@@ -247,9 +231,9 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       final p = provider.products.where((x) => x.id == row.productId).firstOrNull;
       if (p == null) continue;
       final m = p.forGrams(row.grams);
-      cal += m.calories;
-      pro += m.protein;
-      fat += m.fat;
+      cal  += m.calories;
+      pro  += m.protein;
+      fat  += m.fat;
       carb += m.carbs;
       grams += row.grams;
     }
@@ -274,6 +258,9 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
           SliverToBoxAdapter(child: _buildBasicsCard()),
           _sectionLabel('ИНГРЕДИЕНТЫ', Icons.restaurant_menu_rounded),
           SliverToBoxAdapter(child: _buildIngredientsCard(provider)),
+          // 🆕 СЕКЦИЯ ШАГОВ — между ингредиентами и лабораторией
+          _sectionLabel('ПРИГОТОВЛЕНИЕ', Icons.format_list_numbered_rounded),
+          SliverToBoxAdapter(child: _buildStepsCard()),
           _sectionLabel('ЛАБОРАТОРИЯ', Icons.science_rounded),
           SliverToBoxAdapter(child: _buildLabCard(totals, provider)),
           _sectionLabel('ДЕТАЛИ', Icons.tune_rounded),
@@ -304,52 +291,42 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       ),
       child: Stack(
         children: [
-          // 🆕 ФОН: фото или градиент
           Positioned.fill(
             child: isImage
-                ? Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.asset(
-                  _heroBg,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [_Hero.bgTop, _Hero.bgBottom],
-                      ),
-                    ),
-                  ),
-                ),
-                DecoratedBox(
+                ? Stack(fit: StackFit.expand, children: [
+              Image.asset(_heroBg, fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.45),
-                        Colors.black.withOpacity(0.15),
-                        Colors.black.withOpacity(0.55),
-                      ],
-                      stops: const [0.0, 0.35, 1.0],
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: [_Hero.bgTop, _Hero.bgBottom],
                     ),
                   ),
                 ),
-              ],
-            )
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.45),
+                      Colors.black.withOpacity(0.15),
+                      Colors.black.withOpacity(0.55),
+                    ],
+                    stops: const [0.0, 0.35, 1.0],
+                  ),
+                ),
+              ),
+            ])
                 : DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
                   colors: [theme.top, theme.bottom],
                 ),
               ),
             ),
           ),
-          // Декоративное свечение (для градиентных тем)
           if (!isImage)
             Positioned(
               top: 40, right: -60,
@@ -365,22 +342,17 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                 ),
               ),
             ),
-          // 🆕 ПЛАВНЫЙ ПЕРЕХОД В ФОН (150px, 7 stops)
           Positioned(
             left: 0, right: 0, bottom: 0, height: 150,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
                     colors: [
-                      _P.bg.withOpacity(0.0),
-                      _P.bg.withOpacity(0.05),
-                      _P.bg.withOpacity(0.15),
-                      _P.bg.withOpacity(0.35),
-                      _P.bg.withOpacity(0.65),
-                      _P.bg.withOpacity(0.90),
+                      _P.bg.withOpacity(0.0),  _P.bg.withOpacity(0.05),
+                      _P.bg.withOpacity(0.15), _P.bg.withOpacity(0.35),
+                      _P.bg.withOpacity(0.65), _P.bg.withOpacity(0.90),
                       _P.bg,
                     ],
                     stops: const [0.0, 0.15, 0.30, 0.50, 0.70, 0.85, 1.0],
@@ -398,27 +370,20 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                 children: [
                   Row(
                     children: [
-                      _iconPill(
-                        icon: Icons.arrow_back_rounded,
-                        onTap: () => Navigator.pop(context),
-                      ),
+                      _iconPill(icon: Icons.arrow_back_rounded,
+                          onTap: () => Navigator.pop(context)),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           widget.existing == null ? 'НОВЫЙ РЕЦЕПТ' : 'РЕДАКТИРОВАНИЕ',
                           style: GoogleFonts.inter(
                             color: Colors.white.withOpacity(0.7),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.4,
+                            fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.4,
                             shadows: [Shadow(color: Colors.black.withOpacity(0.4), blurRadius: 4)],
                           ),
                         ),
                       ),
-                      _iconPill(
-                        icon: Icons.wallpaper_rounded,
-                        onTap: _openThemePicker,
-                      ),
+                      _iconPill(icon: Icons.wallpaper_rounded, onTap: _openThemePicker),
                       const SizedBox(width: 8),
                       _difficultyPill(),
                     ],
@@ -427,26 +392,18 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                   TextField(
                     controller: _nameCtrl,
                     style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
+                      color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700,
                       letterSpacing: -0.6,
                       shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 8)],
                     ),
                     decoration: InputDecoration(
                       hintText: 'Название блюда',
                       hintStyle: GoogleFonts.inter(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
+                          color: Colors.white.withOpacity(0.5), fontSize: 24, fontWeight: FontWeight.w600),
+                      border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero,
                     ),
                   ),
                   const SizedBox(height: 18),
-                  // 4 метрики КБЖУ
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -479,21 +436,12 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                           borderRadius: BorderRadius.circular(100),
                           border: Border.all(color: Colors.white.withOpacity(0.18)),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.person_outline_rounded, size: 11, color: Colors.white),
-                            const SizedBox(width: 5),
-                            Text(
-                              '${perPortion.round()} ккал/порц',
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.person_outline_rounded, size: 11, color: Colors.white),
+                          const SizedBox(width: 5),
+                          Text('${perPortion.round()} ккал/порц',
+                              style: GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                        ]),
                       ),
                       const Spacer(),
                       Container(
@@ -503,15 +451,10 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                           borderRadius: BorderRadius.circular(100),
                           border: Border.all(color: Colors.white.withOpacity(0.18)),
                         ),
-                        child: Text(
-                          '${totals.grams.round()} г всего',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            fontFeatures: const [ui.FontFeature.tabularFigures()],
-                          ),
-                        ),
+                        child: Text('${totals.grams.round()} г всего',
+                            style: GoogleFonts.inter(
+                                color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600,
+                                fontFeatures: const [ui.FontFeature.tabularFigures()])),
                       ),
                     ],
                   ),
@@ -526,41 +469,23 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
 
   Widget _heroMacro(String emoji, String value, String unit, Color color) {
     return Expanded(
-      child: Column(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 14)),
-          const SizedBox(height: 6),
-          Text(
-            value,
+      child: Column(children: [
+        Text(emoji, style: const TextStyle(fontSize: 14)),
+        const SizedBox(height: 6),
+        Text(value,
             style: GoogleFonts.inter(
-              color: color,
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.4,
-              fontFeatures: const [ui.FontFeature.tabularFigures()],
-              shadows: [Shadow(color: Colors.black.withOpacity(0.3), blurRadius: 4)],
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            unit,
+                color: color, fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.4,
+                fontFeatures: const [ui.FontFeature.tabularFigures()],
+                shadows: [Shadow(color: Colors.black.withOpacity(0.3), blurRadius: 4)])),
+        const SizedBox(height: 2),
+        Text(unit,
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.75),
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.4,
-            ),
-          ),
-        ],
-      ),
+                color: Colors.white.withOpacity(0.75), fontSize: 9, fontWeight: FontWeight.w600, letterSpacing: 0.4)),
+      ]),
     );
   }
 
-  Widget _divider() => Container(
-    width: 1,
-    height: 32,
-    color: Colors.white.withOpacity(0.18),
-  );
+  Widget _divider() => Container(width: 1, height: 32, color: Colors.white.withOpacity(0.18));
 
   Widget _iconPill({required IconData icon, required VoidCallback onTap}) {
     return _Press(
@@ -571,9 +496,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
           color: Colors.white.withOpacity(0.14),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(color: Colors.white.withOpacity(0.22)),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2)),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: Icon(icon, color: Colors.white, size: 14),
       ),
@@ -589,32 +512,20 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
           color: Colors.white.withOpacity(0.14),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(color: Colors.white.withOpacity(0.22)),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2)),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2))],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_difficulty.emoji, style: const TextStyle(fontSize: 11)),
-            const SizedBox(width: 5),
-            Text(
-              _difficulty.displayName.toUpperCase(),
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-              ),
-            ),
-          ],
-        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Text(_difficulty.emoji, style: const TextStyle(fontSize: 11)),
+          const SizedBox(width: 5),
+          Text(_difficulty.displayName.toUpperCase(),
+              style: GoogleFonts.inter(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
+        ]),
       ),
     );
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  🆕 THEME + IMAGE PICKER
+  //  THEME PICKER
   // ═══════════════════════════════════════════════════════════════
   Future<void> _openThemePicker() async {
     final result = await showModalBottomSheet<String>(
@@ -634,36 +545,21 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 38, height: 5,
-                  decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3)),
-                ),
-              ),
+              Center(child: Container(width: 38, height: 5,
+                  decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3)))),
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    width: 38, height: 38,
+              Row(children: [
+                Container(width: 38, height: 38,
                     decoration: BoxDecoration(color: _P.peachSoft, borderRadius: BorderRadius.circular(11)),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.wallpaper_rounded, color: _P.peachDeep, size: 19),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Фон рецепта',
-                            style: GoogleFonts.inter(color: _P.text, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
-                        const SizedBox(height: 2),
-                        Text('Цветовые темы и фотографии природы',
-                            style: GoogleFonts.inter(color: _P.textMuted, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                    child: const Icon(Icons.wallpaper_rounded, color: _P.peachDeep, size: 19)),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Фон рецепта', style: GoogleFonts.inter(color: _P.text, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
+                  const SizedBox(height: 2),
+                  Text('Цветовые темы и фотографии природы', style: GoogleFonts.inter(color: _P.textMuted, fontSize: 12)),
+                ])),
+              ]),
               const SizedBox(height: 18),
               Flexible(
                 child: SingleChildScrollView(
@@ -671,200 +567,73 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.palette_outlined, size: 13, color: _P.textMuted),
-                          const SizedBox(width: 6),
-                          Text('ЦВЕТОВЫЕ ТЕМЫ',
-                              style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-                        ],
-                      ),
+                      Row(children: [
+                        const Icon(Icons.palette_outlined, size: 13, color: _P.textMuted),
+                        const SizedBox(width: 6),
+                        Text('ЦВЕТОВЫЕ ТЕМЫ', style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                      ]),
                       const SizedBox(height: 10),
                       GridView.count(
-                        crossAxisCount: 4,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                        childAspectRatio: 0.9,
+                        crossAxisCount: 4, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 0.9,
                         children: _heroThemes.map((theme) {
                           final isSelected = !_isImagePath(_heroBg) && theme.id == _heroBg;
                           return _Press(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              Navigator.pop(ctx, theme.id);
-                            },
+                            onTap: () { HapticFeedback.selectionClick(); Navigator.pop(ctx, theme.id); },
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: isSelected ? _P.peachDeep : Colors.white.withOpacity(0.9),
-                                  width: isSelected ? 3 : 1,
-                                ),
-                                boxShadow: isSelected
-                                    ? [BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 10, spreadRadius: -2, offset: const Offset(0, 3))]
-                                    : null,
+                                border: Border.all(color: isSelected ? _P.peachDeep : Colors.white.withOpacity(0.9), width: isSelected ? 3 : 1),
+                                boxShadow: isSelected ? [BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 10, spreadRadius: -2, offset: const Offset(0, 3))] : null,
                               ),
                               clipBehavior: Clip.antiAlias,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [theme.top, theme.bottom],
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 8, right: 8,
-                                    child: Container(
-                                      width: 18, height: 18,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: RadialGradient(
-                                          colors: [theme.accent.withOpacity(0.7), theme.accent.withOpacity(0)],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned.fill(
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.55)],
-                                          stops: const [0.4, 1.0],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    left: 6, top: 6,
-                                    child: Text(theme.emoji, style: const TextStyle(fontSize: 16)),
-                                  ),
-                                  Positioned(
-                                    left: 6, right: 6, bottom: 6,
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(theme.label,
-                                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.inter(
-                                                  color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700,
-                                                  shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 3)])),
-                                        ),
-                                        if (isSelected)
-                                          Container(
-                                            width: 14, height: 14,
-                                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                            alignment: Alignment.center,
-                                            child: const Icon(Icons.check_rounded, color: _P.peachDeep, size: 9),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              child: Stack(fit: StackFit.expand, children: [
+                                DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [theme.top, theme.bottom]))),
+                                Positioned(top: 8, right: 8, child: Container(width: 18, height: 18, decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [theme.accent.withOpacity(0.7), theme.accent.withOpacity(0)])))),
+                                Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.55)], stops: const [0.4, 1.0])))),
+                                Positioned(left: 6, top: 6, child: Text(theme.emoji, style: const TextStyle(fontSize: 16))),
+                                Positioned(left: 6, right: 6, bottom: 6, child: Row(children: [
+                                  Expanded(child: Text(theme.label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700, shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 3)]))),
+                                  if (isSelected) Container(width: 14, height: 14, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle), alignment: Alignment.center, child: const Icon(Icons.check_rounded, color: _P.peachDeep, size: 9)),
+                                ])),
+                              ]),
                             ),
                           );
                         }).toList(),
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          const Icon(Icons.landscape_rounded, size: 13, color: _P.textMuted),
-                          const SizedBox(width: 6),
-                          Text('ФОТО ПРИРОДЫ',
-                              style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-                          const Spacer(),
-                          Text('${_heroBackgrounds.length}',
-                              style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
+                      Row(children: [
+                        const Icon(Icons.landscape_rounded, size: 13, color: _P.textMuted),
+                        const SizedBox(width: 6),
+                        Text('ФОТО ПРИРОДЫ', style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                        const Spacer(),
+                        Text('${_heroBackgrounds.length}', style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
+                      ]),
                       const SizedBox(height: 10),
                       GridView.count(
-                        crossAxisCount: 3,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 0.82,
+                        crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.82,
                         children: _heroBackgrounds.map((path) {
                           final isSelected = _isImagePath(_heroBg) && _heroBg == path;
                           final label = _heroBgLabels[path] ?? '';
                           return _Press(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              Navigator.pop(ctx, path);
-                            },
+                            onTap: () { HapticFeedback.selectionClick(); Navigator.pop(ctx, path); },
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isSelected ? _P.peachDeep : Colors.white.withOpacity(0.9),
-                                  width: isSelected ? 3 : 1,
-                                ),
-                                boxShadow: isSelected
-                                    ? [BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 12, spreadRadius: -2, offset: const Offset(0, 4))]
-                                    : null,
+                                border: Border.all(color: isSelected ? _P.peachDeep : Colors.white.withOpacity(0.9), width: isSelected ? 3 : 1),
+                                boxShadow: isSelected ? [BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 12, spreadRadius: -2, offset: const Offset(0, 4))] : null,
                               ),
                               clipBehavior: Clip.antiAlias,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Image.asset(
-                                    path, fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [_Hero.bgTop, _Hero.bgBottom],
-                                        ),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Icon(Icons.image_not_supported_rounded, color: Colors.white.withOpacity(0.5), size: 22),
-                                    ),
-                                  ),
-                                  Positioned.fill(
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.55)],
-                                          stops: const [0.4, 1.0],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    left: 8, right: 8, bottom: 8,
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(label,
-                                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.inter(
-                                                  color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w700,
-                                                  shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)])),
-                                        ),
-                                        if (isSelected)
-                                          Container(
-                                            width: 18, height: 18,
-                                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                            alignment: Alignment.center,
-                                            child: const Icon(Icons.check_rounded, color: _P.peachDeep, size: 12),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              child: Stack(fit: StackFit.expand, children: [
+                                Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [_Hero.bgTop, _Hero.bgBottom])), alignment: Alignment.center, child: Icon(Icons.image_not_supported_rounded, color: Colors.white.withOpacity(0.5), size: 22))),
+                                Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.55)], stops: const [0.4, 1.0])))),
+                                Positioned(left: 8, right: 8, bottom: 8, child: Row(children: [
+                                  Expanded(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w700, shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)]))),
+                                  if (isSelected) Container(width: 18, height: 18, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle), alignment: Alignment.center, child: const Icon(Icons.check_rounded, color: _P.peachDeep, size: 12)),
+                                ])),
+                              ]),
                             ),
                           );
                         }).toList(),
@@ -896,8 +665,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(20),
+          color: _P.surface, borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white.withOpacity(0.95), width: 1.5),
           boxShadow: [
             BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6)),
@@ -908,52 +676,25 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
-              controller: _descCtrl,
-              maxLines: 3,
-              minLines: 1,
+              controller: _descCtrl, maxLines: 3, minLines: 1,
               style: GoogleFonts.inter(color: _P.text, fontSize: 13),
               decoration: InputDecoration(
                 hintText: 'Описание (необязательно)',
                 hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero,
               ),
             ),
             const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _numField(
-                    label: 'Порций',
-                    ctrl: _portionsCtrl,
-                    icon: Icons.people_outline_rounded,
-                    color: _P.lavenderDeep,
-                    softColor: _P.lavenderSoft,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _numField(
-                    label: 'Подготовка',
-                    ctrl: _prepTimeCtrl,
-                    icon: Icons.timer_outlined,
-                    color: _P.skyDeep,
-                    softColor: _P.skySoft,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _numField(
-                    label: 'Готовка',
-                    ctrl: _cookTimeCtrl,
-                    icon: Icons.local_fire_department_outlined,
-                    color: _P.peachDeep,
-                    softColor: _P.peachSoft,
-                  ),
-                ),
-              ],
-            ),
+            Row(children: [
+              Expanded(child: _numField(label: 'Порций', ctrl: _portionsCtrl,
+                  icon: Icons.people_outline_rounded, color: _P.lavenderDeep, softColor: _P.lavenderSoft)),
+              const SizedBox(width: 8),
+              Expanded(child: _numField(label: 'Подготовка', ctrl: _prepTimeCtrl,
+                  icon: Icons.timer_outlined, color: _P.skyDeep, softColor: _P.skySoft)),
+              const SizedBox(width: 8),
+              Expanded(child: _numField(label: 'Готовка', ctrl: _cookTimeCtrl,
+                  icon: Icons.local_fire_department_outlined, color: _P.peachDeep, softColor: _P.peachSoft)),
+            ]),
           ],
         ),
       ),
@@ -961,11 +702,8 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
   }
 
   Widget _numField({
-    required String label,
-    required TextEditingController ctrl,
-    required IconData icon,
-    required Color color,
-    required Color softColor,
+    required String label, required TextEditingController ctrl,
+    required IconData icon, required Color color, required Color softColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -974,43 +712,22 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white.withOpacity(0.9), width: 1),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 13, color: color),
-              const SizedBox(width: 5),
-              Text(
-                label.toUpperCase(),
-                style: GoogleFonts.inter(
-                  color: color,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: ctrl,
-            keyboardType: TextInputType.number,
-            onChanged: (_) => setState(() {}),
-            style: GoogleFonts.inter(
-              color: _P.text,
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [ui.FontFeature.tabularFigures()],
-            ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-        ],
-      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(label.toUpperCase(),
+              style: GoogleFonts.inter(color: color, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
+        ]),
+        const SizedBox(height: 8),
+        TextField(
+          controller: ctrl, keyboardType: TextInputType.number,
+          onChanged: (_) => setState(() {}),
+          style: GoogleFonts.inter(color: _P.text, fontSize: 17, fontWeight: FontWeight.w700,
+              fontFeatures: const [ui.FontFeature.tabularFigures()]),
+          decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
+        ),
+      ]),
     );
   }
 
@@ -1022,55 +739,231 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       padding: const EdgeInsets.symmetric(horizontal: _padH),
       child: Container(
         decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(20),
+          color: _P.surface, borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white.withOpacity(0.95), width: 1.5),
-          boxShadow: [
-            BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6)),
-          ],
+          boxShadow: [BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6))],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(children: [
+          ..._ingredients.asMap().entries.map((e) => _ingredientTile(
+            provider: provider, row: e.value, index: e.key,
+          )),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: _Press(
+              onTap: () => _showAddIngredientSheet(provider),
+              child: Container(
+                width: double.infinity, height: 52,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: [_P.peachDeep, Color(0xFFE0845A)]),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                ),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text('ДОБАВИТЬ ИНГРЕДИЕНТ',
+                      style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
+                ]),
+              ),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _ingredientTile({
+    required NutritionProvider provider,
+    required _IngredientRow row, required int index,
+  }) {
+    final product = provider.products.where((p) => p.id == row.productId).firstOrNull;
+    final macros = product?.forGrams(row.grams);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 2),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _P.bg, borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _P.divider.withOpacity(0.7)),
+        ),
+        child: Column(children: [
+          Row(children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white, borderRadius: BorderRadius.circular(12),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
+              ),
+              alignment: Alignment.center,
+              child: Text(product?.categoryEmoji ?? '🍽️', style: const TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(row.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(color: _P.text, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 3),
+              Row(children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: _P.peachSoft, borderRadius: BorderRadius.circular(6)),
+                  child: Text('${macros?.calories.round() ?? 0} ккал',
+                      style: GoogleFonts.inter(color: _P.peachDeep, fontSize: 10, fontWeight: FontWeight.w700,
+                          fontFeatures: const [ui.FontFeature.tabularFigures()])),
+                ),
+                const SizedBox(width: 6),
+                Text('Б${macros?.protein.toStringAsFixed(0) ?? 0} Ж${macros?.fat.toStringAsFixed(0) ?? 0} У${macros?.carbs.toStringAsFixed(0) ?? 0}',
+                    style: GoogleFonts.inter(color: _P.textMuted, fontSize: 9, fontWeight: FontWeight.w600,
+                        fontFeatures: const [ui.FontFeature.tabularFigures()])),
+              ]),
+            ])),
+            _Press(
+              onTap: () { HapticFeedback.lightImpact(); setState(() => _ingredients.removeAt(index)); },
+              child: Container(width: 30, height: 30,
+                  decoration: BoxDecoration(color: _P.pinkSoft, borderRadius: BorderRadius.circular(9)),
+                  child: const Icon(Icons.close_rounded, size: 14, color: _P.pinkDeep)),
+            ),
+          ]),
+          const SizedBox(height: 12),
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+              child: Text('${row.grams.round()} г',
+                  style: GoogleFonts.inter(color: _P.text, fontSize: 12, fontWeight: FontWeight.w700,
+                      fontFeatures: const [ui.FontFeature.tabularFigures()])),
+            ),
+            Expanded(
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 4,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                  activeTrackColor: _P.peachDeep,
+                  inactiveTrackColor: _P.divider,
+                  thumbColor: _P.peachDeep,
+                  overlayColor: _P.peachDeep.withOpacity(0.15),
+                ),
+                child: Slider(
+                  value: row.grams.clamp(1.0, 1000.0), min: 1, max: 1000,
+                  onChanged: (v) { setState(() { _ingredients[index] = row.copyWith(grams: v); }); },
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 64,
+              child: TextField(
+                controller: TextEditingController(text: row.grams.toStringAsFixed(0)),
+                keyboardType: TextInputType.number, textAlign: TextAlign.right,
+                onChanged: (v) {
+                  final n = double.tryParse(v);
+                  if (n != null && n > 0) setState(() { _ingredients[index] = row.copyWith(grams: n); });
+                },
+                style: GoogleFonts.inter(color: _P.text, fontSize: 12, fontWeight: FontWeight.w600,
+                    fontFeatures: const [ui.FontFeature.tabularFigures()]),
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  filled: true, fillColor: Colors.white,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                ),
+              ),
+            ),
+          ]),
+        ]),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  🆕 ШАГИ ПРИГОТОВЛЕНИЯ
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildStepsCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _padH),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _P.surface, borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.95), width: 1.5),
+          boxShadow: [BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6))],
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ..._ingredients.asMap().entries.map((e) => _ingredientTile(
-              provider: provider,
-              row: e.value,
-              index: e.key,
-            )),
+            // Header с счётчиком шагов и общим таймингом
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+              child: Row(children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _P.peachSoft, borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text('${_steps.length}',
+                      style: GoogleFonts.inter(
+                          color: _P.peachDeep, fontSize: 12, fontWeight: FontWeight.w800,
+                          fontFeatures: const [ui.FontFeature.tabularFigures()])),
+                ),
+                const SizedBox(width: 8),
+                Text(_stepsWord(_steps.length),
+                    style: GoogleFonts.inter(
+                        color: _P.textMuted, fontSize: 12, fontWeight: FontWeight.w500)),
+                const Spacer(),
+                if (_steps.isNotEmpty)
+                  _Press(
+                    onTap: _clearAllSteps,
+                    child: Text('Очистить',
+                        style: GoogleFonts.inter(
+                            color: _P.pinkDeep, fontSize: 11, fontWeight: FontWeight.w600)),
+                  ),
+              ]),
+            ),
+            // Пустое состояние
+            if (_steps.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                child: Column(children: [
+                  Container(
+                    width: 64, height: 64,
+                    decoration: BoxDecoration(
+                      color: _P.peachSoft, shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.restaurant_menu_rounded, color: _P.peachDeep, size: 28),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Добавь шаги приготовления',
+                      style: GoogleFonts.inter(color: _P.text, fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text('Опиши процесс по порядку — так удобнее готовить',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(color: _P.textMuted, fontSize: 12)),
+                ]),
+              )
+            // Список шагов
+            else
+              ..._steps.asMap().entries.map((e) => _stepTile(e.key, e.value)),
+            // Кнопка добавления
             Padding(
               padding: const EdgeInsets.all(12),
               child: _Press(
-                onTap: () => _showAddIngredientSheet(provider),
+                onTap: _addStep,
                 child: Container(
-                  width: double.infinity,
-                  height: 52,
+                  width: double.infinity, height: 52,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [_P.peachDeep, Color(0xFFE0845A)],
-                    ),
+                        begin: Alignment.topLeft, end: Alignment.bottomRight,
+                        colors: [_P.greenDeep, Color(0xFF558A74)]),
                     borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
-                    ],
+                    boxShadow: [BoxShadow(color: _P.greenDeep.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.add_rounded, size: 18, color: Colors.white),
-                      const SizedBox(width: 8),
-                      Text(
-                        'ДОБАВИТЬ ИНГРЕДИЕНТ',
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(_steps.isEmpty ? 'ДОБАВИТЬ ПЕРВЫЙ ШАГ' : 'ДОБАВИТЬ ШАГ',
+                        style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
+                  ]),
                 ),
               ),
             ),
@@ -1080,185 +973,259 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
     );
   }
 
-  Widget _ingredientTile({
-    required NutritionProvider provider,
-    required _IngredientRow row,
-    required int index,
-  }) {
-    final product = provider.products.where((p) => p.id == row.productId).firstOrNull;
-    final macros = product?.forGrams(row.grams);
+  Widget _stepTile(int index, RecipeStep step) {
+    final ctrl = TextEditingController(text: step.text);
+    final timerCtrl = TextEditingController(
+        text: step.timerSec != null && step.timerSec! > 0
+            ? _formatTimer(step.timerSec!)
+            : '');
+    final isLast = index == _steps.length - 1;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 2),
+      padding: EdgeInsets.fromLTRB(12, 4, 12, isLast ? 8 : 4),
       child: Container(
-        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _P.bg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _P.divider.withOpacity(0.7)),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
+            // Header: номер + действия
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 8, 0),
+              child: Row(children: [
+                // Номер шага в круге
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 28, height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(
+                        begin: Alignment.topLeft, end: Alignment.bottomRight,
+                        colors: [_P.peachDeep, Color(0xFFE0845A)]),
+                    shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
+                      BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: Text(product?.categoryEmoji ?? '🍽️',
-                      style: const TextStyle(fontSize: 18)),
+                  child: Text('${index + 1}',
+                      style: GoogleFonts.inter(
+                          color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800,
+                          fontFeatures: const [ui.FontFeature.tabularFigures()])),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        row.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          color: _P.text,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: _P.peachSoft,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${macros?.calories.round() ?? 0} ккал',
-                              style: GoogleFonts.inter(
-                                color: _P.peachDeep,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                fontFeatures: const [ui.FontFeature.tabularFigures()],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Б${macros?.protein.toStringAsFixed(0) ?? 0} Ж${macros?.fat.toStringAsFixed(0) ?? 0} У${macros?.carbs.toStringAsFixed(0) ?? 0}',
-                            style: GoogleFonts.inter(
-                              color: _P.textMuted,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              fontFeatures: const [ui.FontFeature.tabularFigures()],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  child: Text('Шаг ${index + 1}',
+                      style: GoogleFonts.inter(
+                          color: _P.text, fontSize: 13, fontWeight: FontWeight.w600)),
                 ),
+                // Кнопки перемещения
+                if (index > 0)
+                  _Press(
+                    onTap: () => _moveStep(index, index - 1),
+                    child: Container(
+                      width: 28, height: 28,
+                      decoration: BoxDecoration(
+                        color: Colors.white, borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.arrow_upward_rounded, size: 14, color: _P.textMuted),
+                    ),
+                  ),
+                if (index > 0) const SizedBox(width: 4),
+                if (!isLast)
+                  _Press(
+                    onTap: () => _moveStep(index, index + 1),
+                    child: Container(
+                      width: 28, height: 28,
+                      decoration: BoxDecoration(
+                        color: Colors.white, borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.arrow_downward_rounded, size: 14, color: _P.textMuted),
+                    ),
+                  ),
+                if (!isLast) const SizedBox(width: 4),
+                // Удалить
                 _Press(
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    setState(() => _ingredients.removeAt(index));
+                    setState(() => _steps.removeAt(index));
                   },
                   child: Container(
-                    width: 30,
-                    height: 30,
+                    width: 28, height: 28,
                     decoration: BoxDecoration(
-                      color: _P.pinkSoft,
-                      borderRadius: BorderRadius.circular(9),
+                      color: _P.pinkSoft, borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.close_rounded, size: 14, color: _P.pinkDeep),
                   ),
                 ),
-              ],
+              ]),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
+            // Описание шага
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+              child: TextField(
+                controller: ctrl,
+                maxLines: null,
+                minLines: 2,
+                onChanged: (v) {
+                  setState(() {
+                    _steps[index] = RecipeStep(
+                      order: step.order,
+                      text: v,
+                      timerSec: step.timerSec,
+                    );
+                  });
+                },
+                style: GoogleFonts.inter(color: _P.text, fontSize: 13, height: 1.4),
+                decoration: InputDecoration(
+                  hintText: 'Опиши, что нужно сделать…',
+                  hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
+                  filled: true, fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                ),
+              ),
+            ),
+            // Таймер (опционально)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Row(children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  width: 28, height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    color: _P.skySoft, borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    '${row.grams.round()} г',
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.timer_outlined, size: 14, color: _P.skyDeep),
+                ),
+                const SizedBox(width: 8),
+                Text('Таймер:',
                     style: GoogleFonts.inter(
-                      color: _P.text,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: const [ui.FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                      activeTrackColor: _P.peachDeep,
-                      inactiveTrackColor: _P.divider,
-                      thumbColor: _P.peachDeep,
-                      overlayColor: _P.peachDeep.withOpacity(0.15),
-                    ),
-                    child: Slider(
-                      value: row.grams.clamp(1.0, 1000.0),
-                      min: 1,
-                      max: 1000,
-                      onChanged: (v) {
-                        setState(() {
-                          _ingredients[index] = row.copyWith(grams: v);
-                        });
-                      },
-                    ),
-                  ),
-                ),
+                        color: _P.textMuted, fontSize: 12, fontWeight: FontWeight.w500)),
+                const SizedBox(width: 6),
                 SizedBox(
-                  width: 64,
+                  width: 80,
                   child: TextField(
-                    controller: TextEditingController(text: row.grams.toStringAsFixed(0)),
+                    controller: timerCtrl,
                     keyboardType: TextInputType.number,
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.center,
                     onChanged: (v) {
-                      final n = double.tryParse(v);
-                      if (n != null && n > 0) {
-                        setState(() {
-                          _ingredients[index] = row.copyWith(grams: n);
-                        });
-                      }
+                      final secs = _parseTimer(v);
+                      setState(() {
+                        _steps[index] = RecipeStep(
+                          order: step.order,
+                          text: step.text,
+                          timerSec: secs,
+                        );
+                      });
                     },
                     style: GoogleFonts.inter(
-                      color: _P.text,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [ui.FontFeature.tabularFigures()],
-                    ),
+                        color: _P.skyDeep, fontSize: 13, fontWeight: FontWeight.w700,
+                        fontFeatures: const [ui.FontFeature.tabularFigures()]),
                     decoration: InputDecoration(
-                      isDense: true,
+                      hintText: 'мм:сс',
+                      hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 12),
+                      filled: true, fillColor: Colors.white,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                      filled: true,
-                      fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
+                          borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                     ),
                   ),
                 ),
-              ],
+                const SizedBox(width: 6),
+                Text('(необязательно)',
+                    style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10)),
+              ]),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _addStep() {
+    setState(() {
+      _steps.add(RecipeStep(
+        order: _steps.length + 1,
+        text: '',
+        timerSec: null,
+      ));
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  void _moveStep(int from, int to) {
+    setState(() {
+      final item = _steps.removeAt(from);
+      _steps.insert(to, item);
+      _renumberSteps();
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  void _clearAllSteps() {
+    if (_steps.isEmpty) return;
+    showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _P.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Удалить все шаги?', style: _T.headline),
+        content: Text('Это действие нельзя отменить', style: _T.body),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
+              child: Text('Отмена', style: _T.body)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: _P.pinkDeep),
+            child: const Text('Удалить', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    ).then((ok) {
+      if (ok == true) setState(() => _steps.clear());
+    });
+  }
+
+  void _renumberSteps() {
+    for (int i = 0; i < _steps.length; i++) {
+      _steps[i] = RecipeStep(
+        order: i + 1,
+        text: _steps[i].text,
+        timerSec: _steps[i].timerSec,
+      );
+    }
+  }
+
+  String _formatTimer(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  int? _parseTimer(String v) {
+    if (v.trim().isEmpty) return null;
+    // Формат "мм:сс" или просто число (минуты)
+    if (v.contains(':')) {
+      final parts = v.split(':');
+      if (parts.length == 2) {
+        final m = int.tryParse(parts[0]) ?? 0;
+        final s = int.tryParse(parts[1]) ?? 0;
+        final total = m * 60 + s;
+        return total > 0 ? total : null;
+      }
+    }
+    // Просто число — считаем минутами
+    final min = int.tryParse(v);
+    return min != null && min > 0 ? min * 60 : null;
+  }
+
+  String _stepsWord(int n) {
+    if (n == 1) return 'шаг';
+    if (n >= 2 && n <= 4) return 'шага';
+    return 'шагов';
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -1277,189 +1244,110 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [_Hero.bgTop, _Hero.bgBottom],
-          ),
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [_Hero.bgTop, _Hero.bgBottom]),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
-          boxShadow: [
-            BoxShadow(color: _P.text.withOpacity(0.15), blurRadius: 24, spreadRadius: -6, offset: const Offset(0, 10)),
-          ],
+          boxShadow: [BoxShadow(color: _P.text.withOpacity(0.15), blurRadius: 24, spreadRadius: -6, offset: const Offset(0, 10))],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 40, height: 40,
+                decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.10),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.15)),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text('🧪', style: TextStyle(fontSize: 18)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('ЛАБОРАТОРИЯ',
-                          style: GoogleFonts.inter(
-                              color: _P.peachSoft,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.4)),
-                      const SizedBox(height: 2),
-                      Text('Попадание в цель',
-                          style: GoogleFonts.inter(
-                              color: _Hero.textHigh,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
-                if (calHit && proHit)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: _P.greenDeep.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _P.greenDeep.withOpacity(0.4)),
-                    ),
-                    child: Text('✓ ИДЕАЛЬНО',
-                        style: GoogleFonts.inter(
-                            color: _P.greenSoft,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _labSlider(
-              label: 'Калории',
-              value: totals.cal,
-              target: _targetCalories,
-              unit: 'ккал',
-              color: _P.peachDeep,
-              pct: calPct,
-              hit: calHit,
-              onChanged: (v) => setState(() => _targetCalories = v),
-            ),
-            const SizedBox(height: 16),
-            _labSlider(
-              label: 'Белок',
-              value: totals.pro,
-              target: _targetProtein,
-              unit: 'г',
-              color: _P.greenDeep,
-              pct: proPct,
-              hit: proHit,
-              onChanged: (v) => setState(() => _targetProtein = v),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white.withOpacity(0.15))),
+                alignment: Alignment.center,
+                child: const Text('🧪', style: TextStyle(fontSize: 18))),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('ЛАБОРАТОРИЯ',
+                  style: GoogleFonts.inter(color: _P.peachSoft, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
+              const SizedBox(height: 2),
+              Text('Попадание в цель',
+                  style: GoogleFonts.inter(color: _Hero.textHigh, fontSize: 15, fontWeight: FontWeight.w600)),
+            ])),
+            if (calHit && proHit)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                    color: _P.greenDeep.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _P.greenDeep.withOpacity(0.4))),
+                child: Text('✓ ИДЕАЛЬНО',
+                    style: GoogleFonts.inter(color: _P.greenSoft, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
+              ),
+          ]),
+          const SizedBox(height: 18),
+          _labSlider(label: 'Калории', value: totals.cal, target: _targetCalories,
+              unit: 'ккал', color: _P.peachDeep, pct: calPct, hit: calHit,
+              onChanged: (v) => setState(() => _targetCalories = v)),
+          const SizedBox(height: 16),
+          _labSlider(label: 'Белок', value: totals.pro, target: _targetProtein,
+              unit: 'г', color: _P.greenDeep, pct: proPct, hit: proHit,
+              onChanged: (v) => setState(() => _targetProtein = v)),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
-              ),
-              child: Row(
-                children: [
-                  const Text('💡', style: TextStyle(fontSize: 14)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Двигай граммы ингредиентов — КБЖУ пересчитается вживую',
-                      style: GoogleFonts.inter(
-                        color: Colors.white.withOpacity(0.75),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+                border: Border.all(color: Colors.white.withOpacity(0.1))),
+            child: Row(children: [
+              const Text('💡', style: TextStyle(fontSize: 14)),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Двигай граммы ингредиентов — КБЖУ пересчитается вживую',
+                  style: GoogleFonts.inter(
+                      color: Colors.white.withOpacity(0.75), fontSize: 11, fontWeight: FontWeight.w500, fontStyle: FontStyle.italic))),
+            ]),
+          ),
+        ]),
       ),
     );
   }
 
   Widget _labSlider({
-    required String label,
-    required double value,
-    required double target,
-    required String unit,
-    required Color color,
-    required double pct,
-    required bool hit,
-    required ValueChanged<double> onChanged,
+    required String label, required double value, required double target,
+    required String unit, required Color color, required double pct,
+    required bool hit, required ValueChanged<double> onChanged,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(label,
-                style: GoogleFonts.inter(
-                    color: _Hero.textHigh, fontSize: 12, fontWeight: FontWeight.w600)),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: hit ? _P.greenDeep.withOpacity(0.25) : Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '${value.round()} / ${target.round()} $unit',
-                style: GoogleFonts.inter(
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Text(label, style: GoogleFonts.inter(color: _Hero.textHigh, fontSize: 12, fontWeight: FontWeight.w600)),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+              color: hit ? _P.greenDeep.withOpacity(0.25) : Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8)),
+          child: Text('${value.round()} / ${target.round()} $unit',
+              style: GoogleFonts.inter(
                   color: hit ? _P.greenSoft : Colors.white.withOpacity(0.85),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  fontFeatures: const [ui.FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-          ],
+                  fontSize: 11, fontWeight: FontWeight.w700,
+                  fontFeatures: const [ui.FontFeature.tabularFigures()])),
         ),
-        const SizedBox(height: 8),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 4,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-            activeTrackColor: color,
-            inactiveTrackColor: Colors.white.withOpacity(0.15),
-            thumbColor: Colors.white,
-            overlayColor: color.withOpacity(0.2),
-          ),
-          child: Slider(
-            value: target.clamp(50.0, 2000.0),
-            min: 50,
-            max: 2000,
-            onChanged: onChanged,
-          ),
+      ]),
+      const SizedBox(height: 8),
+      SliderTheme(
+        data: SliderTheme.of(context).copyWith(
+          trackHeight: 4,
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+          activeTrackColor: color,
+          inactiveTrackColor: Colors.white.withOpacity(0.15),
+          thumbColor: Colors.white,
+          overlayColor: color.withOpacity(0.2),
         ),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: LinearProgressIndicator(
-            value: pct.clamp(0.0, 1.0),
-            minHeight: 4,
-            backgroundColor: Colors.white.withOpacity(0.1),
-            valueColor: AlwaysStoppedAnimation(hit ? _P.greenDeep : color),
-          ),
+        child: Slider(value: target.clamp(50.0, 2000.0), min: 50, max: 2000, onChanged: onChanged),
+      ),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: LinearProgressIndicator(
+          value: pct.clamp(0.0, 1.0), minHeight: 4,
+          backgroundColor: Colors.white.withOpacity(0.1),
+          valueColor: AlwaysStoppedAnimation(hit ? _P.greenDeep : color),
         ),
-      ],
-    );
+      ),
+    ]);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -1471,71 +1359,41 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(20),
+          color: _P.surface, borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white.withOpacity(0.95), width: 1.5),
-          boxShadow: [
-            BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6)),
-          ],
+          boxShadow: [BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6))],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: _P.yellowSoft,
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text('⚖️', style: TextStyle(fontSize: 16)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 36, height: 36,
+                decoration: BoxDecoration(color: _P.yellowSoft, borderRadius: BorderRadius.circular(11)),
+                alignment: Alignment.center,
+                child: const Text('⚖️', style: TextStyle(fontSize: 16))),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Ужарка / уварка',
+                  style: GoogleFonts.inter(color: _P.text, fontSize: 13, fontWeight: FontWeight.w600)),
+              Text('Вес готового блюда (необязательно)',
+                  style: GoogleFonts.inter(color: _P.textMuted, fontSize: 10)),
+            ])),
+            SizedBox(
+              width: 90,
+              child: TextField(
+                controller: _cookedWeightCtrl,
+                keyboardType: TextInputType.number, textAlign: TextAlign.right,
+                style: GoogleFonts.inter(color: _P.text, fontSize: 14, fontWeight: FontWeight.w700,
+                    fontFeatures: const [ui.FontFeature.tabularFigures()]),
+                decoration: InputDecoration(
+                  hintText: 'г', hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 12),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  filled: true, fillColor: _P.bg,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Ужарка / уварка',
-                          style: GoogleFonts.inter(
-                              color: _P.text, fontSize: 13, fontWeight: FontWeight.w600)),
-                      Text('Вес готового блюда (необязательно)',
-                          style: GoogleFonts.inter(
-                              color: _P.textMuted, fontSize: 10)),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 90,
-                  child: TextField(
-                    controller: _cookedWeightCtrl,
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.inter(
-                        color: _P.text,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        fontFeatures: const [ui.FontFeature.tabularFigures()]),
-                    decoration: InputDecoration(
-                      hintText: 'г',
-                      hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 12),
-                      isDense: true,
-                      contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      filled: true,
-                      fillColor: _P.bg,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ],
-        ),
+          ]),
+        ]),
       ),
     );
   }
@@ -1549,28 +1407,18 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _P.surface,
-          borderRadius: BorderRadius.circular(20),
+          color: _P.surface, borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white.withOpacity(0.95), width: 1.5),
-          boxShadow: [
-            BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6)),
-          ],
+          boxShadow: [BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, spreadRadius: -4, offset: const Offset(0, 6))],
         ),
         child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 8, runSpacing: 8,
           children: RecipeTags.all.map((tag) {
             final selected = _tags.contains(tag);
             return _Press(
               onTap: () {
                 HapticFeedback.selectionClick();
-                setState(() {
-                  if (selected) {
-                    _tags.remove(tag);
-                  } else {
-                    _tags.add(tag);
-                  }
-                });
+                setState(() { selected ? _tags.remove(tag) : _tags.add(tag); });
               },
               child: AnimatedContainer(
                 duration: _reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
@@ -1579,29 +1427,16 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                 decoration: BoxDecoration(
                   color: selected ? _P.peachDeep : _P.bg,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: selected ? _P.peachDeep : _P.divider,
-                    width: selected ? 1.5 : 1,
-                  ),
-                  boxShadow: selected
-                      ? [BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))]
-                      : null,
+                  border: Border.all(color: selected ? _P.peachDeep : _P.divider, width: selected ? 1.5 : 1),
+                  boxShadow: selected ? [BoxShadow(color: _P.peachDeep.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))] : null,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(RecipeTags.emoji(tag), style: const TextStyle(fontSize: 12)),
-                    const SizedBox(width: 5),
-                    Text(
-                      RecipeTags.label(tag),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Text(RecipeTags.emoji(tag), style: const TextStyle(fontSize: 12)),
+                  const SizedBox(width: 5),
+                  Text(RecipeTags.label(tag),
                       style: GoogleFonts.inter(
-                        color: selected ? Colors.white : _P.text,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+                          color: selected ? Colors.white : _P.text, fontSize: 11, fontWeight: FontWeight.w600)),
+                ]),
               ),
             );
           }).toList(),
@@ -1619,31 +1454,22 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       decoration: BoxDecoration(
         color: _P.surface,
         border: Border(top: BorderSide(color: _P.divider.withOpacity(0.8))),
-        boxShadow: [
-          BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, -4)),
-        ],
+        boxShadow: [BoxShadow(color: _P.text.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, -4))],
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          width: double.infinity,
-          height: 54,
+          width: double.infinity, height: 54,
           child: ElevatedButton(
             onPressed: () => _save(provider),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _P.peachDeep,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              backgroundColor: _P.peachDeep, foregroundColor: Colors.white,
+              elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               shadowColor: _P.peachDeep.withOpacity(0.4),
             ),
             child: Text(
               widget.existing == null ? 'СОХРАНИТЬ РЕЦЕПТ' : 'ОБНОВИТЬ',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-              ),
+              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.8),
             ),
           ),
         ),
@@ -1664,17 +1490,14 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
     if (selected != null) {
       setState(() {
         _ingredients.add(_IngredientRow(
-          id: _uuid.v4(),
-          productId: selected.id,
-          name: selected.name,
-          grams: 100,
+          id: _uuid.v4(), productId: selected.id, name: selected.name, grams: 100,
         ));
       });
     }
   }
 
   Future<void> _showDifficultyPicker() async {
-    final picked = await showModalBottomSheet<RecipeDifficulty>(
+    await showModalBottomSheet<RecipeDifficulty>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
@@ -1685,84 +1508,55 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
         ),
         child: SafeArea(
           top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  width: 38, height: 5,
-                  decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text('Сложность', style: _T.title2),
-                    const Spacer(),
-                    _Press(
-                      onTap: () => Navigator.pop(ctx),
-                      child: Container(
-                        width: 32, height: 32,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Center(child: Container(width: 38, height: 5,
+                decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3)))),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(children: [
+                Text('Сложность', style: _T.title2),
+                const Spacer(),
+                _Press(onTap: () => Navigator.pop(ctx),
+                    child: Container(width: 32, height: 32,
                         decoration: const BoxDecoration(color: _P.bg, shape: BoxShape.circle),
-                        child: const Icon(Icons.close_rounded, size: 14, color: _P.textMuted),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              ...RecipeDifficulty.values.map((d) {
-                final selected = d == _difficulty;
-                return _Press(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _difficulty = d);
-                    Navigator.pop(ctx);
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: selected ? _P.peachSoft : _P.bg,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: selected ? _P.peachDeep : _P.divider,
-                        width: selected ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(d.emoji, style: const TextStyle(fontSize: 20)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(d.displayName,
-                                  style: GoogleFonts.inter(
-                                      color: _P.text,
-                                      fontSize: 14,
-                                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
-                              const SizedBox(height: 2),
-                              Text(_difficultyDescription(d),
-                                  style: GoogleFonts.inter(
-                                      color: _P.textMuted,
-                                      fontSize: 11)),
-                            ],
-                          ),
-                        ),
-                        if (selected)
-                          const Icon(Icons.check_circle_rounded,
-                              size: 20, color: _P.peachDeep),
-                      ],
-                    ),
+                        child: const Icon(Icons.close_rounded, size: 14, color: _P.textMuted))),
+              ]),
+            ),
+            const SizedBox(height: 12),
+            ...RecipeDifficulty.values.map((d) {
+              final selected = d == _difficulty;
+              return _Press(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _difficulty = d);
+                  Navigator.pop(ctx);
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: selected ? _P.peachSoft : _P.bg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: selected ? _P.peachDeep : _P.divider, width: selected ? 1.5 : 1),
                   ),
-                );
-              }),
-            ],
-          ),
+                  child: Row(children: [
+                    Text(d.emoji, style: const TextStyle(fontSize: 20)),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(d.displayName,
+                          style: GoogleFonts.inter(color: _P.text, fontSize: 14,
+                              fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
+                      const SizedBox(height: 2),
+                      Text(_difficultyDescription(d),
+                          style: GoogleFonts.inter(color: _P.textMuted, fontSize: 11)),
+                    ])),
+                    if (selected) const Icon(Icons.check_circle_rounded, size: 20, color: _P.peachDeep),
+                  ]),
+                ),
+              );
+            }),
+          ]),
         ),
       ),
     );
@@ -1773,8 +1567,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Text('Введи название рецепта'),
-        backgroundColor: _P.pinkDeep,
-        behavior: SnackBarBehavior.floating,
+        backgroundColor: _P.pinkDeep, behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ));
       return;
@@ -1782,11 +1575,22 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
     if (_ingredients.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Text('Добавь хотя бы один ингредиент'),
-        backgroundColor: _P.pinkDeep,
-        behavior: SnackBarBehavior.floating,
+        backgroundColor: _P.pinkDeep, behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ));
       return;
+    }
+
+    // 🆕 Перенумеруем шаги перед сохранением
+    _renumberSteps();
+    // Фильтруем пустые шаги
+    final cleanSteps = _steps.where((s) => s.text.trim().isNotEmpty).toList();
+    for (int i = 0; i < cleanSteps.length; i++) {
+      cleanSteps[i] = RecipeStep(
+        order: i + 1,
+        text: cleanSteps[i].text.trim(),
+        timerSec: cleanSteps[i].timerSec,
+      );
     }
 
     final template = MealTemplate(
@@ -1795,11 +1599,10 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
       items: _ingredients
           .map((r) => MealTemplateItem(
-        productId: r.productId,
-        grams: r.grams,
-        name: r.name,
+        productId: r.productId, grams: r.grams, name: r.name,
       ))
           .toList(),
+      steps: cleanSteps,  // 🆕 СОХРАНЯЕМ ШАГИ
       portions: int.tryParse(_portionsCtrl.text) ?? 1,
       cookedWeight: double.tryParse(_cookedWeightCtrl.text),
       prepTimeMin: int.tryParse(_prepTimeCtrl.text),
@@ -1809,11 +1612,12 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
     );
 
     await provider.saveTemplate(template);
-
     if (!mounted) return;
     HapticFeedback.mediumImpact();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(widget.existing == null ? '✅ Рецепт сохранён' : '✅ Рецепт обновлён'),
+      content: Text(widget.existing == null
+          ? '✅ Рецепт сохранён'
+          : '✅ Рецепт обновлён'),
       backgroundColor: _P.greenDeep,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -1830,20 +1634,9 @@ class _IngredientRow {
   final String productId;
   final String name;
   final double grams;
-
-  _IngredientRow({
-    required this.id,
-    required this.productId,
-    required this.name,
-    required this.grams,
-  });
-
+  _IngredientRow({required this.id, required this.productId, required this.name, required this.grams});
   _IngredientRow copyWith({double? grams}) => _IngredientRow(
-    id: id,
-    productId: productId,
-    name: name,
-    grams: grams ?? this.grams,
-  );
+      id: id, productId: productId, name: name, grams: grams ?? this.grams);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1852,166 +1645,114 @@ class _IngredientRow {
 class _IngredientPickerSheet extends StatefulWidget {
   final NutritionProvider provider;
   const _IngredientPickerSheet({required this.provider});
-
   @override
   State<_IngredientPickerSheet> createState() => _IngredientPickerSheetState();
 }
 
 class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
   String _query = '';
-
   @override
   Widget build(BuildContext context) {
     final products = _query.isEmpty
         ? widget.provider.products.take(50).toList()
         : widget.provider.searchProducts(_query).take(50).toList();
-
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 24, offset: const Offset(0, -8)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 24, offset: const Offset(0, -8))],
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            Container(
-                width: 38, height: 5, decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3))),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38, height: 38,
-                    decoration: BoxDecoration(color: _P.peachSoft, borderRadius: BorderRadius.circular(11)),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.restaurant_menu_rounded, color: _P.peachDeep, size: 19),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Выбери продукт', style: GoogleFonts.inter(color: _P.text, fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
-                        Text('${products.length} в базе',
-                            style: GoogleFonts.inter(color: _P.textMuted, fontSize: 11)),
-                      ],
-                    ),
-                  ),
-                  _Press(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 34, height: 34,
+        child: Column(children: [
+          const SizedBox(height: 10),
+          Container(width: 38, height: 5,
+              decoration: BoxDecoration(color: _P.divider, borderRadius: BorderRadius.circular(3))),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(children: [
+              Container(width: 38, height: 38,
+                  decoration: BoxDecoration(color: _P.peachSoft, borderRadius: BorderRadius.circular(11)),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.restaurant_menu_rounded, color: _P.peachDeep, size: 19)),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Выбери продукт',
+                    style: GoogleFonts.inter(color: _P.text, fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
+                Text('${products.length} в базе',
+                    style: GoogleFonts.inter(color: _P.textMuted, fontSize: 11)),
+              ])),
+              _Press(onTap: () => Navigator.pop(context),
+                  child: Container(width: 34, height: 34,
                       decoration: const BoxDecoration(color: _P.bg, shape: BoxShape.circle),
-                      child: const Icon(Icons.close_rounded, size: 16, color: _P.textMuted),
+                      child: const Icon(Icons.close_rounded, size: 16, color: _P.textMuted))),
+            ]),
+          ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              autofocus: true,
+              onChanged: (v) => setState(() => _query = v),
+              style: GoogleFonts.inter(color: _P.text, fontSize: 14, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: 'Поиск продукта...',
+                hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
+                prefixIcon: const Icon(Icons.search_rounded, color: _P.textMuted, size: 18),
+                filled: true, fillColor: _P.bg,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              itemCount: products.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              itemBuilder: (_, i) {
+                final p = products[i];
+                return _Press(
+                  onTap: () { HapticFeedback.selectionClick(); Navigator.pop(context, p); },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _P.bg, borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: _P.divider.withOpacity(0.7)),
                     ),
+                    child: Row(children: [
+                      Container(width: 40, height: 40,
+                          decoration: BoxDecoration(
+                              color: Colors.white, borderRadius: BorderRadius.circular(12),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))]),
+                          alignment: Alignment.center,
+                          child: Text(p.categoryEmoji, style: const TextStyle(fontSize: 18))),
+                      const SizedBox(width: 12),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(color: _P.text, fontSize: 13, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(color: _P.peachSoft, borderRadius: BorderRadius.circular(6)),
+                          child: Text('${p.calories.round()} ккал / 100г',
+                              style: GoogleFonts.inter(color: _P.peachDeep, fontSize: 10, fontWeight: FontWeight.w700,
+                                  fontFeatures: const [ui.FontFeature.tabularFigures()])),
+                        ),
+                      ])),
+                      Container(width: 30, height: 30,
+                          decoration: BoxDecoration(color: _P.peachDeep.withOpacity(0.12), borderRadius: BorderRadius.circular(9)),
+                          child: const Icon(Icons.add_rounded, size: 16, color: _P.peachDeep)),
+                    ]),
                   ),
-                ],
-              ),
+                );
+              },
             ),
-            const SizedBox(height: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                autofocus: true,
-                onChanged: (v) => setState(() => _query = v),
-                style: GoogleFonts.inter(color: _P.text, fontSize: 14, fontWeight: FontWeight.w500),
-                decoration: InputDecoration(
-                  hintText: 'Поиск продукта...',
-                  hintStyle: GoogleFonts.inter(color: _P.textMuted, fontSize: 13),
-                  prefixIcon: const Icon(Icons.search_rounded, color: _P.textMuted, size: 18),
-                  filled: true,
-                  fillColor: _P.bg,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                itemCount: products.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 6),
-                itemBuilder: (_, i) {
-                  final p = products[i];
-                  return _Press(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.pop(context, p);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _P.bg,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: _P.divider.withOpacity(0.7)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40, height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(p.categoryEmoji, style: const TextStyle(fontSize: 18)),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(p.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
-                                        color: _P.text, fontSize: 13, fontWeight: FontWeight.w600)),
-                                const SizedBox(height: 2),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: _P.peachSoft,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text('${p.calories.round()} ккал / 100г',
-                                      style: GoogleFonts.inter(
-                                          color: _P.peachDeep,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          fontFeatures: const [ui.FontFeature.tabularFigures()])),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 30, height: 30,
-                            decoration: BoxDecoration(
-                              color: _P.peachDeep.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(9),
-                            ),
-                            child: const Icon(Icons.add_rounded, size: 16, color: _P.peachDeep),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ]),
       ),
     );
   }
@@ -2024,24 +1765,18 @@ Widget _sectionLabel(String text, IconData icon) {
   return SliverToBoxAdapter(
     child: Padding(
       padding: const EdgeInsets.fromLTRB(_padH, 24, _padH, 10),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: _P.textMuted.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Icon(icon, size: 12, color: _P.textMuted),
-          ),
-          const SizedBox(width: 8),
-          Text(text.toUpperCase(),
-              style: GoogleFonts.inter(
-                  fontSize: 11, fontWeight: FontWeight.w700, color: _P.text, letterSpacing: 1.2)),
-          const SizedBox(width: 12),
-          Expanded(child: Container(height: 1, color: _P.divider)),
-        ],
-      ),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(color: _P.textMuted.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+          child: Icon(icon, size: 12, color: _P.textMuted),
+        ),
+        const SizedBox(width: 8),
+        Text(text.toUpperCase(),
+            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: _P.text, letterSpacing: 1.2)),
+        const SizedBox(width: 12),
+        Expanded(child: Container(height: 1, color: _P.divider)),
+      ]),
     ),
   );
 }
@@ -2050,17 +1785,13 @@ class _Press extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
   const _Press({required this.child, this.onTap});
-
   @override
   State<_Press> createState() => _PressState();
 }
 
 class _PressState extends State<_Press> {
   bool _down = false;
-  void _set(bool v) {
-    if (_down != v) setState(() => _down = v);
-  }
-
+  void _set(bool v) { if (_down != v) setState(() => _down = v); }
   @override
   Widget build(BuildContext context) {
     final interactive = widget.onTap != null;
@@ -2071,10 +1802,7 @@ class _PressState extends State<_Press> {
       onTapCancel: interactive ? () => _set(false) : null,
       onTap: widget.onTap == null
           ? null
-          : () {
-        HapticFeedback.selectionClick();
-        widget.onTap!();
-      },
+          : () { HapticFeedback.selectionClick(); widget.onTap!(); },
       child: widget.child,
     );
     if (!interactive) return child;

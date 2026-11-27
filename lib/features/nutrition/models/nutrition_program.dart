@@ -80,6 +80,7 @@ class NutritionProgram {
   final double targetCarbs;
   final List<MealSlotTarget> slots;
   final bool isActive;
+  final String? backgroundImage; // 🆕 ДОБАВЛЕНО
 
   const NutritionProgram({
     required this.id,
@@ -94,6 +95,7 @@ class NutritionProgram {
     required this.targetCarbs,
     this.slots = const [],
     this.isActive = true,
+    this.backgroundImage, // 🆕 ДОБАВЛЕНО
   });
 
   int get totalDays => endDate.difference(startDate).inDays + 1;
@@ -118,6 +120,7 @@ class NutritionProgram {
     'targetCarbs': targetCarbs,
     'slots': jsonEncode(slots.map((s) => s.toMap()).toList()),
     'isActive': isActive ? 1 : 0,
+    'backgroundImage': backgroundImage, // 🆕 ДОБАВЛЕНО
   };
 
   factory NutritionProgram.fromMap(Map<String, dynamic> m) => NutritionProgram(
@@ -136,6 +139,7 @@ class NutritionProgram {
     targetCarbs: (m['targetCarbs'] as num).toDouble(),
     slots: _decodeSlots(m['slots']),
     isActive: (m['isActive'] as num?)?.toInt() == 1,
+    backgroundImage: m['backgroundImage'] as String?, // 🆕 ДОБАВЛЕНО
   );
 
   static List<MealSlotTarget> _decodeSlots(dynamic raw) {
