@@ -15,23 +15,47 @@ import '../../../providers/fitness_provider.dart';
 import '../widgets/image_picker_field.dart';
 import '../widgets/exercise_image_selector.dart';
 
-// ═══════════════════════════════════════════════════════════════════
-//  DESIGN SYSTEM (Локальная копия из HomeScreen для автономности)
-// ═══════════════════════════════════════════════════════════════════
 class _Palette {
-  static const bg = Color(0xFFF6F5F1);
-  static const surface = Color(0xFFFFFFFF);
-  static const text = Color(0xFF263D36);
-  static const textMuted = Color(0xFF7C8982);
-  static const green = Color(0xFF426C59);
-  static const greenSoft = Color(0xFFE7EFE5);
-  static const sage = Color(0xFF8CAB93);
-  static const peach = Color(0xFFC79475);
-  static const peachSoft = Color(0xFFF5E6DC);
-  static const pink = Color(0xFFBB8F9D);
-  static const pinkSoft = Color(0xFFF2E4E7);
-  static const yellow = Color(0xFFE7D9B8);
-  static const divider = Color(0xFFE5E8E1);
+  static const Color bg = Color(0xFFF6F5F1);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color text = Color(0xFF263D36);
+  static const Color textMuted = Color(0xFF7C8982);
+  static const Color green = Color(0xFF426C59);
+  static const Color greenSoft = Color(0xFFE7EFE5);
+  static const Color sage = Color(0xFF8CAB93);
+  static const Color peach = Color(0xFFC79475);
+  static const Color peachSoft = Color(0xFFF5E6DC);
+  static const Color pink = Color(0xFFBB8F9D);
+  static const Color blue = Color(0xFF3B82F6);
+  static const Color pinkSoft = Color(0xFFF2E4E7);
+  static const Color yellow = Color(0xFFE7D9B8);
+  static const Color divider = Color(0xFFE5E8E1);
+}
+
+class _Hero {
+  static const Color bgTop = Color(0xFF1B2027);
+  static const Color bgBottom = Color(0xFF161719);
+  static const Color accent = Color(0xFFEF9563);
+  static const Color textHigh = Colors.white;
+  static const Color textLow = Color(0xFFA4A6AA);
+}
+
+class _HeroAccents {
+  static const Color peach = Color(0xFFEF9563);
+  static const Color amber = Color(0xFFE8B858);
+  static const Color sage = Color(0xFFA5C9AF);
+  static const Color pink = Color(0xFFE899A8);
+  static const Color sky = Color(0xFF7EA8C6);
+}
+
+class _Vibrant {
+  static const Color neonGreen = Color(0xFF3DDC84);
+  static const Color vividPeach = Color(0xFFFF8A65);
+  static const Color electricBlue = Color(0xFF4A90E2);
+  static const Color glowingPink = Color(0xFFFF6B8B);
+  static const Color goldTop = Color(0xFFF4D06F);
+  static const Color goldMid = Color(0xFFE8B858);
+  static const Color goldBottom = Color(0xFFD4A04A);
 }
 
 class _R {
@@ -57,8 +81,7 @@ class _AppImg extends StatelessWidget {
     }
     if (p.startsWith('http')) {
       return CachedNetworkImage(
-        imageUrl: p,
-        fit: fit,
+        imageUrl: p, fit: fit,
         placeholder: (_, __) => fb,
         errorWidget: (_, __, ___) => fb,
       );
